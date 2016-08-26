@@ -1,0 +1,460 @@
+/************************************
+* Item Out Of Stock Checker
+* Version 1.2
+* ChangeLog v1.2
+*  - ONLY_ACTIVE is used to filter campaigns and adgroups only. All Keywords and Ads in the AdGroups will
+*    be checked which solves the "once disabled, always disabled" issue.
+*  - Updated call to get the Final Urls. Now calls getFinalUrl and getMobileFinalUrl instead of getDestinationUrl
+*  - OUT_OF_STOCK_TEXTS can now contain multiple things to check for.
+*  - If the CAMPAIGN_LABEL does not exist, it is ignored with a warning.
+* ChangeLog v1.1 - Filtered out deleted Campaigns and AdGroups
+* Created By: Russ Savage
+* FreeAdWordsScripts.com
+***********************************/
+var URL_LEVEL = 'Ad';								 // or Keyword
+var ONLY_ACTIVE = true; 						// set to false to check keywords or ads in all campaigns (paused and active)
+var CAMPAIGN_LABEL = ''; 						// set this if you want to only check campaigns with this label
+var STRIP_QUERY_STRING = true; 			// set this to false if the stuff that comes after the question mark is important
+var WRAPPED_URLS = false; 					// set this to true if you use a 3rd party like Marin or Kenshoo for managing you account
+var EMAIL_ADDRESS = "joshd@sewelldirect.com";
+var OUT_OF_STOCK_LABEL = "Out_of_Stock"; 					// The label that is added to newly paused ads
+var IN_STOCK_LABEL = "Now_In_Stock"; 	// The label that is added to newly enabled ads
+
+var OUT_OF_STOCK_LABEL_ID = AdWordsApp.labels()
+.withCondition('Name = "'+OUT_OF_STOCK_LABEL+'"')
+.get().next().getId();
+
+var IN_STOCK_LABEL_ID = AdWordsApp.labels()
+.withCondition('Name = "'+IN_STOCK_LABEL+'"')
+.get().next().getId();
+
+var pausedNum = 0;
+var enabledNum = 0;
+var pausedAdGrpNum = 0;
+var enabledAdGrpNum = 0;
+
+// Array to hold all newly paused urls
+var pausedUrls = [['Ads Paused: '],['<br>Campaign','AdGroup','Ad','URL']]; 
+var pausedAdGroups = [['Ad Groups Paused: '],['<br>Campaign','AdGroup']]; 
+
+// Array to hold all  enabled urls
+var enabledUrls = [['Ads Enabled: ']['<br>Campaign','AdGroup','Ad','URL']]; 
+var enabledAdGroups = [['Ad Groups Enabled: ']['<br>Campaign','AdGroup','Ad','URL']]; 
+
+
+// This is the specific text (or texts) to search for 
+// on the page that indicates the item 
+// is out of stock. If ANY of these match the html
+// on the page, the item is considered "out of stock"
+var OUT_OF_STOCK_TEXTS = [
+  '<h4 id="stockStatus" itemprop="availability">Out of Stock</h4>'
+];
+
+var IN_STOCK_TEXTS = [
+  '<h4 id="stockStatus" itemprop="availability">In Stock</h4>'
+];
+
+function main() {			
+	// Create the label if needed
+	if(!AdWordsApp.labels().withCondition("Name = '"+OUT_OF_STOCK_LABEL+"'").get().hasNext()){
+		createLabelIfNeeded(OUT_OF_STOCK_LABEL);
+	} 
+
+	// Create the label if needed
+	if(!AdWordsApp.labels().withCondition("Name = '"+IN_STOCK_LABEL+"'").get().hasNext()){
+		createLabelIfNeeded(IN_STOCK_LABEL);
+	} 
+
+	// Pause ads that need pausing
+	pauseURLs();
+	pauseAdGroups();
+	
+	// Enable ads that need enabling
+	enableURLs();
+
+	if (pausedNum >0){		
+		Logger.log(pausedUrls.join());
+	}
+	if (enabledNum > 0){
+		Logger.log(enabledUrls.join());
+	}
+
+	//Send an email summarizing the changes
+	EmailResults();
+}
+
+function enableURLs(){
+  
+  var alreadyCheckedUrls = {};
+  
+  var iter = buildSelectorEnable().get();
+  
+  while(iter.hasNext()) {	    
+    var entity = iter.next();
+	var adGroup = entity.getAdGroup();
+    var urls = [];
+    
+    if(entity.urls().getFinalUrl()) {
+      urls.push(entity.urls().getFinalUrl());
+    }
+    
+    if(entity.urls().getMobileFinalUrl()) {
+      urls.push(entity.urls().getMobileFinalUrl());
+    }
+    
+    for(var i in urls) {      
+      var url = cleanUrl(urls[i]);
+      
+      if(alreadyCheckedUrls[url]) {
+        if(alreadyCheckedUrls[url] === 'in stock'){  
+          
+            Enable(entity, url);
+			
+			if(adGroup.isPaused()){
+				EnableAdGroup(adGroup);
+			}          
+        } 
+      } 
+      else{
+        var htmlCode;
+        try {
+          htmlCode = UrlFetchApp.fetch(url).getContentText();
+        } 
+        catch(e) {
+          Logger.log('There was an issue checking:'+url+', Skipping.');
+          continue;
+        }
+        
+        var did_enable = false;
+        
+        for(var x in 	IN_STOCK_TEXTS){						
+          if(htmlCode.indexOf(IN_STOCK_TEXTS[x]) >= 0)  
+          {
+            alreadyCheckedUrls[url] = 'in stock';
+            
+            Enable(entity);
+			
+			if(adGroup.isPaused()){
+				EnableAdGroup(adGroup);
+			}
+			
+            did_enable = true;
+            
+            Logger.log('Url: '+url+' is '+alreadyCheckedUrls[url]);
+            
+            break;
+          }
+        }  
+        
+        if(!did_enable) { 
+          alreadyCheckedUrls[url] = 'out of stock';
+          entity.pause();
+        }
+      }
+    }
+  } 
+}
+
+function Enable(entity, url){
+	entity.enable();
+	entity.removeLabel(OUT_OF_STOCK_LABEL);						
+	entity.applyLabel(IN_STOCK_LABEL);
+	
+	// Add this to the list of enabled urls
+	enabledUrls = enabledUrls.concat(['\n<br>'+ entity.getCampaign().getName(), entity.getAdGroup().getName() , entity.getHeadline(), url]);
+
+	Logger.log('Ads for: ' + entity + ': ' + url + ' are now enabled.');
+	enabledNum++
+}
+
+
+
+function EnableAdGroup(entity){	
+	var adGrpName = entity.getName();	
+	var campaignName = entity.getCampaign().getName();
+	
+	entity.enable();
+	entity.removeLabel(OUT_OF_STOCK_LABEL);						
+	entity.applyLabel(IN_STOCK_LABEL);
+	
+	// Add this to the list of enabled ad groups
+	enabledAdGroups = enabledAdGroups.concat(['\n<br>'+ campaignName, adGrpName]);  
+	Logger.log('AdGroup: ' + adGrpName + ' is now enabled.');
+	enabledAdGroups++;
+}
+
+function pauseURLs(){
+  
+  var alreadyCheckedUrls = {};
+  
+  var iter = buildSelectorPause().get();
+  
+  while(iter.hasNext()) {	    
+    var entity = iter.next();
+    var urls = [];
+    
+    if(entity.urls().getFinalUrl()) {
+      urls.push(entity.urls().getFinalUrl());
+    }
+    
+    if(entity.urls().getMobileFinalUrl()) {
+      urls.push(entity.urls().getMobileFinalUrl());
+    }
+    
+    for(var i in urls) {      
+      var url = cleanUrl(urls[i]);
+      
+      if(alreadyCheckedUrls[url]) {
+        if(alreadyCheckedUrls[url] === 'out of stock'){  
+          	
+			Pause(entity, url);
+			
+		}				
+      }else{
+        var htmlCode;
+        try {
+          htmlCode = UrlFetchApp.fetch(url).getContentText();
+        } 
+        catch(e) {
+          Logger.log('There was an issue checking: ' + entity + ' ' + url + ', Skipping.');
+          continue;
+        }
+        
+        var did_pause = false;
+        
+        for(var x in OUT_OF_STOCK_TEXTS){						
+          if(htmlCode.indexOf(OUT_OF_STOCK_TEXTS[x]) >= 0)  {
+            alreadyCheckedUrls[url] = 'out of stock';
+			
+			Pause(entity, url);			
+            did_pause = true;          
+            
+            break;
+          }
+        }  
+        
+        if(!did_pause) { 
+          alreadyCheckedUrls[url] = 'in stock';
+          entity.enable();
+        }
+      }
+    }
+  }   
+}
+
+function Pause(entity, url){
+	entity.pause();            
+	entity.applyLabel(OUT_OF_STOCK_LABEL);						
+	removeInStockLabel(entity);	
+	
+	var adGroup = entity.getAdGroup().getName();
+		// Add this to the list of paused urls
+		pausedUrls = pausedUrls.concat(['\n<br>'+ entity.getCampaign().getName(), adGroup , entity.getHeadline(), url]);  
+		Logger.log('Ads for: ' + adGroup +  ': ' + entity.getHeadline() + ': ' + url + ' are now paused.');
+		pausedNum++;
+}
+
+function pauseGroup(entity){
+	entity.pause();            
+	entity.applyLabel(OUT_OF_STOCK_LABEL);						
+	removeInStockLabel(entity);	
+	
+	adGroup = entity.getName();
+	// Add this to the list of paused urls
+	pausedAdGroups = pausedAdGroups.concat(['\n<br>'+ entity.getCampaign().getName(), adGroup]);  
+	Logger.log('AdGroup: ' + entity.getName() + ' is now paused.');
+	pausedAdGrpNum++;
+}
+
+function allAdsPaused(adGroup){
+	var answer = false;
+	var ads = adGroup.ads()
+    .get();
+	
+	while(ads.hasNext()){
+		var ad = ads.next();
+		if(ad.isEnabled()){
+			answer = false;
+			return false;
+		}		
+		if (ad.isPaused()){
+			answer = true;
+		}
+	}		
+	return answer;
+}
+
+function pauseAdGroups(){
+	var adGroups = AdWordsApp.adGroups()
+	.withCondition('CampaignStatus = ENABLED')
+	.withCondition('AdGroupStatus = ENABLED')
+	.get();
+		
+	while (adGroups.hasNext()){
+		adGroup = adGroups.next();
+		if (allAdsPaused(adGroup)){
+			pauseGroup(adGroup);
+		}
+	}	
+}
+
+/* function pauseLog(entity, url){
+	try{
+		if(allAdsPaused(entity)){
+			adGroup = entity.getName();
+			// Add this to the list of paused urls
+			pausedUrls = pausedUrls.concat(['\n<br>'+ entity.getCampaign().getName(), adGroup, 'N/A', url]);  
+			Logger.log('AdGroup: ' + entity.getName() + ' is now paused.');
+			pausedNum++;
+		}
+	}
+	catch(e){		
+		
+	}  	
+} */
+
+
+function removeInStockLabel(entity){
+  try{
+    entity.removeLabel(IN_STOCK_LABEL);
+  }
+  catch(e){
+    return;
+  }
+  
+}
+
+function cleanUrl(url) {
+  if(WRAPPED_URLS) 
+  {
+    url = url.substr(url.lastIndexOf('http'));
+    if(decodeURIComponent(url) !== url) 
+    {
+      url = decodeURIComponent(url);
+    }
+  }
+  if(STRIP_QUERY_STRING) 
+  {
+    if(url.indexOf('?')>=0) 
+    {
+      url = url.split('?')[0];
+    }
+  }
+  if(url.indexOf('{') >= 0) 
+  {
+    //Let's remove the value track parameters
+    url = url.replace(/\{[0-9a-zA-Z]+\}/g,'');
+  }
+  return url;
+}
+
+function EmailResults() {
+
+	if(pausedNum !=0 || enabledNum !=0)  {
+		var subject = emailSubject();
+		var message  =  emailMessage();
+		
+		MailApp.sendEmail({
+			to: EMAIL_ADDRESS,
+			subject: subject,
+			htmlBody: message
+		});
+	}
+}
+
+function emailMessage(){
+	var message = '';
+	
+	if(pausedNum !=0){
+		if(message === ''){
+			message +=  pausedNum + ' ' + pausedUrls.join();
+		}else{
+			message += '<br><br>'+ pausedNum + ' ' + pausedUrls.join();
+		}
+	}
+	
+	if(enabledNum !=0){
+		if(message === ''){
+			message += enabledNum + ' ' + enabledUrls.join();
+		}else{
+			message += '<br><br>' +enabledNum + ' ' + enabledUrls.join();
+		}
+	}		
+	
+	if(pausedAdGrpNum !=0){		
+		message += '<br><br>' + pausedAdGrpNum + ' ' + pausedAdGroups.join();		
+	}	
+	
+	if(enabledAdGrpNum !=0){	
+		message += '<br><br>' + enabledAdGrpNum + ' ' + enabledAdGroups.join();		
+	}	
+	
+	return message;
+}
+
+function emailSubject(){	
+	var subject =  'AdWords Alert: Stock Checker: ';
+	
+	if(pausedNum !=0){
+		subject += pausedNum + ' ads auto-paused due to lack of stock. ';
+	}
+	if(enabledNum !=0){
+		subject += enabledNum + ' ads re-enabled. ';
+	}	
+	return subject;
+}
+
+//Helper function to format todays date
+function _getDateString() {
+  return Utilities.formatDate((new Date()), AdWordsApp.currentAccount().getTimeZone(), "yyyy-MM-dd");
+}
+// Conditions for pausing ads
+function buildSelectorPause() {
+  var selector = (URL_LEVEL === 'Ad') ? AdWordsApp.ads() : AdWordsApp.keywords();
+  
+  selector = selector
+  .withCondition('CampaignStatus != DELETED')
+  .withCondition('AdGroupStatus != DELETED')
+  .withCondition("Labels CONTAINS_NONE [" + OUT_OF_STOCK_LABEL_ID +"]");;
+  
+  if(ONLY_ACTIVE){
+    selector = selector
+    .withCondition('CampaignStatus = ENABLED');
+    
+    if(URL_LEVEL !== 'Ad'){						
+      selector = selector
+      .withCondition('AdGroupStatus = ENABLED');		
+    }		
+  }
+  return selector;
+}
+
+// Conditions for enabling ads
+function buildSelectorEnable() {
+  var selector = (URL_LEVEL === 'Ad') ? AdWordsApp.ads() : AdWordsApp.keywords();
+  
+  selector = selector
+  .withCondition('CampaignStatus != DELETED')
+  .withCondition('AdGroupStatus != DELETED')
+  .withCondition("Labels CONTAINS_ANY [" + OUT_OF_STOCK_LABEL_ID +"]");
+  
+  if(ONLY_ACTIVE){
+    selector = selector
+    .withCondition('CampaignStatus = ENABLED')
+    
+    if(URL_LEVEL !== 'Ad') 
+    {						
+      selector = selector
+      .withCondition('AdGroupStatus = PAUSED')
+    }
+  }  
+  return selector;  
+}
+
+//This is a helper function to create the label if it does not already exist
+function createLabelIfNeeded(name) {
+  if(!AdWordsApp.labels().withCondition("Name = '"+name+"'").get().hasNext()) {
+    AdWordsApp.createLabel(name);
+  }
+}
+
