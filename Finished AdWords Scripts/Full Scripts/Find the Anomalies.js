@@ -11,13 +11,13 @@
 **************************************/
 var DATE_RANGE = 'LAST_30_DAYS';
 var DECIMAL_PLACES = 3;
-var STANDARD_DEVIATIONS = 2;
+var STANDARD_DEVIATIONS = 1;
 var EMAILS = ['joshd@sewelldirect.com'];
 var SCRIPT_NAME = ['Anomaly','Tagger'];
 
 function main() {
   // This will add labels to and send emails about adgroups, keywords and ads. Remove any if you like.
-  var levels_to_tag = ['adgroup','keyword','ad'];
+  var levels_to_tag = ['adgroup'/*,'keyword'/*,'ad'*/];
   for(var x in levels_to_tag) {
     var report = getContentRows(levels_to_tag[x]);
     var entity_map = buildEntityMap(levels_to_tag[x]);
@@ -105,72 +105,138 @@ function addLabelToAnomalies(entites, mean, sd, stat_key, label, level) {
   try{
     for(var i in entites) {
       var entity = entites[i]['entity'];
+      //print('addLabelToAnomalies: ' + entity);
       var stat = entites[i]['stats'][stat_key];	
       var rawDev =  stat - mean;
-     // print('rawDev: ' + round(stat) + ' - '+ round(mean) + ' = ' + round(rawDev) + ', sd: '+ round(sd));
-	  
+      
+      var highLabel = setLabel(label, 'high');
+      var lowLabel = setLabel(label, 'low');
+      
       var deviation = Math.abs(rawDev);
-      if(sd != 0 && deviation/sd >= STANDARD_DEVIATIONS){
-        print('low index: '+label_name.indexOf('low'));        
-        print('high index: '+label_name.indexOf('high'));
+      if(sd != 0 && deviation/sd >= STANDARD_DEVIATIONS && rawDev != 0){
         
-        if(rawDev > 0 && label_name.indexOf('high') < 0){
-          label_name= 'high_'+label_name;
+        if(rawDev > 0){
+          label_name = highLabel;
         }
-        else if (rawDev < 0 && label_name.indexOf('low') < 0){
-          label_name = 'low_'+label_name;
+        else if (rawDev < 0){
+          label_name = lowLabel;
         }		
-        createLabelIfNeeded(label_name);
-     
-        entity.applyLabel(label_name);
-        report += toReportRow(entity,level,label_name);
-        print(entity +' has ' + label_name + ': ' + round(stat) + ', deviation: ' + round(deviation)+ ', sd: '+ round(sd) + ', rawDev: '+ round(rawDev) +', mean: '+ round(mean));
+        if (shouldBeLabeled(label_name)){
+          entity.applyLabel(label_name);
+          report += toReportRow(entity,level,label_name);
+          print(entity +' has ' + label_name + ': ' + round(stat) + ', deviation: ' + round(deviation)+ ', sd: '+ round(sd) + ', rawDev: '+ round(rawDev) +', mean: '+ round(mean));
+        }
         
       }	
       else {
-        if(hasLabel(entity, label)){
-           removeLabels(entity, label);
-         }
+        removeLabels(entity, highLabel, lowLabel);
       }
     }	
   }
-  catch(e){
-    
-    //Logger.log(e.message);
+  catch(f){    
+    Logger.log(f.message);
   }
   return report;
+}
+
+
+function shouldBeLabeled(label){  
+  // Comment out labels that shouldn't be applied
+  var possibles = [
+    // highs to check
+    'high_cpc',
+    // 'high_cpm',
+    'high_page_views',
+    'high_pos',
+    'high_time_on_site',
+    'high_bounce',
+    'high_clicks',
+    // 'high_cv',
+    // 'high_conv',
+    'high_cost',
+    'high_ctr',
+    'high_imps',
+    // lows to check
+    'low_cpc',
+    // 'low_cpm',
+    'low_page_views',
+    // 'low_pos',
+    'low_time_on_site',
+    // 'low_bounce',
+    'low_clicks',
+    'low_cv',
+    'low_conv',
+    'low_cost',
+    'low_ctr',
+    'low_imps'
+  ];
+  //print('Index of label: ' + possibles.indexOf(label));
+  if (possibles.indexOf(label) >= 0){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+function setLabel(lblName, type){
+  var result = lblName;
+  if (lblName.indexOf('low') < 0 && lblName.indexOf('high') < 0){
+    result = type +'_' + lblName;
+  }
+  createLabelIfNeeded(result);
+  return result;
 }
 
 function hasLabel(entity, label){
   var possibles = [label, 'high_'+label, 'low_'+label];
   var lblStack = entity.labels()
-  .withCondition("LabelNames CONTAINS_ANY ["+ possibles +"]")
+  .withCondition("LabelNames CONTAINS_ANY "+ possibles +"")
   .get();
   
- // print(possibles.join());
+  // print(possibles.join());
   if(lblStack.hasNext()){
     
     print('lblStack.hasNext === true ');
     return true;
   }
   else {
-    //print('lblStack.hasNext === false ');
+    print('lblStack.hasNext === false ');
     return false;
   }
 }
-function removeLabels(entity, label){  
+function hasLabel(entity, label){
+    var lblStack = entity.labels()
+  .withCondition("LabelNames CONTAINS_ANY "+ [label] +"")
+  .get();
+  
+  // print(possibles.join());
+  if(lblStack.hasNext()){
+    
+    print('lblStack.hasNext === true ');
+    return true;
+  }
+  else {
+    return false;
+  }
+
+}
+function removeLabels(entity, highLabel, lowLabel){    
   
   try{
-    entity.removeLabel(label_name);
-    entity.removeLabel('high_'+label_name);
-    entity.removeLabel('low_'+label_name);
+    entity.removeLabel(highLabel);
   }
-  catch(e){
-    print('removeLabels ' + e.message);
-      return; 
-    }
+  catch(h){
+    print('removeLabels ' + h.message);
   }
-    
+  try{
+    entity.removeLabel(lowLabel);
+  }
+  catch(l){
+    print('removeLabels: ' + l.message);   
+  } 
+}
+
 //This is a helper function to create the label if it does not already exist
 function createLabelIfNeeded(name) {
   if(!AdWordsApp.labels().withCondition("Name = '"+name+"'").get().hasNext()) {
@@ -243,7 +309,8 @@ function getIterator(entity_type) {
       return AdWordsApp.adGroups().forDateRange(DATE_RANGE)
       .withCondition("Impressions > 0")
       .withCondition("CampaignStatus = ENABLED")
-      .withCondition("Status = ENABLED").get();
+      .withCondition("Status = ENABLED")
+      .get();
     case 'keyword' :
       return AdWordsApp.keywords().forDateRange(DATE_RANGE)
       .withCondition("Impressions > 0")      
@@ -266,9 +333,9 @@ function getIterator(entity_type) {
 function getStatsMap(stats) {
   return { // You can comment these out as needed.
     cpc : stats.getAverageCpc(),
-    cpm : stats.getAverageCpm(),
+    // cpm : stats.getAverageCpm(),
     page_views : stats.getAveragePageviews(),
-    pos : stats.getAveragePosition(),
+    // pos : stats.getAveragePosition(),
     time_on_site : stats.getAverageTimeOnSite(),
     bounce : stats.getBounceRate(),
     clicks : stats.getClicks(),

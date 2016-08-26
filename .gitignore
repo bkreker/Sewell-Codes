@@ -1,0 +1,8 @@
+#gitignore
+*xlsx
+*.xml
+*.xsd
+*.xsl
+*.htm
+*.csv
+Thank you page.html

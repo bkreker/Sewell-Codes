@@ -1,5 +1,6 @@
 /************************************
 * Item Out Of Stock Checker
+   Based on template Created By: Russ Savage
 ***********************************/
 var URL_LEVEL = 'Ad';	// or Keyword
 var ONLY_ACTIVE = true; // set to false to check keywords or ads in all campaigns (paused and active)
