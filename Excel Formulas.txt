@@ -1,0 +1,5 @@
+' Returns the Month name of the cell value to the left of it
+=IF(B3=1,"January",IF(B3=2,"February",IF(B3=3,"March",IF(B3=4,"April",IF(B3=5,"May",IF(B3=6,"June",IF(B3=7,"July",IF(B3=8,"August",IF(B3=9,"September",IF(B3=10,"October",IF(B3=11,"November",IF(B3=12,"December"))))))))))))
+
+' Returns the day of the week, starting with 1 = Sunday
+=IF(E3=1,"Sunday",IF(E3=2,"Monday",IF(E3=3,"Tuesday",IF(E3=4,"Wednesday",IF(E3=5,"Thursday",IF(E3=6,"Friday",IF(E3=7,"Saturday")))))))
