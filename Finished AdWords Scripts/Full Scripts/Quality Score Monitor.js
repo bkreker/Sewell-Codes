@@ -30,19 +30,30 @@ function main(){
 
 function isException(kw){
   var labels = kw.labels().get();
+  var qs = kw.getQualityScore();
+  var result = false;
+  var reg_isNumber = /[0-9]+\.?[0-9]*/g;
   
-  while(labels.hasNext()){
-    var label = labels.next();
-    if(label.getName() === EXCEPTION_LABEL){
-      return true;
-    }
-    else continue;
+  if(qs === null || !qs.match(reg_isNumber)){
+    result = true;
+    print("Null qs for " + kw.getText());
   }
-  return false;
+  else{
+    while(labels.hasNext()){
+      var label = labels.next();
+      if(label.getName() === EXCEPTION_LABEL){
+        result = true;
+      }
+      else {
+        continue;
+      }
+    }
+  }
+  return result;
 }
 
 function CheckOrPause(){
-  Logger.log('Pausing Kws below 4.');
+  Logger.log('Starting.');
   var keywordSelector = AdWordsApp
   .keywords()
   .withCondition("CampaignStatus = ENABLED")
@@ -76,20 +87,30 @@ function CheckOrPause(){
       var msg = [campaignName,adGroupName,keyword,matchType,qs, cost, convVal, conversions, maxCPC, avgCPC, kwId];
       
       if(qs <= MIN_QS){
-        Logger.log("Pausing " + msg.join());
-        kw.pause();
-        PAUSED_LIST = PAUSED_LIST.concat('\n' + msg);
-        i++;
-        pausedNum++;
-        kw.applyLabel(LABEL);
+        pauseKeyword(kw);
+     
       }else{
-        Logger.log('Not Pausing: ' + msg.join());
-        CHECKED_LIST = CHECKED_LIST.concat('\n'+msg);
-        checkedNum++;
+        checkedKeyword(kw,msg);
       }
     }
   }
   Logger.log('Times Looped to Pause: '+ i);
+}
+
+function  pauseKeyword(kw, msg){
+  pausedNum++;
+  kw.pause();
+  Logger.log("Pausing " + msg.join());
+  PAUSED_LIST = PAUSED_LIST.concat('\n' + msg);
+  addToPausedSpreadsheet(msg);
+  kw.applyLabel(LABEL);  
+}
+
+function checkedKeyword(kw,msg){
+  checkedNum++;
+  Logger.log('Not Pausing: ' + msg.join());
+  CHECKED_LIST = CHECKED_LIST.concat('\n'+msg);
+  
 }
 
 // Function to get date and return true if it's monday
@@ -107,6 +128,19 @@ function todayIsMonday(){
   else{
     return false;
   }
+}
+
+// Add the info for paused keywords to a set-aside spreadsheet to keep better track of all of them
+function addToPausedSpreadsheet(msg){
+  var lowQS_Url = 'https://docs.google.com/spreadsheets/d/143g_NYaLyQqNMnocHCku4u9EP0OEPRBYhYvTuIsRn1Y/edit?usp=sharing';
+  var lowQS_SheetName = 'Low QS Keywords Paused';
+  var ss = SpreadsheetApp.openByUrl(lowQS_Url);
+  var sheet = ss.getSheetByName(lowQS_SheetName);
+  var date = _getDateString();
+  
+  msg = msg.concat(date);
+  sheet.appendRow(msg)
+  
 }
 
 function formatKeyword(keyW) {
@@ -258,13 +292,14 @@ function createLabelIfNeeded(name) {
 
 function EmailResults() {
   var Subject =  'AdWords Alert: Quality Score Monitor';
-  var Message  = emailMessage();
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or issues with this code, please inform me as soon as possible.';
+  var Message  = emailMessage() + signature;
   var Attachment = emailAttachment();
   var To;
   
   if(AdWordsApp.getExecutionInfo().isPreview()){ 
 		To = EMAILS[0] ;
-		Message = 'Preview\n'+Message;
+		Message = 'Preview\n'+ Message;
 	}
   else{
 		To = EMAILS.join();

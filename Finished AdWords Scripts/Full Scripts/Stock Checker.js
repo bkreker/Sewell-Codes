@@ -339,7 +339,8 @@ function cleanUrl(url) {
 function EmailResults() {
   if(pausedNum !=0 || enabledNum !=0)  {
     var Subject =  'AdWords Alert: Stock Checker';	
-    var Message  =  emailMessage();
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or issues with this code, please inform me as soon as possible.';
+  var Message  = emailMessage() + signature;
     var Attachment = emailAttachment();
     var To;   
     
