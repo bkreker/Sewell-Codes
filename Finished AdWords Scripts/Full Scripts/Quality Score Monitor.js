@@ -1,7 +1,16 @@
+/**********************************
+*
+* Auto-Maintenance
+* Created by Josh DeGraw
+*
+***********************************/
+
+var REPORT_NAME = ['Quality', 'Score', 'Monitor'];
 var EMAILS = [
   "joshd@sewelldirect.com", 
   "cameronp@sewelldirect.com"
 ];
+
 var TITLES = ['\nCampaign','AdGroup','Keyword','MatchType','QS','Cost','ConvValue','Conversions','MaxCPC','AvgCPC','KeywordID'];
 var PAUSED_LIST = [['Paused'],TITLES];
 var pausedNum = 0;
@@ -12,7 +21,6 @@ var MED_QS = 5;
 var LABEL = "Low_QS";
 var EXCEPTION_LABEL = "Low_QS_Exception";
 var DATE_RANGE = 'LAST_WEEK';
-
 //info for the sheet that will hold the Conversion Values
 var CONV_SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1-dyzDaFZ8mQvHGidP6MP1P-EXNVFRzJyTxbyi4sHnFg/edit?usp=sharing';
 var CONV_TIME_PERIOD = 'LAST_30_DAYS';
@@ -291,26 +299,29 @@ function createLabelIfNeeded(name) {
 }
 
 function EmailResults() {
-  var Subject =  'AdWords Alert: Quality Score Monitor';
-  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or issues with this code, please inform me as soon as possible.';
-  var Message  = emailMessage() + signature;
-  var Attachment = emailAttachment();
-  var To;
+    var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+	var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+	var Message  = emailMessage() + signature;
+    var Attachment = emailAttachment();
+	var file_name = _getDateString()+'_'+REPORT_NAME.join('_');
+    var To;   
+	var isPreview = '';
   
+ 
   if(AdWordsApp.getExecutionInfo().isPreview()){ 
-		To = EMAILS[0] ;
-		Message = 'Preview\n'+ Message;
-	}
+    To = EMAILS[0] 
+    isPreview = 'Preview; No changes actually made.\n';
+  }
   else{
-		To = EMAILS.join();
-	}
+    To = EMAILS.join();
+  }
   
   if(Message != ''){   
     MailApp.sendEmail({
       to: To,
       subject: Subject,
       body: Message,
-      attachments:[{fileName: 'Low_QS_'+_getDateString()+'.csv', mimeType: 'text/csv', content: Attachment}]
+      attachments:[{fileName: file_name+'.csv', mimeType: 'text/csv', content: Attachment}]
     });
     
   }

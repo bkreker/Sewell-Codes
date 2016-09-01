@@ -1,3 +1,11 @@
+/**********************************
+* Auto-Maintenance
+* Loosely based on template Created By Russ Savage
+* Customized by Josh DeGraw
+***********************************/
+
+var REPORT_NAME =  ['Auto', 'Maintenance'];
+
 var EMAILS = ['joshd@sewelldirect.com', 'cameronp@sewelldirect.com'];
 
 //info for the sheet that will hold the Conversion Values
@@ -38,12 +46,13 @@ var PAUSED_LABEL = 'Auto-Paused';
 var REDUCED_LABEL = 'Auto-Reduced';
 var INCREASED_LABEL = 'Auto-Increased';
 var MAINTENANCE_LABELS = [
-		PAUSED_LABEL, 
-		REDUCED_LABEL, 
-		INCREASED_LABEL
+  PAUSED_LABEL, 
+  REDUCED_LABEL, 
+  INCREASED_LABEL
 ];
 
 function main() {
+	
   // Update the spreadsheet,
   getDefaults();
   updateConvValReport();  
@@ -294,15 +303,15 @@ function isIncluded(campaign){
 function addLabel(kw, label){	
   createLabelIfNeeded(label);
   // Skip adding the label if it already has it
-	if(!hasLabelAlready(kw, label)){
-		kw.applyLabel(label);
-	}
-	var others = hasDifferentLabel(kw,label);
-	if(others.truth){
-		for (var i in others.existingLabels){
-			kw.removeLabel(i);
-		}
-	}
+  if(!hasLabelAlready(kw, label)){
+    kw.applyLabel(label);
+  }
+  var others = hasDifferentLabel(kw,label);
+  if(others.truth){
+    for (var i in others.existingLabels){
+      kw.removeLabel(i);
+    }
+  }
 }
 
 //
@@ -369,7 +378,7 @@ function getLifeTimeProfit(ag, kw){
   var profit = 0.0;
   var cost = 0.0;
   var conVal = 0.0;
-    
+  
   var regex = /,/g;
   while (rows.hasNext()){
     var row = rows.next();
@@ -379,12 +388,12 @@ function getLifeTimeProfit(ag, kw){
     cost = costSheet.replace(regex,'');
     conVal = convSheet.replace(regex,'');
     profit = conVal - cost;
-
+    
   }
   
   profit = round(profit);
   //info(agId + ' ' + kwId + ' Profit = $'+ profit + ' ($' + conVal + ' - $' + cost + ')');
-    
+  
   return profit;
 }
 
@@ -556,7 +565,6 @@ function updateConvValReport() {
   }
 }
 
-
 //
 // Clear the named ranges
 //
@@ -582,20 +590,18 @@ function clearSheet(ss){
   convRange.clear({contentsOnly: true});
 }
 
-
-
-function emailResults() {
-  var message  = emailMessage();
-  var subject =  'AdWords Alert: Auto-Maintenance';
-  var message = emailMessage();
-  var attachment = emailAttachment();
-  var file_name = _getDateString()+'_Auto_Maintenance_' +TIME_PERIOD;
-  var To;
+function emailResults() {  
+  var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+  var Message  = emailMessage() + signature;
+  var Attachment = emailAttachment();
+  var file_name = _getDateString()+'_'+REPORT_NAME.join('_')+TIME_PERIOD;
+  var To;   
   var isPreview = '';
   
   if(AdWordsApp.getExecutionInfo().isPreview()){ 
     To = EMAILS[0] 
-    isPreview = 'Preview; No changes actually made\n';
+    isPreview = 'Preview; No changes actually made.\n';
   }
   else{
     To = EMAILS.join();
@@ -604,10 +610,10 @@ function emailResults() {
   if (message != '') {
     MailApp.sendEmail( {
       to: To,
-      subject: subject,
-      body: isPreview + message,
-      attachments:[{fileName: file_name+ '.csv', mimeType: 'text/csv', content: file_name + '\n' + attachment}]
-    });
+      subject: Subject,
+      body: isPreview + Message + signature,
+      attachments:[{fileName: file_name+ '.csv', mimeType: 'text/csv', content: file_name + '\n' + Attachment}]
+                      });
     info('Email sent to: '+ To);
   }
 }
@@ -728,24 +734,29 @@ function _getDateString() {
 }
 
 function hasLabelAlready(kw, label){
-	kw.labels().withCondition("Name = '"+label+"'").get().hasNext() ? return true : return false;
+  if(kw.labels().withCondition("Name = '"+label+"'").get().hasNext()){ 
+    return true 
+  }
+  else{
+    return false;
+  }
 }
 
 function hasDifferentLabel(kw, label){
-	var truth = false;
-	var existingLabels = [];
-	for (var i in MAINTENANCE_LABELS){
-		if(i != label){
-			if (kw.labels().withCondition("Name = '"+i+"'").get().hasNext()){
-				truth = true;
-				existingLabels.push(labels.next());
-			}
-		}
-	}
-	return {
-		truth: truth,
-		existingLabels: existingLabels
-	};
+  var truth = false;
+  var existingLabels = [];
+  for (var i in MAINTENANCE_LABELS){
+    if(i != label){
+      if (kw.labels().withCondition("Name = '"+i+"'").get().hasNext()){
+        truth = true;
+        existingLabels.push(labels.next());
+      }
+    }
+  }
+  return {
+    truth: truth,
+    existingLabels: existingLabels
+  };
 }
 
 //Helper function to format todays date

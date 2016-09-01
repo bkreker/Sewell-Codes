@@ -1,7 +1,10 @@
-/************************************
-* Item Out Of Stock Checker
-   Based on template Created By: Russ Savage
+/**********************************
+* Item Stock Checker
+* Loosely based on template Created By Russ Savage
+* Customized by Josh DeGraw
 ***********************************/
+
+var REPORT_NAME = ['Stock', 'Checker'];
 var URL_LEVEL = 'Ad';	// or Keyword
 var ONLY_ACTIVE = true; // set to false to check keywords or ads in all campaigns (paused and active)
 var CAMPAIGN_LABEL = ''; // set this if you want to only check campaigns with this label
@@ -15,7 +18,6 @@ var EMAILS = [
 ];
 var OUT_OF_STOCK_LABEL = "Out_of_Stock"; 					// The label that is added to newly paused ads
 var IN_STOCK_LABEL = "Now_In_Stock"; 	// The label that is added to newly enabled ads
-
 var OUT_OF_STOCK_LABEL_ID = AdWordsApp.labels()
 .withCondition('Name = "'+OUT_OF_STOCK_LABEL+'"')
 .get().next().getId();
@@ -338,20 +340,27 @@ function cleanUrl(url) {
 
 function EmailResults() {
   if(pausedNum !=0 || enabledNum !=0)  {
-    var Subject =  'AdWords Alert: Stock Checker';	
-  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or issues with this code, please inform me as soon as possible.';
-  var Message  = emailMessage() + signature;
+	var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+	var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+	var Message  = emailMessage() + signature;
     var Attachment = emailAttachment();
+	var file_name = _getDateString()+'_'+REPORT_NAME.join('_');
     var To;   
+	var isPreview = '';
     
-    AdWordsApp.getExecutionInfo().isPreview() ? To = EMAILS[0] : To = EMAILS.join();
-    
+  if(AdWordsApp.getExecutionInfo().isPreview()){ 
+    To = EMAILS[0] 
+    isPreview = 'Preview; No changes actually made.\n';
+  }
+  else{
+    To = EMAILS.join();
+  }
     // Do not email the report to cameron when in preview mode           
     MailApp.sendEmail({
       to: To,
       subject: Subject,
       body: Message,
-      attachments:[{fileName: _getDateString()+'_Stock_Checker.csv', mimeType: 'text/csv', content: Attachment}]
+      attachments:[{fileName: file_name+ '.csv', mimeType: 'text/csv', content: Attachment}]
     });        
   }
 }

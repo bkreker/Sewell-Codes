@@ -1,12 +1,9 @@
 /************************************
 * AdWords Account Audit Checklist
-* Version 1.1
-* ChangeLog v1.1 - Fixed issue with extension selector.
-* Based on the blog post by Phil Kowalski
-* http://www.wordstream.com/blog/ws/2013/07/02/adwords-account-audit-checklist
 * Created By: Russ Savage
-* FreeAdWordsScripts.com
+* Customized By: Josh DeGraw
 ************************************/
+var REPORT_NAME = ['Account', 'Audit'];
 var EMAIL_ADDRESS = 'joshd@sewelldirect.com';
 var KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
 var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads in an AdGroup
@@ -88,11 +85,23 @@ function main() {
   
 }
 
-function EmailResults() {	
-  var Subject =  'AdWords Alert: Account Audit';
-  var Message  =  'Attached are the results of the account audit.';
-  var Attachment = getAttachment(); 
+function EmailResults() {	    
+  var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+  var Message  = emailMessage() + signature;
+  var Attachment = emailAttachment();
+  var file_name = _getDateString()+'_'+REPORT_NAME.join('_');
+  var To;   
+  var isPreview = '';
   
+  
+  if(AdWordsApp.getExecutionInfo().isPreview()){ 
+    To = EMAILS[0] 
+    isPreview = 'Preview; No changes actually made.\n';
+  }
+  else{
+    To = EMAILS.join();
+  }
   if(Attachment != ''){
     MailApp.sendEmail({	
       to: EMAIL_ADDRESS,
@@ -102,10 +111,11 @@ function EmailResults() {
     });
   }
 }
-
-function getAttachment(){
+function emailMessage(){
+  return 'Attached are the results of the account audit.';
+}
+function emailAttachment(){
   var attachment = '';
-  //[[AD_NUM_LIST.join()],[KEYWORD_LIST.join()],[PHONE_LIST.join()],[LINK_LIST.join()]];
   info('adNum: ' + adNum);
   if(adNum > 0){
     attachment += AD_NUM_LIST.join();

@@ -41,7 +41,9 @@ function sendResultsViaEmail(report,level) {
   var rows = report.match(/\n/g).length - 1;
   
   var subject =  'AdWords Alert: '+ SCRIPT_NAME.join(' ') + _initCap(level) + ' Entities Report - ' + _getDateString();
-  var message = "There are " + rows + " " + level + "s that have abnormal performance. See attachment for details.";
+  
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+  var message = "There are " + rows + " " + level + "s that have abnormal performance. See attachment for details." + signature;
   var file_name = SCRIPT_NAME.join('_')+_getDateString();
   var To;
   var isPreview = '';
@@ -138,7 +140,6 @@ function addLabelToAnomalies(entites, mean, sd, stat_key, label, level) {
   }
   return report;
 }
-
 
 function shouldBeLabeled(label){  
   // Comment out labels that shouldn't be applied
