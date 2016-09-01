@@ -11,13 +11,13 @@
 **************************************/
 var DATE_RANGE = 'LAST_30_DAYS';
 var DECIMAL_PLACES = 3;
-var STANDARD_DEVIATIONS = 1;
+var STANDARD_DEVIATIONS = 2;
 var EMAILS = ['joshd@sewelldirect.com'];
 var SCRIPT_NAME = ['Anomaly','Tagger'];
 
 function main() {
   // This will add labels to and send emails about adgroups, keywords and ads. Remove any if you like.
-  var levels_to_tag = ['adgroup'/*,'keyword'/*,'ad'*/];
+  var levels_to_tag = ['adgroup','keyword'/*,'ad'*/];
   for(var x in levels_to_tag) {
     var report = getContentRows(levels_to_tag[x]);
     var entity_map = buildEntityMap(levels_to_tag[x]);
@@ -40,7 +40,7 @@ function main() {
 function sendResultsViaEmail(report,level) {
   var rows = report.match(/\n/g).length - 1;
   
-  var subject =  'AdWords Alert: '+ SCRIPT_NAME.join(' ') + _initCap(level) + ' Entities Report - ' + _getDateString();
+  var subject =  'AdWords Alert: '+ SCRIPT_NAME.join(' ') + ' '+ _initCap(level) + 's Report - ' + _getDateString();
   
   var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
   var message = "There are " + rows + " " + level + "s that have abnormal performance. See attachment for details." + signature;
