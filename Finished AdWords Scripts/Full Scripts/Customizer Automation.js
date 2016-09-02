@@ -1,3 +1,9 @@
+/************************************
+* Customizer Automtion
+* Created By: Josh DeGraw
+************************************/
+
+var SCRIPT_NAME =  ['Ad' ,'Customizer'];
 var PRICE_TEXT = ['itemprop="price">','</div>']
 var TITLES;
 
@@ -9,7 +15,6 @@ var PriceNum = 0;
 var EMAILS = ['joshd@sewelldirect.com'];
 
 var CUSTOMIZER_FILE_NAME = 'Ad Customizer';
-var TEST_FILE_ID = '0B2YtZPyR5eEcN1Ezbk91dktDaGM';
 var ACTUAL_FILE_ID = '1FCp4YgZJ9pLAuWUZGGQjIg4G_bL4yBZX7lDqT3fXyP4';
 var FOLDER_ID = '0B2YtZPyR5eEcNnRRZWFJblZUTms';
 
@@ -24,7 +29,6 @@ var REGEX_PRICE_FORMAT = /(\d*\.)\d+/g;
 var REGEX_PRICE_CODE = [/(itemprop="price">\$\d*\.)\d+(<\/div>)/g, /(class="price belowstrike">\$\d*\.)\d+(<\/h2>)/g];
 var REGEX_URL = /(http)s?:\/\//g;
 
-
 function main() {   
   var date = _getDate();
   var day = date.day;
@@ -34,7 +38,6 @@ function main() {
   updateReport();
   EmailResults();
 }
-
 
 function getFileFromDrive() {
   var filesIterator = DriveApp.getFilesByName(CUSTOMIZER_FILE_NAME);
@@ -102,10 +105,9 @@ function getPrices(){
         var added = '';
         var msg;
         
-        //if(alreadyAddedPrices[unique]){
-        // if alreadyCheckedUrls has a value for this url
+        // if alreadyCheckedUrls has a value for this url and if that value is a valid price, add it to the customizer
         if(alreadyCheckedUrls[url]){
-          // if that value is a valid price, add it to the customizer
+          // 
           if(alreadyCheckedUrls[url].priceString().match(REGEX_PRICE_FORMAT)){            
             price =  alreadyCheckedUrls[url].price;
             sku = alreadyCheckedUrls[url].sku;
@@ -113,7 +115,6 @@ function getPrices(){
             addToLists(sku, getPromotion(price), price, round(price), campaign,  adGroup, url, unique);            
           }
         }
-        //}
         else{          
           var item = getPriceAndSku(adGroup, rawUrl);
           price = item.price;
@@ -169,6 +170,7 @@ function cleanURL(url){
   _url = _url.toLowerCase();
   return _url;
 }
+
 function getAds(ag){
   var selector = ag.ads()
   //.withCondition('Type=TEXT_AD')
@@ -261,20 +263,40 @@ function AM_PM(date){
 }
 
 function EmailResults() {
-  var date = _getDate();
-  var day = date.day;
-  var time = date.time;
-  var To = EMAILS.join();
-  var subject =  'AdWords Alert: Ad Customizer';	
-  var message  =  'Ad Customizer Updated '+ day + ' ' + time+ '\n' + PriceNum + ' prices counted.';
-  var attachment = EMAIL_LIST.join();
+	var date = _getDate().day;
+  var attachment = EMAIL_LIST.join();  
+  var subject =  'AdWords Alert: '+ SCRIPT_NAME.join('_');
+  
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+  var message = emailMessage() + signature;
+  var file_name = SCRIPT_NAME.join('_')+ '_'+date;
+  var To;
+  var isPreview = '';
+  
+  if(AdWordsApp.getExecutionInfo().isPreview()){ 
+    To = EMAILS[0] 
+    isPreview = 'Preview; No changes actually made to AdWords account.\n';
+  }
+  else{
+    To = EMAILS.join();
+  }
   
   MailApp.sendEmail({
     to: To,
     subject: subject,
-    body: message,
-    attachments:[{fileName: day + '_Ad_Customizer.csv', mimeType: 'text/csv', content: attachment}]
-  });    
+    body: isPreview + message,
+    attachments:[{fileName: file_name + '.csv', mimeType: 'text/csv', content: attachment}]
+                    });    
+  
   print('Email sent to '+ To);
+  
+}
+
+function emailMessage(){	
+  var date = _getDate();
+  var day = date.day;
+  var time = date.time;
+  var message  =  'Ad Customizer Updated '+ day + ' ' + time+ '\n' + PriceNum + ' prices counted.';
+  return message;
   
 }

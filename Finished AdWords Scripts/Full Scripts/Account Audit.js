@@ -1,6 +1,6 @@
 /************************************
 * AdWords Account Audit Checklist
-* Created By: Russ Savage
+* Template created By: Russ Savage
 * Customized By: Josh DeGraw
 ************************************/
 var REPORT_NAME = ['Account', 'Audit'];

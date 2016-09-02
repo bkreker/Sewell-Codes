@@ -43,7 +43,7 @@ function sendResultsViaEmail(report,level) {
   var subject =  'AdWords Alert: '+ SCRIPT_NAME.join(' ') + ' '+ _initCap(level) + 's Report - ' + _getDateString();
   
   var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-  var message = "There are " + rows + " " + level + "s that have abnormal performance. See attachment for details." + signature;
+  var message = emailMessage(rows) + signature;
   var file_name = SCRIPT_NAME.join('_')+_getDateString();
   var To;
   var isPreview = '';
@@ -70,6 +70,9 @@ function sendResultsViaEmail(report,level) {
   }
 }
 
+function emailMessage(rows){
+	return "There are " + rows + " " + level + "s that have abnormal performance. See attachment for details.";
+}
 
 //Helper function to return a single row of the report formatted correctly
 function toReportRow(entity,level,label_name) {
