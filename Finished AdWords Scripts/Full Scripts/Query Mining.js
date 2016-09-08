@@ -12,7 +12,7 @@
 **/
 
 function main() {
- 
+  
   // Options  
   var startDate = "2015-04-01";
   var endDate = "2016-09-01";
@@ -22,14 +22,14 @@ function main() {
   var currencySymbol = "$";
   // The currency symbol used for formatting. For example "£", "$" or "€".
   
-  var campaignNameContains = "";
+  var campaignNameContains = "HDMI Shopping";
   // Use this if you only want to look at some campaigns
   // such as campaigns with names containing 'Brand' or 'Shopping'.
   // Leave as "" if not wanted.
   
   var spreadsheetUrl = "https://docs.google.com/spreadsheets/d/1aSOeW0R6LEmp8RwwLQOj-ZWF6pUS4VZtp0ZGuheCA-Q/edit?usp=sharing";
   // The URL of the Google Doc the results will be put into.
-   
+  
   // Thresholds
   
   var impressionThreshold = 10;
@@ -47,42 +47,71 @@ function main() {
   var sharedSetNames = [];
   var sharedSetCampaigns = [];
   var dateRange = startDate.replace(/-/g, "") + "," + endDate.replace(/-/g, "");
-  var activeCampaignIds = [];
+  var activeCampaignIds = [];  
+  var keywordReport;
   
   // Gather ad group level negative keywords
   var keywordParam = "Id";
-  var keywordReport = AdWordsApp.report(
-    "SELECT CampaignId, AdGroupId, Id, KeywordMatchType " +
-    "FROM   KEYWORDS_PERFORMANCE_REPORT " +
-    "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND IsNegative = TRUE " +
-    "AND CampaignName CONTAINS_IGNORE_CASE '" + campaignNameContains + "' " +
-    "DURING " + dateRange);
+  if(campaignNameContains === ""){
+    keywordReport = AdWordsApp.report(
+      "SELECT CampaignId, AdGroupId, Id, KeywordMatchType " +
+      "FROM   NEGATIVE_KEYWORDS_PERFORMANCE_REPORT " +
+      "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND IsNegative = TRUE " +
+      "DURING " + dateRange);
+  }else{     
+    keywordReport = AdWordsApp.report(
+      "SELECT CampaignId, AdGroupId, Id, KeywordMatchType " +
+      "FROM   KEYWORDS_PERFORMANCE_REPORT " +
+      "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND IsNegative = TRUE " +
+      "AND CampaignName CONTAINS_IGNORE_CASE '" + campaignNameContains + "' " +
+      "DURING " + dateRange);    
+  }
+  
+  print(activeCampaignIds.join(', '));
+  print(keywordReport.rows().hasNext());
+  print("line 82: " + campaignNameContains);
   
   var keywordRows = keywordReport.rows();
   while (keywordRows.hasNext()) {
     var keywordRow = keywordRows.next();
     
     if (negativesByGroup[keywordRow["AdGroupId"]] == undefined) {
-      negativesByGroup[keywordRow["AdGroupId"]] = 
-        [[keywordRow[keywordParam].toLowerCase(),keywordRow["KeywordMatchType"].toLowerCase()]];
-    } else {
+      var thing = [[keywordRow[keywordParam].toLowerCase(),keywordRow["KeywordMatchType"].toLowerCase()]];
+      negativesByGroup[keywordRow["AdGroupId"]] = thing;
+      pring('line 69: ' + thing);
       
+    } else {      
       negativesByGroup[keywordRow["AdGroupId"]].push([keywordRow[keywordParam].toLowerCase(),keywordRow["KeywordMatchType"].toLowerCase()]);
     }
-    
+    print('activeCampaignIds.indexOf(keywordRow["CampaignId"]): ' + activeCampaignIds.indexOf(keywordRow["CampaignId"]));
     if (activeCampaignIds.indexOf(keywordRow["CampaignId"]) < 0) {
       activeCampaignIds.push(keywordRow["CampaignId"]);
     }
   }//end while
   
-  // Gather campaign level negative keywords
+  if(activeCampaignIds.length < 0){
+    for (var camp in campaignNameContains){
+      var name = AdWordsApp.campaigns()
+      .withCondition('Name CONTAINS_IGNORE_CASE "' + camp + '"')
+      .get();
+      
+      if(name.hasNext()){
+        var id = name.next().getId();
+        activeCampaignIds.push(id); 
+      }
+      print(activeCampaignIds.join(', '));
+    }
+  }
+  print("Line 105" + activeCampaignIds.join(","));
   
+  // Gather campaign level negative keywords
   var campaignNegReport = AdWordsApp.report(
     "SELECT CampaignId, Id, KeywordMatchType " +
     "FROM   CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT " +
     "WHERE  IsNegative = TRUE " +
     "AND CampaignId IN [" + activeCampaignIds.join(",") + "]"
   );
+  
   var campaignNegativeRows = campaignNegReport.rows();
   while (campaignNegativeRows.hasNext()) {
     var campaignNegativeRow = campaignNegativeRows.next();
@@ -151,10 +180,10 @@ function main() {
     }
   }//end while
   
-  Logger.log("Finished negative keyword lists.");
+  print("Finished negative keyword lists.");
   
   // Defines the statistics to download or calculate, and their formatting
-
+  
   var statColumns = ["Clicks", "Impressions", "Cost", "ConvertedClicks", "ConversionValue"];
   var calculatedStats = [["CTR","Clicks","Impressions"],
                          ["CPC","Cost","Clicks"],
@@ -167,8 +196,8 @@ function main() {
   
   // Go through the search query report, remove searches already excluded by negatives
   // record the performance of each word in each remaining query
-    Logger.log("Going through the search query report, remove searches already excluded by negatives, and recording the performance of each word in each remaining query...");
-	
+  print("Going through the search query report, remove searches already excluded by negatives, and recording the performance of each word in each remaining query...");
+  
   var queryReport = AdWordsApp.report(
     "SELECT CampaignName, CampaignId, AdGroupId, AdGroupName, Query, " + statColumns.join(", ") + " " +
     "FROM SEARCH_QUERY_PERFORMANCE_REPORT " +
@@ -219,7 +248,7 @@ function main() {
     // we ignore it and go on to the next query
     
     var currentWords = queryRow["Query"].split(" ");
-	var searchQuery = currentWords.join(' ');
+    var searchQuery = currentWords.join(' ');
     var doneWords = [];
     
     if (campaignSearchWords[queryRow["CampaignName"]] == undefined) {
@@ -246,7 +275,7 @@ function main() {
     
     for (var w=0; w < currentWords.length; w++) {
       if (doneWords.indexOf(currentWords[w]) < 0) { //if this word hasn't been in the query yet
-        Logger.log("Line 256; query: " + searchQuery;
+        print("Line 256; query: " + searchQuery);
         if (campaignSearchWords[queryRow["CampaignName"]][currentWords[w]] == undefined) {
           campaignSearchWords[queryRow["CampaignName"]][currentWords[w]] = [searchQuery];
         }
@@ -274,7 +303,7 @@ function main() {
     }//end for
   }//end while
   
-  Logger.log("Finished analysing queries.");
+  print("Finished analysing queries.");
   
   
   // Output the data into the spreadsheet
@@ -411,9 +440,7 @@ function main() {
     totalWordSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).getSheetByName(totalWordName);
     wordCountSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).getSheetByName(wordCountName);
     i++;
-	/*
-	*/
-	
+    
   }
   campaignWordSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).insertSheet(campaignWordName);
   totalWordSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).insertSheet(totalWordName);
@@ -435,5 +462,9 @@ function main() {
   wordCountSheet.getRange("R2C1:R" + (wordLengthOutput.length+1) + "C" + wordLengthOutput[0].length).setValues(wordLengthOutput);
   wordCountSheet.getRange("R3C2:R" + (wordLengthOutput.length+1) + "C" + (formatting.length+1)).setNumberFormats(wordLengthFormat);
   
-  Logger.log("Finished writing to spreadsheet.");
+  print("Finished writing to spreadsheet.");
+}
+
+function print(msg){
+  Logger.log(msg); 
 }
