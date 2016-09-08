@@ -175,8 +175,16 @@ function main() {
       "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED " +
         "AND CampaignName CONTAINS_IGNORE_CASE '" + campaignNameContains + "' " +
           "DURING " + dateRange);
-  
-  var campaignSearchWords = [];
+  //campaignSearchWords["CampaignName"][currentWord[w]][statColumns[i]];
+  var campaignSearchWords = {
+	campName: "",
+	currentWords: {
+		query: '',
+		words: [],
+		stats: []
+	},
+	
+  };
   var totalSearchWords = [];
   var totalSearchWordsKeys = [];
   var numberOfWords = [];
@@ -221,9 +229,9 @@ function main() {
     var currentWords = queryRow["Query"].split(" ");
 	var searchQuery = currentWords.join(' ');
     var doneWords = [];
-    
-    if (campaignSearchWords[queryRow["CampaignName"]] == undefined) {
-      campaignSearchWords[queryRow["CampaignName"]] = [searchQuery];
+    Logger.log("Writing query to object on line 232.");
+    if (campaignSearchWords.campName[] == undefined) {
+      campaignSearchWords[queryRow["CampaignName"]].currentWords.query = [searchQuery];
     }
     
     var wordLength = currentWords.length;
@@ -246,7 +254,7 @@ function main() {
     
     for (var w=0; w < currentWords.length; w++) {
       if (doneWords.indexOf(currentWords[w]) < 0) { //if this word hasn't been in the query yet
-        Logger.log("Line 256; query: " + searchQuery;
+        Logger.log("Line 256; query: " + searchQuery);
         if (campaignSearchWords[queryRow["CampaignName"]][currentWords[w]] == undefined) {
           campaignSearchWords[queryRow["CampaignName"]][currentWords[w]] = [searchQuery];
         }
@@ -411,8 +419,6 @@ function main() {
     totalWordSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).getSheetByName(totalWordName);
     wordCountSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).getSheetByName(wordCountName);
     i++;
-	/*
-	*/
 	
   }
   campaignWordSheet = SpreadsheetApp.openByUrl(spreadsheetUrl).insertSheet(campaignWordName);
