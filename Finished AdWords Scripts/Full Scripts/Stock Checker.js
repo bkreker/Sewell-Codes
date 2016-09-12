@@ -14,17 +14,17 @@ var EMAILS = [
   "joshd@sewelldirect.com", 
   "cameronp@sewelldirect.com",
   "jarom@sewelldirect.com",
-  "jarom@sewelldirect.com"
+  "sean@sewelldirect.com"
 ];
 var OUT_OF_STOCK_LABEL = "Out_of_Stock"; 					// The label that is added to newly paused ads
 var IN_STOCK_LABEL = "Now_In_Stock"; 	// The label that is added to newly enabled ads
 var OUT_OF_STOCK_LABEL_ID = AdWordsApp.labels()
-.withCondition('Name = "'+OUT_OF_STOCK_LABEL+'"')
-.get().next().getId();
+	.withCondition('Name = "'+OUT_OF_STOCK_LABEL+'"')
+	.get().next().getId();
 
 var IN_STOCK_LABEL_ID = AdWordsApp.labels()
-.withCondition('Name = "'+IN_STOCK_LABEL+'"')
-.get().next().getId();
+	.withCondition('Name = "'+IN_STOCK_LABEL+'"')
+	.get().next().getId();
 
 var PAUSED_SKUS = ['SKUs Paused: '];
 var ENABLED_SKUS = ['SKUs Enabled: '];
@@ -340,7 +340,7 @@ function cleanUrl(url) {
 
 function EmailResults() {
   if(pausedNum !=0 || enabledNum !=0)  {
-	var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+    var Subject =  'AdWords Alert: '+REPORT_NAME.join(' ');	
 	var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
 	var Message  = emailMessage() + signature;
     var Attachment = emailAttachment();

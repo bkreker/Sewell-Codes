@@ -26,6 +26,8 @@ var CONV_SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1-dyzDaFZ8mQv
 var CONV_TIME_PERIOD = 'LAST_30_DAYS';
 var CONV_SHEET_NAME = 'CONV_VALUE_REPORT';
 var ADGRP_CONV_SHEET_NAME = 'AdGroupConv';
+var LOW_QS_LOG_URL = 'https://docs.google.com/spreadsheets/d/143g_NYaLyQqNMnocHCku4u9EP0OEPRBYhYvTuIsRn1Y/edit?usp=sharing';
+var LOW_QS_LOG_SHEET_NAME = 'Low QS Keywords Paused';
 
 function main(){
   createLabelIfNeeded(LABEL);
@@ -42,7 +44,7 @@ function isException(kw){
   var result = false;
   var reg_isNumber = /[0-9]+\.?[0-9]*/g;
   
-  if(qs === null || !qs.match(reg_isNumber)){
+  if(qs === null || !qs.toString().match(reg_isNumber)){
     result = true;
     print("Null qs for " + kw.getText());
   }
@@ -91,18 +93,17 @@ function CheckOrPause(){
       var convVal = valReport.ConvVal;
       var avgCPC = valReport.AvgCPC;
       
-      // [['Campaign','AdGroup','Keyword','MatchType','QS','Cost','ConvValue','Conversions','MaxCPC','AvgCPC','KeywordID']];
+      // [['Campaign','AdGroup','Keyword','MatchType','QS','Cost','ConvValue','Conversions','MaxCPC','AvgCPC','kwId']];
       var msg = [campaignName,adGroupName,keyword,matchType,qs, cost, convVal, conversions, maxCPC, avgCPC, kwId];
       
       if(qs <= MIN_QS){
-        pauseKeyword(kw);
+        pauseKeyword(kw, msg);
      
       }else{
         checkedKeyword(kw,msg);
       }
     }
   }
-  Logger.log('Times Looped to Pause: '+ i);
 }
 
 function  pauseKeyword(kw, msg){
@@ -140,10 +141,8 @@ function todayIsMonday(){
 
 // Add the info for paused keywords to a set-aside spreadsheet to keep better track of all of them
 function addToPausedSpreadsheet(msg){
-  var lowQS_Url = 'https://docs.google.com/spreadsheets/d/143g_NYaLyQqNMnocHCku4u9EP0OEPRBYhYvTuIsRn1Y/edit?usp=sharing';
-  var lowQS_SheetName = 'Low QS Keywords Paused';
-  var ss = SpreadsheetApp.openByUrl(lowQS_Url);
-  var sheet = ss.getSheetByName(lowQS_SheetName);
+  var ss = SpreadsheetApp.openByUrl(LOW_QS_LOG_URL);
+  var sheet = ss.getSheetByName(LOW_QS_LOG_SHEET_NAME);
   var date = _getDateString();
   
   msg = msg.concat(date);
@@ -299,7 +298,7 @@ function createLabelIfNeeded(name) {
 }
 
 function EmailResults() {
-    var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+    var Subject =  'AdWords Alert: '+REPORT_NAME.join(' ');	
 	var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
 	var Message  = emailMessage() + signature;
     var Attachment = emailAttachment();
@@ -326,6 +325,7 @@ function EmailResults() {
     
   }
 }
+
 function emailAttachment(){
   var attachment = '';
   if(pausedNum >0){
@@ -348,7 +348,7 @@ function emailMessage(){
     if (message != ''){message+='\n\n';}
     message += checkedNum + ' keywords have a QS of ' + MED_QS + '.';
   }
-  return message;
+  return message + '\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_SHEET_NAME + ', along with the date of the change.';
 }
 
 
