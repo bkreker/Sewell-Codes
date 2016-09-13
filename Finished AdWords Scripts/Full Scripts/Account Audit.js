@@ -1,13 +1,13 @@
 /************************************
 * AdWords Account Audit Checklist
-* Template created By: Russ Savage
+* Created By: Russ Savage
 * Customized By: Josh DeGraw
 ************************************/
 var REPORT_NAME = ['Account', 'Audit'];
 var EMAIL_ADDRESS = 'joshd@sewelldirect.com';
 var KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
-var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads in an AdGroup
-var MAX_NUM_OF_ADS = 4;// <-- this is the maximum number of ads in an AdGroup
+var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an AdGroup
+var MAX_NUM_OF_ADS = 4;// <-- this is the maximum number of ads you want in an AdGroup
 var SITE_LINK_MIN = 4;
 var EMAIL_MESSAGE = [];
 
@@ -86,7 +86,7 @@ function main() {
 }
 
 function EmailResults() {	    
-  var Subject =  'AdWords Alert'+REPORT_NAME.join(' ');	
+  var Subject =  'AdWords Alert: ' + REPORT_NAME.join(' ');	
   var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
   var Message  = emailMessage() + signature;
   var Attachment = emailAttachment();
@@ -374,12 +374,13 @@ function newLine(){
 }
 function warn(msg, level) {
   Logger.log('WARNING: '+msg);
-  //info(msg);//EMAIL_MESSAGE.push('\nWARNING: '+msg);
+  //info(msg);
+  //old: EMAIL_MESSAGE.push('\nWARNING: '+msg);
 }
 
 function info(msg, level) {
   Logger.log(msg);
-  //EMAIL_MESSAGE.push('\n'+msg);
+  // old:  EMAIL_MESSAGE.push('\n'+msg);
 }
 
 function Log(msg){
