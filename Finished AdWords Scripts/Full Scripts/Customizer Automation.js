@@ -231,8 +231,9 @@ function print(msg){
 
 // A helper function to make rounding a little easier
 function round(value) {
-  var decimals = Math.pow(10,DECIMAL_PLACES);
-  return Math.round(value*decimals)/decimals;
+ // var decimals = Math.pow(10,DECIMAL_PLACES);
+  // return Math.round(value*decimals)/decimals;
+  return Math.floor(value);
 }
 
 //Helper function to format todays date
@@ -263,7 +264,7 @@ function AM_PM(date){
 }
 
 function EmailResults() {
-	var date = _getDate().day;
+  var date = _getDate().day;
   var attachment = EMAIL_LIST.join();  
   var subject =  'AdWords Alert: '+ SCRIPT_NAME.join('_');
   

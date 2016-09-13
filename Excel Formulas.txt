@@ -3,3 +3,6 @@
 
 ' Returns the day of the week, starting with 1 = Sunday
 =IF(WEEKDAY(A2)=1,"Sunday",IF(WEEKDAY(A2)=2,"Monday",IF(WEEKDAY(A2)=3,"Tuesday",IF(WEEKDAY(A2)=4,"Wednesday",IF(WEEKDAY(A2)=5,"Thursday",IF(WEEKDAY(A2)=6,"Friday",IF(WEEKDAY(A2)=7,"Saturday")))))))
+
+' Returns the Quarter of the year in column A2
+=ROUNDUP(MONTH(A2)/3,0)

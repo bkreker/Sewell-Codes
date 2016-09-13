@@ -348,7 +348,7 @@ function emailMessage(){
     if (message != ''){message+='\n\n';}
     message += checkedNum + ' keywords have a QS of ' + MED_QS + '.';
   }
-  return message + '\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_SHEET_NAME + ', along with the date of the change.';
+  return message + '\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_URL + ', along with the date of the change.';
 }
 
 
