@@ -6,3 +6,6 @@
 
 ' Returns the Quarter of the year in column A2
 =ROUNDUP(MONTH(A2)/3,0)
+
+' Gets the weekly average of the stats to the left, on the 52, 13, 4, and 1 week
+=((L2/52)+(M2/13)+(N2/4)+O2)/4
