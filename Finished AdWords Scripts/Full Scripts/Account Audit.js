@@ -4,7 +4,10 @@
  * Customized By: Josh DeGraw
  ************************************/
 var REPORT_NAME = ['Account', 'Audit'];
-var EMAILS = ['joshd@sewelldirect.com'];
+var EMAILS = [
+	'joshd@sewelldirect.com', 
+	'cameronp@sewelldirect.com'
+];
 var KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
 var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an AdGroup
 var MAX_NUM_OF_ADS = 4; // <-- this is the maximum number of ads you want in an AdGroup
@@ -37,6 +40,12 @@ var PHONE_LIST = [
 ];
 var phoneNum = 0;
 
+var ModNum = 0;
+var MOBILE_MOD_LIST = [
+	['Campaigns without mobile modifiers:'],
+	['\nCampaign']
+]
+
 var LINK_LIST = [
     ['Campaigns without recommended number of sitelinks (' + SITE_LINK_MIN + '):'],
     ['\nCampaign']
@@ -60,7 +69,7 @@ function main() {
     verifySearchAndDisplay();
 
     //  d. Check Mobile Strategy
-    //verifyMobileModifiers();
+    verifyMobileModifiers();
 
     //2. AdGroups
     //  a. Check for AdGroups with more than 20-30 keywords
@@ -319,7 +328,10 @@ function verifyMobileModifiers() {
         var mobile = camp.targeting().platforms().mobile().get().next();
         //check for mobile modifiers
         if (desktop.getBidModifier() == 1 && mobile.getBidModifier() == 1) {
-            warn('Campaign: "' + camp.getName() + '" has no mobile modifier set.');
+			var campName = camp.getName();
+			ModNum++;
+			MOBILE_MOD_LIST = MOBILE_MOD_LIST.concat()
+            warn('Campaign: "' + campName + '" has no mobile modifier set.');
         }
     }
 }
