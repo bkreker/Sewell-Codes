@@ -26,9 +26,15 @@ var KEYWORD_LIST = [
 ];
 
 var NEG_KEYWORD_LIST = [
-    ['AdGroups negative keywords (no max recommended):'],
-    ['\nCampaign,AdGroup,NegKeywords']
+	['AdGroups negative keywords (no max recommended):'],
+	['\nCampaign,AdGroup,NegKeywords']
+		
 ];
+
+var NegativeKeywordsObj = {	
+	Count: 0,
+	List: NEG_KEYWORD_LIST
+};
 
 var kwNum = 0;
 var negKwNum = 0;
@@ -269,10 +275,10 @@ function verifyAdNum() {
         var adGroup = ag.getName();
         var adCount = ag.ads().withCondition('Status = ENABLED').get().totalNumEntities();
         if (adCount < NUMBER_OF_ADS) {
-            var msg = 'Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" does not have enough ads: ' + adCount;
-            warn(msg);
-            AD_NUM_LIST = AD_NUM_LIST.concat(['\n' + campaign, adGroup, adCount]);
-            adNum++;
+            var msg = 'Warning: Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" does not have enough ads: ' + adCount; 
+			var adNumParams = [campaign, adGroup, adCount];
+     
+			addToList(adNumParams, AD_NUM_LIST, adNum, msg)
         }
         if (adCount > (MAX_NUM_OF_ADS)) {
             var msg = 'Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" has too many ads: ' + adCount;
@@ -293,14 +299,11 @@ function verifyKeywordNum() {
         var ag = agIter.next();
         var kwSize = ag.keywords().withCondition('Status = ENABLED').get().totalNumEntities();
         if (kwSize >= KEYWORD_NUM) {
-            var campaignName = ag.getCampaign().getName();
-            var adGroupName = ag.getName();
-            warn('Campaign: "' + campaignName + '" AdGroup: "' + adGroupName + '" has too many keywords: ' + kwSize);
-            kwNum++;
-            var msg = [campaignName, adGroupName, kwSize]
-            KEYWORD_LIST = KEYWORD_LIST.concat(['\n' + msg]);
-
-
+			var campaignName = ag.getCampaign().getName();
+			var adGroupName = ag.getName();
+            var msg = 'Warning: Campaign: "' + campaignName + '" AdGroup: "' + adGroupName + '" has too many keywords: ' + kwSize;
+            var kwParams = [campaignName, adGroupName, kwSize];
+			addToList(kwParams, KEYWORD_LIST, kwNum, msg);
         }
     }
 }
@@ -314,14 +317,15 @@ function verifyNegKeywordNum() {
         var ag = agIter.next();
         var kwSize = ag.negativeKeywords() /*.withCondition('Status = ENABLED')*/ .get().totalNumEntities();
         if (kwSize > 0) {
-            var campaignName = ag.getCampaign().getName();
-            var adGroupName = ag.getName();
-            info('Campaign: "' + campaignName + '" AdGroup: "' + adGroupName + '" has negative keywords: ' + kwSize);
-
-            var msg = [campaignName, adGroupName, kwSize]
-            NEG_KEYWORD_LIST = NEG_KEYWORD_LIST.concat(['\n' + msg]);
-            negKwNum++;
-
+			var campaignName = ag.getCampaign().getName();
+			var adGroupName = ag.getName();
+			
+			var msg ='Campaign: "' + campaignName + '" AdGroup: "' + adGroupName + '" has negative keywords: ' + kwSize;
+            var negKwParams = [campaignName, adGroupName, kwSize];
+			
+			// addToList(negKwParams, NEG_KEYWORD_LIST, negKwNum, msg);
+			info(NegativeKeywordsObj.List);
+			addToList(NegativeKeywordsObj, negKwParams, msg);
         }
     }
 }
@@ -336,9 +340,8 @@ function verifyMobileModifiers() {
         //check for mobile modifiers
         if (desktop.getBidModifier() == 1 && mobile.getBidModifier() == 1) {
 			var campName = camp.getName();
-			ModNum++;
-			MOBILE_MOD_LIST = MOBILE_MOD_LIST.concat(['\n'+campName]);
-            warn('Campaign: "' + campName + '" has no mobile modifier set.');
+			var msg = 'Warning: Campaign: "' + campName + '" has no mobile modifier set.';
+			addToList([campName], MOBILE_MOD_LIST, ModNum, msg)
         }
     }
 }
@@ -403,6 +406,19 @@ function verifySearchAndDisplay() {
     }
     return results;
 
+}
+
+function addToList(params, list, num, msg){
+	list = list.concat(['\n', params]);
+	num++;
+	info(msg);
+}
+
+function addToList(obj, params, msg){
+	info(obj.List);
+	obj.List = obj.List.concat(['\n',params]);
+	obj.Count++;
+	info(msg);
 }
 
 function newLine() {
