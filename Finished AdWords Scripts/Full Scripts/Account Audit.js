@@ -8,7 +8,7 @@ var EMAILS = [
 	'joshd@sewelldirect.com', 
 	'cameronp@sewelldirect.com'
 ];
-var KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
+var MAX_KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
 var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an AdGroup
 var MAX_NUM_OF_ADS = 4; // <-- this is the maximum number of ads you want in an AdGroup
 var SITE_LINK_MIN = 4;
@@ -20,16 +20,23 @@ var AD_NUM_LIST = [
 ];
 var adNum = 0;
 
+var AdNumObj = {
+	Count: 0,
+	List: AD_NUM_LIST
+};
 var KEYWORD_LIST = [
-    ['AdGroups with too many keywords (max recommended: ' + KEYWORD_NUM + '):'],
+    ['AdGroups with too many keywords (max recommended: ' + MAX_KEYWORD_NUM + '):'],
     ['\nCampaign,AdGroup,Keywords']
 ];
 
 var NEG_KEYWORD_LIST = [
 	['AdGroups negative keywords (no max recommended):'],
-	['\nCampaign,AdGroup,NegKeywords']
-		
+	['\nCampaign,AdGroup,NegKeywords']		
 ];
+var KeywordsObj = {	
+	Count: 0,
+	List: KEYWORD_LIST
+};
 
 var NegativeKeywordsObj = {	
 	Count: 0,
@@ -46,17 +53,30 @@ var PHONE_LIST = [
 ];
 var phoneNum = 0;
 
+var PhoneObj = {
+	Count: 0,
+	List: PHONE_LIST
+};
 var ModNum = 0;
 var MOBILE_MOD_LIST = [
 	['Campaigns without mobile modifiers:'],
 	['\nCampaign']
-]
+];
+
+var MobileModObj = {
+	Count: 0,
+	List: MOBILE_MOD_LIST
+};
 
 var LINK_LIST = [
     ['Campaigns without recommended number of sitelinks (' + SITE_LINK_MIN + '):'],
     ['\nCampaign']
 ];
 var linkNum = 0;
+var LinkObj = {
+	Count: 0,
+	List: MOBILE_MOD_LIST
+};
 
 function main() {
 
@@ -136,45 +156,45 @@ function emailMessage() {
 
 function emailAttachment() {
     var attachment = '';
-    info('adNum: ' + adNum);
-    if (adNum > 0) {
-        attachment += AD_NUM_LIST.join();
+    info('adNum: ' + AdNumObj.Count);
+    if (AdNumObj.Count > 0) {
+        attachment += AdNumObj.List.join();
     }
-    info('kwNum: ' + kwNum);
-    if (kwNum > 0) {
+    info('kwNum: ' + KeywordsObj.Count);
+    if (KeywordsObj.Count > 0) {
         if (attachment != '') {
             attachment += '\n\n'
         }
-        attachment += KEYWORD_LIST.join();
+        attachment += KeywordsObj.List.join();
     }
-    info('negKwNum: ' + negKwNum);
-    if (negKwNum > 0) {
+    info('negKwNum: ' + NegativeKeywordsObj.Count);
+    if (NegativeKeywordsObj.Count > 0) {
         if (attachment != '') {
             attachment += '\n\n'
         }
-        attachment += NEG_KEYWORD_LIST.join();
+        attachment += NegativeKeywordsObj.List.join();
     }
-	info('ModNum: ' + ModNum);
-	if(ModNum > 0){
+	info('ModNum: ' + MobileModObj.Count);
+	if(MobileModObj.Count > 0){
 		  if (attachment != '') {
             attachment += '\n\n'
         }
-		attachment += MOBILE_MOD_LIST.join();
+		attachment += MobileModObj.List.join();
 	}
-    info('phoneNum: ' + phoneNum);
+    info('phoneNum: ' + PhoneObj.Count);
 
-    if (phoneNum > 0) {
+    if (PhoneObj.Count > 0) {
         if (attachment != '') {
             attachment += '\n\n'
         }
-        attachment += PHONE_LIST.join();
+        attachment += PhoneObj.List.join();
     }
-    info('linkNum: ' + linkNum);
-    if (linkNum > 0) {
+    info('linkNum: ' + LinkObj.Count);
+    if (LinkObj.Count > 0) {
         if (attachment != '') {
             attachment += '\n\n'
         }
-        attachment += LINK_LIST.join();
+        attachment += LinkObj.List.join();
     }
     if (attachment != '') {
         attachment += '\n\n'
@@ -206,22 +226,21 @@ function verifyAdExtensions() {
 
     while (campIter.hasNext()) {
         var camp = campIter.next();
+		var campName = camp.getName();
         var phoneNumExtCount = camp.extensions().phoneNumbers().get().totalNumEntities();
         // Phone number extensions
         if (phoneNumExtCount == 0) {
-            var msg = 'Campaign: "' + camp.getName() + '" is missing phone number extensions.';
-            PHONE_LIST = PHONE_LIST.concat(['\n' + camp.getName()]);
-            phoneNum++;
-            Log(msg);
+            var msg = 'Campaign: "' + campName + '" is missing phone number extensions.';
+			var phoneParams = [campName];
+			addToList(PhoneObj, phoneParams, msg);
         }
 
         // Check how many sitelinks a campaign has
         var siteLinksExtCount = camp.extensions().sitelinks().get().totalNumEntities();
         if (siteLinksExtCount < SITE_LINK_MIN) {
-            var msg = 'Campaign: "' + camp.getName() + '" could use more site links. Currently has: ' + siteLinksExtCount;
-            LINK_LIST = LINK_LIST.concat(['\n' + camp.getName()]);
-            linkNum++;
-            Log(msg);
+            var msg = 'Campaign: "' + campName + '" could use more site links. Currently has: ' + siteLinksExtCount;
+            var linkParams = [campName];          
+			addToList(LinkObj, linkParams, msg);
         }
         /*
         // we don't need mobile app extensions
@@ -274,17 +293,17 @@ function verifyAdNum() {
         var campaign = ag.getCampaign().getName();
         var adGroup = ag.getName();
         var adCount = ag.ads().withCondition('Status = ENABLED').get().totalNumEntities();
-        if (adCount < NUMBER_OF_ADS) {
+		var adNumParams = [campaign, adGroup, adCount];
+        
+		if (adCount < NUMBER_OF_ADS) {
             var msg = 'Warning: Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" does not have enough ads: ' + adCount; 
-			var adNumParams = [campaign, adGroup, adCount];
-     
-			addToList(adNumParams, AD_NUM_LIST, adNum, msg)
+     		//addToList(KeywordsObj, adNumParams, msg);
+			//addToList(adNumParams, AD_NUM_LIST, adNum, msg)
+			addToList(AdNumObj, adNumParams, msg);
         }
         if (adCount > (MAX_NUM_OF_ADS)) {
-            var msg = 'Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" has too many ads: ' + adCount;
-            warn(msg);
-            AD_NUM_LIST = AD_NUM_LIST.concat(['\n' + campaign, adGroup, adCount]);
-            adNum++;
+			var msg = 'Warning: Campaign: "' + campaign + '" AdGroup: "' + adGroup + '" has too many ads: ' + adCount; 
+			addToList(AdNumObj, adNumParams, msg);
         }
     }
 }
@@ -298,12 +317,13 @@ function verifyKeywordNum() {
     while (agIter.hasNext()) {
         var ag = agIter.next();
         var kwSize = ag.keywords().withCondition('Status = ENABLED').get().totalNumEntities();
-        if (kwSize >= KEYWORD_NUM) {
+        if (kwSize >= MAX_KEYWORD_NUM) {
 			var campaignName = ag.getCampaign().getName();
 			var adGroupName = ag.getName();
             var msg = 'Warning: Campaign: "' + campaignName + '" AdGroup: "' + adGroupName + '" has too many keywords: ' + kwSize;
             var kwParams = [campaignName, adGroupName, kwSize];
-			addToList(kwParams, KEYWORD_LIST, kwNum, msg);
+			//addToList(kwParams, KEYWORD_LIST, kwNum, msg);
+			addToList(KeywordsObj, kwParams, msg);
         }
     }
 }
@@ -324,7 +344,7 @@ function verifyNegKeywordNum() {
             var negKwParams = [campaignName, adGroupName, kwSize];
 			
 			// addToList(negKwParams, NEG_KEYWORD_LIST, negKwNum, msg);
-			info(NegativeKeywordsObj.List);
+		
 			addToList(NegativeKeywordsObj, negKwParams, msg);
         }
     }
@@ -341,7 +361,8 @@ function verifyMobileModifiers() {
         if (desktop.getBidModifier() == 1 && mobile.getBidModifier() == 1) {
 			var campName = camp.getName();
 			var msg = 'Warning: Campaign: "' + campName + '" has no mobile modifier set.';
-			addToList([campName], MOBILE_MOD_LIST, ModNum, msg)
+			var modParams = [campName];
+			addToList(MobileModObj, modParams, msg)
         }
     }
 }
@@ -408,15 +429,15 @@ function verifySearchAndDisplay() {
 
 }
 
-function addToList(params, list, num, msg){
-	list = list.concat(['\n', params]);
-	num++;
-	info(msg);
-}
+// function addToList(params, list, num, msg){
+	// list = list.concat(['\n', params]);
+	// num++;
+	// info(msg);
+// }
 
 function addToList(obj, params, msg){
-	info(obj.List);
-	obj.List = obj.List.concat(['\n',params]);
+	//info(obj.List);
+	obj.List = obj.List.concat(['\n' + params.join()]);
 	obj.Count++;
 	info(msg);
 }
