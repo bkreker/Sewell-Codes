@@ -1,0 +1,103 @@
+//Helper function to format todays date and time
+function _getDateTime() {
+  var today = new Date();
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "MM-dd-yyyy";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+  var time = AM_PM(today);
+  
+  var date = {
+    day: day,
+    time: time
+  };
+  
+  return date;  
+} 
+
+//Helper function to format todays date
+function _today() {
+  var today = new Date();
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "MM-dd-yyyy";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+ 
+  return day;  
+} 
+
+// Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
+function _daysAgo(num){  	
+  var today = new Date();
+  today.setDate(today.getDate() - num);
+  
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "MM-dd-yyyy";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+  
+  return day;
+}
+
+// Helper function to get the time in am/pm
+function AM_PM(date) {
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    var strTime = hours + ':' + minutes + ' ' + ampm;
+    return strTime;
+}
+
+function formatKeyword(keyword) {
+    keyword = keyword.replace(/[^a-zA-Z0-9 ]/g, '');
+    return keyword;
+}
+
+// A helper function to make rounding a little easier
+function round(value) {
+    var decimals = Math.pow(10, DECIMAL_PLACES);
+    return Math.round(value * decimals) / decimals;
+}
+
+
+//This is a helper function to create the label if it does not already exist
+function createLabelIfNeeded(name) {
+    if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
+        AdWordsApp.createLabel(name);
+    }
+}
+
+//Takes a report and the level of reporting and sends and email
+//with the report as an attachment.
+function sendResultsViaEmail(report,level) {
+  var rows = report.match(/\n/g).length - 1;
+  
+  var subject =  'AdWords Alert: '+ SCRIPT_NAME.join(' ') + ' '+ _initCap(level) + 's Report - ' + _getDateString();
+  
+  var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+  var message = emailMessage(rows) + signature;
+  var file_name = SCRIPT_NAME.join('_')+_getDateString();
+  var To;
+  var isPreview = '';
+  
+  if(rows != 0){
+    // If it's a preview, only send it to me, and mention that no changes were made
+    if(AdWordsApp.getExecutionInfo().isPreview()){ 
+      To = EMAILS[0] 
+      isPreview = 'Preview; No changes actually made.\n';
+    }
+    else{
+      To = EMAILS.join();
+    }
+    
+    MailApp.sendEmail( {
+      to: To,
+      subject: subject,
+      body: isPreview + message,
+      attachments: [Utilities.newBlob(report, 'text/csv', file_name + _getDateString()+'.csv')] 
+    });
+    
+    Logger.log('Email sent to: '+ To);
+    
+  }
+}

@@ -182,7 +182,6 @@ function emailAttachment() {
 		attachment += MobileModObj.List.join();
 	}
     info('phoneNum: ' + PhoneObj.Count);
-
     if (PhoneObj.Count > 0) {
         if (attachment != '') {
             attachment += '\n\n'

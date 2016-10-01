@@ -258,6 +258,7 @@ function _getDate() {
     return date;
 }
 
+// Helper function to get the time in am/pm
 function AM_PM(date) {
     var hours = date.getHours();
     var minutes = date.getMinutes();
