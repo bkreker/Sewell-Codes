@@ -16,9 +16,15 @@ var GP_SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1oQGfRa2YjB1SeJ
 var GP_SHEET_NAME = 'GPs';
 
 var DECIMAL_PLACES = 2;
-var TIME_PERIOD = "LAST_30_DAYS";
-var CONV_TIME_PERIOD = TIME_PERIOD;
-var DATE_RANGE = TIME_PERIOD;
+
+
+var TIME_PERIOD ={
+	min: _daysAgo(91),
+	max: _today(),
+	array: function(){return [this.min, this.max];	},
+	string: function(){return this.array().join()},
+	text: 'LAST_QUARTER'
+};
 
 var DEFAULT_CONV_VAL = 10;
 var DEFAULT_COST = 0;
@@ -61,10 +67,12 @@ var MAINTENANCE_LABELS = [
 
 function main() {
     // Update the spreadsheet,
-    getDefaults();
-    updateConvValReport();
-    CheckItAll();
-    emailResults();
+	//TIME_PERIOD = [_today(), _daysAgo(91)];
+	info(TIME_PERIOD.string());
+     getDefaults();
+     updateConvValReport();
+     CheckItAll();
+     emailResults();
 }
 
 function getDefaults() {
@@ -78,7 +86,7 @@ function getDefaults() {
 
 
 function CheckItAll() {
-    info("Beginning.\nUsing Data from " + TIME_PERIOD + '\n' + TITLES);
+    info("Beginning.\nUsing Data from " + TIME_PERIOD.text + '\n' + TITLES);
     var kw_iter = buildSelector();
     var alreadyLogged = '';
     var logError;
@@ -489,10 +497,10 @@ function updateConvValReport() {
     var periodRange = ss.getRangeByName("TimePeriod");
     var updateTime = today + ', ' + time;
     info('Date: ' + updateTime);
-    DATE = updateTime + ',' + TIME_PERIOD + '\n\n';
+    var DATE = updateTime + ',' + TIME_PERIOD.max + '\n\n';
 
     // Only update it a max of once per day
-    if (dayCellVal != today || periodRange.getValue() != TIME_PERIOD) {
+    if (dayCellVal != today || periodRange.getValue() != TIME_PERIOD.text) {
         Logger.log('Updating ConvVal Report');
         periodRange.setValue(TIME_PERIOD);
         var fields = 'CampaignName, AdGroupName, Id, Cost, ConversionValue, AverageCpc, Cost, Conversions ';
@@ -503,7 +511,7 @@ function updateConvValReport() {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = MANUAL_CPC ' +
-            'DURING ' + CONV_TIME_PERIOD
+            'DURING ' + TIME_PERIOD.string()
         );
 
         // Two reports since OR operator doesn't exist in AWQL
@@ -511,7 +519,7 @@ function updateConvValReport() {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = ENHANCED_CPC ' +
-            'DURING ' + CONV_TIME_PERIOD
+            'DURING ' + TIME_PERIOD.string()
         );
 
         var array = report.rows();
@@ -624,7 +632,7 @@ function emailResults() {
     var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
     var Message = emailMessage() + signature;
     var Attachment = emailAttachment();
-    var file_name = _getDateString() + '_' + REPORT_NAME.join('_') + TIME_PERIOD;
+    var file_name = _getDateString() + '_' + REPORT_NAME.join('_') + TIME_PERIOD.text;
     var To;
     var isPreview = '';
 
@@ -715,7 +723,7 @@ function bidStrategy(bidType) {
 
 function buildSelector() {
     var kw_iter = AdWordsApp.keywords()
-        .forDateRange(TIME_PERIOD)
+        .forDateRange(TIME_PERIOD.string())
         .withCondition("Status = ENABLED")
         .withCondition("AdGroupStatus = ENABLED")
         .withCondition("CampaignStatus = ENABLED")
@@ -808,4 +816,26 @@ function createLabelIfNeeded(name) {
     if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
         AdWordsApp.createLabel(name);
     }
+}
+
+//Helper function to format todays date
+function _today() {
+  var today = new Date();
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "YYYYMMDD";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+ 
+  return day;  
+} 
+
+// Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
+function _daysAgo(num){  	
+  var today = new Date();
+  today.setDate(today.getDate() - num);
+  
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "YYYYMMDD";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+  
+  return day;
 }
