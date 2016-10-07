@@ -10,7 +10,7 @@ var EMAILS = [
     "cameronp@sewelldirect.com"
 ];
 
-var TITLES = ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
+var TITLES = ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
 var PAUSED_LIST = [
     ['Paused'], TITLES
 ];
@@ -93,9 +93,9 @@ function CheckOrPause() {
             var conversions = kw_stats.getConversions();
             var convVal = valReport.ConvVal;
             var avgCPC = valReport.AvgCPC;
-
-            // [['Campaign','AdGroup','Keyword','MatchType','QS','Cost','ConvValue','Conversions','MaxCPC','AvgCPC','kwId']];
-            var msg = [campaignName, adGroupName, keyword, matchType, qs, cost, convVal, conversions, maxCPC, avgCPC, kwId];
+			var netProfit = valReport.NetProfit;
+			// ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
+            var msg = [campaignName, adGroupName, keyword, matchType, qs, cost, convVal, netProfit, conversions, maxCPC, avgCPC, kwId];
 
             if (qs <= MIN_QS) {
                 pauseKeyword(kw, msg);
@@ -172,7 +172,7 @@ function getConvValue(campaign, adGroup, kwId) {
         var cpc = ss.getRangeByName("Selected_CPC").getValue();
         var cost = ss.getRangeByName("Selected_Cost").getValue();
         var conversions = ss.getRangeByName("Selected_Conversions").getValue();
-
+		var np = convVal - cost;
         if (convVal === "#N/A" || convVal === "") {
             convVal = 0;
         }
@@ -186,8 +186,9 @@ function getConvValue(campaign, adGroup, kwId) {
             AvgCPC: cpc,
             Cost: cost,
             Conversions: conversions,
+			NetProfit: np,
             List: function() {
-                return 'ConvVal: ' + this.ConvVal + ' AvgCPC: ' + this.AvgCPC + ' Cost: ' + this.cost + ' Conversions: ' + this.conversions;
+                return 'ConvVal: ' + this.ConvVal + ' AvgCPC: ' + this.AvgCPC + ' Cost: ' + this.cost + ' Conversions: ' + this.conversions + 'NetProfit: ' + np;
             }
         };
 

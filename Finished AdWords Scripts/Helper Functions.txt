@@ -15,27 +15,40 @@ function _getDateTime() {
 } 
 
 //Helper function to format todays date
-function _today() {
+function _today(format) {
   var today = new Date();
   var timeZone = AdWordsApp.currentAccount().getTimeZone();  
-  var dayFormat = "MM-dd-yyyy";  
+  var dayFormat;
+	format == '' ? dayFormat = "MM-dd-yyyy" : dayFormat = format;
   var day = Utilities.formatDate(today, timeZone , dayFormat);
  
   return day;  
 } 
 
 // Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
-function _daysAgo(num){  	
+function _daysAgo(num, format){  	
   var today = new Date();
   today.setDate(today.getDate() - num);
   
   var timeZone = AdWordsApp.currentAccount().getTimeZone();  
   var dayFormat = "MM-dd-yyyy";  
+	format == '' ? dayFormat = "MM-dd-yyyy" : dayFormat = format;
   var day = Utilities.formatDate(today, timeZone , dayFormat);
   
   return day;
 }
-
+function Rolling13Week(){
+  var n = _daysAgo(91, "MM/dd/YYYY") + ' - ' + _today('MM/dd/YYYY')
+  var p = _daysAgo(98, "MM/dd/YYYY") + ' - ' + _daysAgo(7, "MM/dd/YYYY");
+  var result = {
+    prevRange: p,
+    nowRange: n,
+    string: function(){
+      return this.p + ' - ' + this.now;
+    };    
+  }
+  return result;
+}
 // Helper function to get the time in am/pm
 function AM_PM(date) {
     var hours = date.getHours();
