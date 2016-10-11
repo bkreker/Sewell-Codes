@@ -97,7 +97,7 @@ function CheckOrPause() {
 			// ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
             var msg = [campaignName, adGroupName, keyword, matchType, qs, cost, convVal, netProfit, conversions, maxCPC, avgCPC, kwId];
 
-            if (qs <= MIN_QS) {
+            if (qs <= MIN_QS && netProfit < 0) {
                 pauseKeyword(kw, msg);
 
             } else {

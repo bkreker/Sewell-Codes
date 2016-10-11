@@ -251,31 +251,45 @@ function verifyAdExtensions() {
 }
 
 function printMatchTypes() {
-    var numBroad = AdWordsApp.keywords()
+    var broadKws = AdWordsApp.keywords()
         .withCondition('Status = ENABLED')
         .withCondition('AdGroupStatus = ENABLED')
         .withCondition('CampaignStatus = ENABLED')
         .withCondition('KeywordMatchType = BROAD')
-        .get().totalNumEntities();
+        .get();
+	var numBroad = broadKws.totalNumEntities();
+	
+	var numBroadMod = 0;
+	while(broadKws.hasNext()){
+		if(broadKws.next().getText().match(/\+/)){
+			numBroadMod++;
+		}
+	}
+	numBroad -= numBroadMod;
+	
     var numPhrase = AdWordsApp.keywords()
         .withCondition('Status = ENABLED')
         .withCondition('AdGroupStatus = ENABLED')
         .withCondition('CampaignStatus = ENABLED')
         .withCondition('KeywordMatchType = PHRASE')
         .get().totalNumEntities();
+		
     var numExact = AdWordsApp.keywords()
         .withCondition('Status = ENABLED')
         .withCondition('AdGroupStatus = ENABLED')
         .withCondition('CampaignStatus = ENABLED')
         .withCondition('KeywordMatchType = EXACT')
         .get().totalNumEntities();
-    var total = numBroad + numPhrase + numExact;
+		
+    var total = numBroad + numBroadMod+ numPhrase + numExact;
     var percBroad = Math.round(numBroad / total * 100);
+    var percBroadMod = Math.round(numBroadMod / total * 100);
     var percPhrase = Math.round(numPhrase / total * 100);
     var percExact = Math.round(numExact / total * 100);
 
     MATCH_TYPES = MATCH_TYPES.concat(['\nOut of a total of: ' + total + ' active keywords in your account:'], ['\nMatch Type', 'Number', 'Percent']);
     MATCH_TYPES = MATCH_TYPES.concat(['\nBroad', numBroad, percBroad + '%']);
+    MATCH_TYPES = MATCH_TYPES.concat(['\nBroad Mod (+)', numBroadMod, percBroadMod + '%']);
     MATCH_TYPES = MATCH_TYPES.concat(['\nPhrase', numPhrase, percPhrase + '%']);
     MATCH_TYPES = MATCH_TYPES.concat(['\nExact', numExact, percExact + '%']);
 }
