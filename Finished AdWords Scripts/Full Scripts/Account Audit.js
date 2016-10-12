@@ -11,7 +11,8 @@ var EMAILS = [
 var MAX_KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
 var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an AdGroup
 var MAX_NUM_OF_ADS = 4; // <-- this is the maximum number of ads you want in an AdGroup
-var SITE_LINK_MIN = 4;
+var TARGET_LOCATIONS = ['United States']; // <-- the list of places your campaigns should be targeting
+var SITE_LINK_MIN = 4; //<-- this is the minimum number of site links you want in a campaign
 var EMAIL_MESSAGE = [];
 
 var AD_NUM_LIST = [
@@ -47,43 +48,37 @@ var kwNum = 0;
 var negKwNum = 0;
 var MATCH_TYPES = [];
 
-var PHONE_LIST = [
-    ['Campaigns without Phone Extensions:'],
-    ['\nCampaign,']
-];
-var phoneNum = 0;
+//var PHONE_LIST = ;
+//var phoneNum = 0;
 
 var PhoneObj = {
 	Count: 0,
-	List: PHONE_LIST
+	List: [	['Campaigns without Phone Extensions:'],
+			['\nCampaign,']]
 };
-var ModNum = 0;
-var MOBILE_MOD_LIST = [
-	['Campaigns without mobile modifiers:'],
-	['\nCampaign']
-];
+
+//var ModNum = 0;
+//var MOBILE_MOD_LIST = ;
 
 var MobileModObj = {
 	Count: 0,
-	List: MOBILE_MOD_LIST
+	List: [	['Campaigns without mobile modifiers:'],
+			['\nCampaign']]
 };
 
-var LINK_LIST = [
-    ['Campaigns without recommended number of sitelinks (' + SITE_LINK_MIN + '):'],
-    ['\nCampaign']
-];
+//var LINK_LIST = ;
 var linkNum = 0;
 var LinkObj = {
 	Count: 0,
-	List: MOBILE_MOD_LIST
+	List: [	['Campaigns without recommended number of sitelinks (' + SITE_LINK_MIN + '):'],
+			['\nCampaign']]
 };
 
 function main() {
 
     //1. Campaigns
     //  a. Target the right locations. 
-    var includedLocList = ['United States']; // <-- the list of places your campaigns should be targeting
-    verifyTargetedLocations(includedLocList);
+    verifyTargetedLocations(TARGET_LOCATIONS);
 
     // Commented out by Josh because i don't need this right now
     //var excludedLocList = ['Europe']; // <-- the list of places your campaigns should be excluding

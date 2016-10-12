@@ -488,8 +488,9 @@ function updateConvValReport() {
 
     var ss = SpreadsheetApp.openByUrl(CONV_SPREADSHEET_URL);
     var sheet = ss.getSheetByName(CONV_SHEET_NAME);
-    var today = _getDateString();
-    var time = _getTimeString();
+    var date = _getDateTime();
+	var today =date.day;
+    var time = date.time;
     var timeZone = AdWordsApp.currentAccount().getTimeZone();
     var timeCell = ss.getRangeByName('UpdateTime');
     var dayCell = ss.getRangeByName('UpdateDay');
@@ -529,10 +530,9 @@ function updateConvValReport() {
         while (array.hasNext()) {
             var range = sheet.getRange(startRange + i + ':' + endRange + i);
             var rowTotal = array.next();
-            var cpa = 0;
-            if (rowTotal.Conversions != 0) {
-                cpa = rowTotal.Cost / rowTotal.Conversions;
-            }
+            var cpa;
+			
+            rowTotal.Conversions === 0 ? cpa = '-' : cpa = (rowTotal.Cost / rowTotal.Conversions);
 
             var row = [
                 [rowTotal.CampaignName,
@@ -579,7 +579,7 @@ function updateConvValReport() {
 
         range.sort([1, 2]);
 
-        timeCell.setValue(_getTimeString());
+        timeCell.setValue(time);
         dayCell.setValue(today);
     }
 }
@@ -587,6 +587,7 @@ function updateConvValReport() {
 //
 // Clear the named ranges
 //
+
 function clearSheet(ss) {
     var campRange = ss.getRangeByName('CampaignName');
     var adGrpRange = ss.getRangeByName('AdGroupName');
@@ -598,33 +599,14 @@ function clearSheet(ss) {
     var cpaRange = ss.getRangeByName('CPA');
 
 
-    campRange.clear({
-        contentsOnly: true
-    });
-    convRange.clear({
-        contentsOnly: true
-    });
-    adGrpRange.clear({
-        contentsOnly: true
-    });
-    costRange.clear({
-        contentsOnly: true
-    });
-    convValRange.clear({
-        contentsOnly: true
-    });
-    cpaRange.clear({
-        contentsOnly: true
-    });
-    cpcRange.clear({
-        contentsOnly: true
-    });
-    kwIdRange.clear({
-        contentsOnly: true
-    });
-    convRange.clear({
-        contentsOnly: true
-    });
+    campRange.clear({contentsOnly: true});
+    adGrpRange.clear({contentsOnly: true});
+    kwIdRange.clear({contentsOnly: true});
+    convRange.clear({contentsOnly: true});
+    costRange.clear({contentsOnly: true});
+    convValRange.clear({contentsOnly: true});
+    cpcRange.clear({contentsOnly: true});
+    cpaRange.clear({contentsOnly: true});
 }
 
 function emailResults() {
@@ -632,7 +614,7 @@ function emailResults() {
     var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
     var Message = emailMessage() + signature;
     var Attachment = emailAttachment();
-    var file_name = _getDateString() + '_' + REPORT_NAME.join('_') + TIME_PERIOD.text;
+    var file_name = _getDateTime().day + '_' + REPORT_NAME.join('_') + TIME_PERIOD.text;
     var To;
     var isPreview = '';
 
@@ -769,14 +751,14 @@ function round(value) {
 }
 
 //Helper function to format today's date
-function _getDateString() {
-    var today = new Date();
-    var timeZone = AdWordsApp.currentAccount().getTimeZone();
-    var format = "MM-dd-yyyy";
-    var date = Utilities.formatDate(today, timeZone, format);
-    return date;
+// function _getDateString() {
+    // var today = new Date();
+    // var timeZone = AdWordsApp.currentAccount().getTimeZone();
+    // var format = "MM-dd-yyyy";
+    // var date = Utilities.formatDate(today, timeZone, format);
+    // return date;
 
-}
+// }
 
 function hasLabelAlready(kw, label) {
     if (kw.labels().withCondition("Name = '" + label + "'").get().hasNext()) {
@@ -804,12 +786,40 @@ function hasDifferentLabel(kw, label) {
 }
 
 //Helper function to format todays date
-function _getTimeString() {
-    var today = new Date();
-    var timeZone = AdWordsApp.currentAccount().getTimeZone();
-    var format = "HH:mm";
-    var time = Utilities.formatDate(today, timeZone, format);
-    return time;
+// function _getTimeString() {
+    // var today = new Date();
+    // var timeZone = AdWordsApp.currentAccount().getTimeZone();
+    // var format = "HH:mm";
+    // var time = Utilities.formatDate(today, timeZone, format);
+    // return time;
+// }
+
+//Helper function to format todays date and time
+function _getDateTime() {
+  var today = new Date();
+  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
+  var dayFormat = "MM-dd-yyyy";  
+  var day = Utilities.formatDate(today, timeZone , dayFormat);
+  var time = AM_PM(today);
+  
+  var date = {
+    day: day,
+    time: time
+  };
+  
+  return date;  
+} 
+
+// Helper function to get the time in am/pm
+function AM_PM(date) {
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    var strTime = hours + ':' + minutes + ' ' + ampm;
+    return strTime;
 }
 
 function createLabelIfNeeded(name) {
