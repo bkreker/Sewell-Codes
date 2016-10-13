@@ -18,13 +18,7 @@ var GP_SHEET_NAME = 'GPs';
 var DECIMAL_PLACES = 2;
 
 
-var TIME_PERIOD ={
-	min: _daysAgo(91),
-	max: _today(),
-	array: function(){return [this.min, this.max];	},
-	string: function(){return this.array().join()},
-	text: 'LAST_QUARTER'
-};
+var TIME_PERIOD =CustomDateRange();
 
 var DEFAULT_CONV_VAL = 10;
 var DEFAULT_COST = 0;
@@ -346,15 +340,15 @@ function getMaxGP(campaign, adGroup) {
     var price = ss.getRangeByName('Selected_Price').getValue();
     var maxBid = ss.getRangeByName('Selected_MaxBid').getValue();
     var SKU = ss.getRangeByName('Selected_SKU').getValue();
-    var reg = /[A-z #\/]/g;
+    //var reg = /[A-z #\/]/g;
 
-    if (GP.toString().match(reg)) {
+    if (!isNumber(GP)) {
         GP = DEFAULT_GP;
     }
-    if (price.toString().match(reg)) {
+    if (!isNumber(price)) {
         price = DEFAULT_PRICE;
     }
-    if (maxBid.toString().match(reg)) {
+    if (!isNumber(maxBid)) {
         maxBid = DEFAULT_MAX_BID;
     }
 
@@ -452,10 +446,11 @@ function getConvValue(campaign, adGroup, kwId, keyW) {
 
 
     } catch (e) {
-        errorNum++;
+        // errorNum++;
 
-        ERROR_LOG = ERROR_LOG.concat('\n' + e + campaign, adGroup, keyW);
-        convVal = 10;
+        // ERROR_LOG = ERROR_LOG.concat('\n' + e + campaign, adGroup, keyW);
+        // convVal = 10;
+		print(e);
     }
 
     return result;
@@ -484,7 +479,7 @@ function GetStat(campaign, adGroup, kwId, _stat) {
 //
 //  Update the Sheet to contain the most accurate conversion data
 // 
-function updateConvValReport() {
+function updateConvValReport(TimePeriod) {
 
     var ss = SpreadsheetApp.openByUrl(CONV_SPREADSHEET_URL);
     var sheet = ss.getSheetByName(CONV_SHEET_NAME);
@@ -498,12 +493,12 @@ function updateConvValReport() {
     var periodRange = ss.getRangeByName("TimePeriod");
     var updateTime = today + ', ' + time;
     info('Date: ' + updateTime);
-    var DATE = updateTime + ',' + TIME_PERIOD.max + '\n\n';
+    var DATE = updateTime + ',' + TimePeriod.to + '\n\n';
 
     // Only update it a max of once per day
-    if (dayCellVal != today || periodRange.getValue() != TIME_PERIOD.text) {
+    if (dayCellVal != today || periodRange.getValue() != TimePeriod.text) {
         Logger.log('Updating ConvVal Report');
-        periodRange.setValue(TIME_PERIOD);
+        periodRange.setValue(TimePeriod.string());
         var fields = 'CampaignName, AdGroupName, Id, Cost, ConversionValue, AverageCpc, Cost, Conversions ';
         var startRange = 'A';
         var endRange = 'H';
@@ -512,7 +507,7 @@ function updateConvValReport() {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = MANUAL_CPC ' +
-            'DURING ' + TIME_PERIOD.string()
+            'DURING ' + TimePeriod.string()
         );
 
         // Two reports since OR operator doesn't exist in AWQL
@@ -520,7 +515,7 @@ function updateConvValReport() {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = ENHANCED_CPC ' +
-            'DURING ' + TIME_PERIOD.string()
+            'DURING ' + TimePeriod.string()
         );
 
         var array = report.rows();
@@ -588,7 +583,7 @@ function updateConvValReport() {
 // Clear the named ranges
 //
 
-function clearSheet(ss) {
+/* function clearSheet(ss) {
     var campRange = ss.getRangeByName('CampaignName');
     var adGrpRange = ss.getRangeByName('AdGroupName');
     var kwIdRange = ss.getRangeByName('KwId');
@@ -607,9 +602,9 @@ function clearSheet(ss) {
     convValRange.clear({contentsOnly: true});
     cpcRange.clear({contentsOnly: true});
     cpaRange.clear({contentsOnly: true});
-}
+} */
 
-function emailResults() {
+/* function emailResults() {
     var Subject = 'AdWords Alert: ' + REPORT_NAME.join(' ');
     var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
     var Message = emailMessage() + signature;
@@ -638,7 +633,7 @@ function emailResults() {
         });
         info('Email sent to: ' + To);
     }
-}
+} */
 
 function emailMessage() {
     var message = '';
@@ -684,23 +679,12 @@ function emailAttachment() {
     return attachment;
 }
 
-function type(item) {
-    var result = '"';
-    var i = 0;
-    while (i < item.length) {
-        result += '"' + item[i] + '"\n';
-        i++;
-    }
-    return result.join('","') + '"\n';
-}
+
 
 function bidStrategy(bidType) {
     //if( bidType != "TARGET_GP" && bidType != "CONVERSION_OPTIMIZER"){
-    if (bidType == "MANUAL_CPC" || bidType == "MANUAL_CPM") {
-        return true;
-    } else {
-        return false;
-    }
+    return (bidType == "MANUAL_CPC" || bidType == "MANUAL_CPM");
+ 
 }
 
 function buildSelector() {
@@ -735,38 +719,6 @@ function infoPaused(item) {
     pausedKWs = pausedKWs.concat(item);
 }
 
-function info(item) {
-    Logger.log(item);
-}
-
-function formatKeyword(keyword) {
-    keyword = keyword.replace(/[^a-zA-Z0-9 ]/g, '');
-    return keyword;
-}
-
-// A helper function to make rounding a little easier
-function round(value) {
-    var decimals = Math.pow(10, DECIMAL_PLACES);
-    return Math.round(value * decimals) / decimals;
-}
-
-//Helper function to format today's date
-// function _getDateString() {
-    // var today = new Date();
-    // var timeZone = AdWordsApp.currentAccount().getTimeZone();
-    // var format = "MM-dd-yyyy";
-    // var date = Utilities.formatDate(today, timeZone, format);
-    // return date;
-
-// }
-
-function hasLabelAlready(kw, label) {
-    if (kw.labels().withCondition("Name = '" + label + "'").get().hasNext()) {
-        return true
-    } else {
-        return false;
-    }
-}
 
 function hasDifferentLabel(kw, label) {
     var truth = false;
@@ -785,67 +737,5 @@ function hasDifferentLabel(kw, label) {
     };
 }
 
-//Helper function to format todays date
-// function _getTimeString() {
-    // var today = new Date();
-    // var timeZone = AdWordsApp.currentAccount().getTimeZone();
-    // var format = "HH:mm";
-    // var time = Utilities.formatDate(today, timeZone, format);
-    // return time;
-// }
 
-//Helper function to format todays date and time
-function _getDateTime() {
-  var today = new Date();
-  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
-  var dayFormat = "MM-dd-yyyy";  
-  var day = Utilities.formatDate(today, timeZone , dayFormat);
-  var time = AM_PM(today);
-  
-  var date = {
-    day: day,
-    time: time
-  };
-  
-  return date;  
-} 
-
-// Helper function to get the time in am/pm
-function AM_PM(date) {
-    var hours = date.getHours();
-    var minutes = date.getMinutes();
-    var ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    var strTime = hours + ':' + minutes + ' ' + ampm;
-    return strTime;
-}
-
-function createLabelIfNeeded(name) {
-    if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
-        AdWordsApp.createLabel(name);
-    }
-}
-
-//Helper function to format todays date
-function _today() {
-  var today = new Date();
-  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
-  var dayFormat = "YYYYMMDD";  
-  var day = Utilities.formatDate(today, timeZone , dayFormat);
- 
-  return day;  
-} 
-
-// Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
-function _daysAgo(num){  	
-  var today = new Date();
-  today.setDate(today.getDate() - num);
-  
-  var timeZone = AdWordsApp.currentAccount().getTimeZone();  
-  var dayFormat = "YYYYMMDD";  
-  var day = Utilities.formatDate(today, timeZone , dayFormat);
-  
-  return day;
-}
+function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();d=""==a?"MM-dd-yyyy":a;var e=Utilities.formatDate(b,c,d);return e}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d=AdWordsApp.currentAccount().getTimeZone(),e="MM-dd-yyyy";e=""==b?"MM-dd-yyyy":b;var f=Utilities.formatDate(c,d,e);return f}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function CustomDateRange(a){var b=_daysAgo(91,a),c={from:b,to:_today(a),string:function(){return this.from+","+this.to}};return c}function CustomDateRange(){var a="yyyyMMdd",b={from:_daysAgo(91,a),to:_today(a),string:function(){return this.from+","+this.to}};return b}function CustomDateRange(a,b){var c=_daysAgo(a,b),d={from:c,to:_today(b),string:function(){return this.from+","+this.to}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
