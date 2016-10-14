@@ -13,43 +13,26 @@ var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an A
 var MAX_NUM_OF_ADS = 4; // <-- this is the maximum number of ads you want in an AdGroup
 var TARGET_LOCATIONS = ['United States']; // <-- the list of places your campaigns should be targeting
 var SITE_LINK_MIN = 4; //<-- this is the minimum number of site links you want in a campaign
-var EMAIL_MESSAGE = [];
+//var excludedLocList = ['Europe']; // <-- the list of places your campaigns should be excluding
 
-var AD_NUM_LIST = [
-    ['AdGroups with irregular number of ads (max recommended: ' + MAX_NUM_OF_ADS + '):'],
-    ['\nCampaign,AdGroup,Ads']
-];
-var adNum = 0;
-
+var MATCH_TYPES = [];
 var AdNumObj = {
 	Count: 0,
-	List: AD_NUM_LIST
+	List: [	['AdGroups with irregular number of ads (max recommended: ' + MAX_NUM_OF_ADS + '):'],
+			['\nCampaign,AdGroup,Ads']]
 };
-var KEYWORD_LIST = [
-    ['AdGroups with too many keywords (max recommended: ' + MAX_KEYWORD_NUM + '):'],
-    ['\nCampaign,AdGroup,Keywords']
-];
 
-var NEG_KEYWORD_LIST = [
-	['AdGroups negative keywords (no max recommended):'],
-	['\nCampaign,AdGroup,NegKeywords']		
-];
 var KeywordsObj = {	
 	Count: 0,
-	List: KEYWORD_LIST
+	List: [	['AdGroups with too many keywords (max recommended: ' + MAX_KEYWORD_NUM + '):'],
+			['\nCampaign,AdGroup,Keywords']]
 };
 
 var NegativeKeywordsObj = {	
 	Count: 0,
-	List: NEG_KEYWORD_LIST
+	List: [	['AdGroups negative keywords (no max recommended):'],
+			['\nCampaign,AdGroup,NegKeywords']]
 };
-
-var kwNum = 0;
-var negKwNum = 0;
-var MATCH_TYPES = [];
-
-//var PHONE_LIST = ;
-//var phoneNum = 0;
 
 var PhoneObj = {
 	Count: 0,
@@ -57,16 +40,12 @@ var PhoneObj = {
 			['\nCampaign,']]
 };
 
-//var ModNum = 0;
-//var MOBILE_MOD_LIST = ;
-
 var MobileModObj = {
 	Count: 0,
 	List: [	['Campaigns without mobile modifiers:'],
 			['\nCampaign']]
 };
 
-//var LINK_LIST = ;
 var linkNum = 0;
 var LinkObj = {
 	Count: 0,
@@ -80,8 +59,6 @@ function main() {
     //  a. Target the right locations. 
     verifyTargetedLocations(TARGET_LOCATIONS);
 
-    // Commented out by Josh because i don't need this right now
-    //var excludedLocList = ['Europe']; // <-- the list of places your campaigns should be excluding
     //verifyExcludedLocations(excludedLocList);
 
     //  b. Language - Can't be done using scripts yet :(
@@ -115,35 +92,6 @@ function main() {
 
 }
 
-function EmailResults() {
-    var Subject = 'AdWords Alert: ' + REPORT_NAME.join(' ');
-    var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-    var Message = emailMessage() + signature;
-    var Attachment = emailAttachment();
-    var file_name = _getDateString() + '_' + REPORT_NAME.join('_');
-    var To;
-    var isPreview = '';
-
-
-    if (AdWordsApp.getExecutionInfo().isPreview()) {
-        To = EMAILS[0]
-        isPreview = 'Preview; No changes actually made.\n';
-    } else {
-        To = EMAILS.join();
-    }
-    if (Attachment != '') {
-        MailApp.sendEmail({
-            to: To,
-            subject: Subject,
-            body: Message,
-            attachments: [{
-                fileName: _getDateString() + '_Account_Audit.csv',
-                mimeType: 'text/csv',
-                content: Attachment
-            }]
-        });
-    }
-}
 
 function emailMessage() {
     return 'Attached are the results of the account audit.';
@@ -196,11 +144,6 @@ function emailAttachment() {
     attachment += MATCH_TYPES.join();
 
     return attachment;
-}
-//Helper function to format todays date
-function _getDateString() {
-    var date = Utilities.formatDate((new Date()), AdWordsApp.currentAccount().getTimeZone(), "yyyy-MM-dd");
-    return date;
 }
 
 function verifyConversionTracking() {
@@ -437,11 +380,6 @@ function verifySearchAndDisplay() {
 
 }
 
-// function addToList(params, list, num, msg){
-	// list = list.concat(['\n', params]);
-	// num++;
-	// info(msg);
-// }
 
 function addToList(obj, params, msg){
 	//info(obj.List);
@@ -450,21 +388,4 @@ function addToList(obj, params, msg){
 	info(msg);
 }
 
-function newLine() {
-    //EMAIL_MESSAGE.push('\n');
-}
-
-function warn(msg, level) {
-    Logger.log('WARNING: ' + msg);
-    //info(msg);
-    //old: EMAIL_MESSAGE.push('\nWARNING: '+msg);
-}
-
-function info(msg, level) {
-    Logger.log(msg);
-    // old:  EMAIL_MESSAGE.push('\n'+msg);
-}
-
-function Log(msg) {
-    Logger.log(msg);
-}
+function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();d=""==a?"MM-dd-yyyy":a;var e=Utilities.formatDate(b,c,d);return e}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d=AdWordsApp.currentAccount().getTimeZone(),e="MM-dd-yyyy";e=""==b?"MM-dd-yyyy":b;var f=Utilities.formatDate(c,d,e);return f}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function CustomDateRange(a){var b=_daysAgo(91,a),c={from:b,to:_today(a),string:function(){return this.from+","+this.to}};return c}function CustomDateRange(){var a="yyyyMMdd",b={from:_daysAgo(91,a),to:_today(a),string:function(){return this.from+","+this.to}};return b}function CustomDateRange(a,b){var c=_daysAgo(a,b),d={from:c,to:_today(b),string:function(){return this.from+","+this.to}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function warn(a) {Logger.log('WARNING: ' + a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}

@@ -348,7 +348,7 @@ function emailMessage() {
         }
         message += checkedNum + ' keywords have a QS of ' + MED_QS + '.';
     }
-    return 'This script Pauses keywords below QS of '+MIN_QS + ' that also are not profitable for: '+ DATE_RANGE+'\n' + message + '\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_URL + ', along with the date of the change.';
+    return message +'This script Pauses keywords below QS of '+MIN_QS + ' that also are not profitable for: '+ DATE_RANGE+'\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_URL + ', along with the date of the change.';
 }
 
 
