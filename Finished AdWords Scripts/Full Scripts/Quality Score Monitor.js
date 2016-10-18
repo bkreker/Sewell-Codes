@@ -10,17 +10,21 @@ var EMAILS = [
     "cameronp@sewelldirect.com"
 ];
 
-var TITLES = ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
+var TITLES = ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'Impressions', 'Clicks', 'MaxCPC', 'AvgCPC', 'KeywordID'];
+
 var PAUSED_LIST = [
     ['Paused'], TITLES
 ];
-var pausedNum = 0;
 var CHECKED_LIST = [
     ['Checked'], TITLES
 ];
+
+var pausedNum = 0;
 var checkedNum = 0;
+
 var MIN_QS = 4;
 var MED_QS = 5;
+
 var LABEL = "Low_QS";
 var EXCEPTION_LABEL = "Low_QS_Exception";
 var DATE_RANGE = 'LAST_30_DAYS';
@@ -81,19 +85,27 @@ function CheckOrPause() {
         if (!isException(kw)) {
 			try{
 				var kwId = kw.getId();
+				var kwStats = kw.getStatsFor(DATE_RANGE);
 				var campaignName = kw.getCampaign().getName();
 				var adGroupName = kw.getAdGroup().getName();
 				var keyW = kw.getText();
 				var keyword = formatKeyword(keyW);
-				var qs = kw.getQualityScore();
-				var maxCPC = kw.getMaxCpc();
-				var matchType = kw.getMatchType();
-
+				
 				var valReport = getConvValue(campaignName, adGroupName, kwId);
+				var matchType = kw.getMatchType();
+				var qs = kw.getQualityScore();
+				var cost = valReport.Cost;
+				var convVal = valReport.ConvVal;
+				var netProfit = valReport.NetProfit;
+				var conversions = valReport.Conversions;
+				var clicks = kwStats.getClicks();
+				var maxCPC = kw.getMaxCpc();
+				var avgCpc = valReport.AvgCPC;
+				var impressions = kwStats.getImpressions();
 				
 			
-				// ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'MaxCPC', 'AvgCPC', 'KeywordID'];
-				var msg = [campaignName, adGroupName, keyword, matchType, qs, valReport.Cost, valReport.ConvVal, valReport.NetProfit, valReport.Conversions, maxCPC, valReport.AvgCPC, kwId];
+				// ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'Impressions', 'Clicks', 'MaxCPC', 'AvgCPC', 'KeywordID'];
+				var msg = [campaignName, adGroupName, keyword, matchType, qs, cost, convVal, netProfit, conversions,impressions, clicks, maxCPC, avgCpc, kwId];
 
 				if (qs <= MIN_QS && netProfit < 0) {
 					pauseKeyword(kw, msg);
@@ -104,7 +116,7 @@ function CheckOrPause() {
 			}
 			catch(e)
 			{
-				Logger.log(e);
+				Logger.log('Error in CheckOrPause for kw ' + kw + ': ' + e);
 			}
 			
         }

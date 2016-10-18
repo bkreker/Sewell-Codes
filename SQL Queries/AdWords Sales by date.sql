@@ -20,3 +20,9 @@ ORDER BY
 	datepart(Month, OrderDate), 
 	datepart(week, OrderDate)
 	--,datepart(Day, OrderDate) 
+	
+	SELECT OrderId, OrderDate, TotalPrice, OrderQuantity, TotalMaterialCost, ProductPartNumber, ProductName, GoogleAnalyticsSource,GoogleAnalyticsMedium,CustomerId
+FROM ProductSalesSince2008
+WHERE OrderDate BETWEEN dbo.DaysAgo(100) and dbo.Today()
+AND (GoogleAnalyticsSource LIKE '%google%' OR GoogleAnalyticsSource LIKE '%bing%' )
+AND GoogleAnalyticsMedium LIKE '%cpc%'
