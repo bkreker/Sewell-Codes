@@ -150,6 +150,31 @@ function round(value) {
     return Math.round(value * decimals) / decimals;
 }
 
+//This function returns the standard deviation for a set of entities
+//The stat key determines which stat to calculate it for
+function getStandardDev(entites,mean,stat_key) {
+  var total = 0;
+  for(var i in entites) {
+    total += Math.pow(entites[i]['stats'][stat_key] - mean,2);
+  }
+  if(Math.sqrt(entites.length-1) == 0) {
+    return 0;
+  }
+  return round(Math.sqrt(total)/Math.sqrt(entites.length-1));
+}
+
+//Returns the mean (average) for the set of entities
+//Again, stat key determines which stat to calculate this for
+function getMean(entites,stat_key) {
+  var total = 0;
+  for(var i in entites) {
+    total += entites[i]['stats'][stat_key];
+  }
+  if(entites.length == 0) {
+    return 0;
+  }
+  return round(total/entites.length);
+}
 
 //This is a helper function to create the label if it does not already exist
 function createLabelIfNeeded(name) {

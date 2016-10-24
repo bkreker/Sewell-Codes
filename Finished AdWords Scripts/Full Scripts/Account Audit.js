@@ -145,7 +145,71 @@ function emailAttachment() {
 
     return attachment;
 }
-
+function verifyAdScheduling() 
+{
+  var AD_SCHEDULES = {
+    TotalGoodWeekendCount: 0,
+    TotalBadWeekendCount: 0,
+    BadCampCount: 0,
+    Campaigns: []
+  
+  };
+  var schedules;
+  var s;
+  var row;
+  var campaigns = AdWordsApp.campaigns()
+  .withCondition('Status = ENABLED')
+  .get();
+  
+  while (campaigns.hasNext()) 
+  {
+    var camp = campaigns.next();
+    AD_SCHEDULES.Campaigns[camp] = {
+      Rows: [],
+      GoodWeekendCount : 0,
+      BadWeekendCount: 0
+    };
+    schedules = camp.targeting().adSchedules().get();
+    
+    if (schedules.totalNumEntities() > 0) 
+    {
+      print(camp.getName() + ': ');
+      
+      while (schedules.hasNext()) 
+      {
+        s = schedules.next();
+        row = s.getDayOfWeek() + '\t' + s.getStartHour() + '\t' + s.getEndHour() + '\t' + s.getBidModifier();
+        print('\t' + row);
+        if (s.getDayOfWeek() === 'SATURDAY' || s.getDayOfWeek() === 'SUNDAY')
+        {
+          if(s.getBidModifier() < 1){
+            
+          AD_SCHEDULES.Campaigns[camp].GoodWeekendCount++;
+          AD_SCHEDULES.TotalGoodWeekendCount++;
+          }
+          else{          
+          AD_SCHEDULES.Campaigns[camp].BadWeekendCount++;
+          AD_SCHEDULES.TotalBadWeekendCount++;
+          }
+        }
+       AD_SCHEDULES.Campaigns[camp].Rows.push(row);
+        
+      } // end while
+      
+      print(AD_SCHEDULES.Campaigns[camp].GoodWeekendCount);
+      if(AD_SCHEDULES.Campaigns[camp].GoodWeekendCount === 0.0){
+        AD_SCHEDULES.BadCampCount++;
+      }           
+     
+    } 
+    else 
+    {
+      print(camp.getName() + ' has no ad schedules.');
+    }
+  }
+  print('Total: ' + AD_SCHEDULES.TotalBadWeekendCount);
+  print('Without: ' + AD_SCHEDULES.BadCampCount);
+}
 function verifyConversionTracking() {
     //Assume that if the account has not had a conversion in 7 days, something is wrong.
     var campsWithConversions = AdWordsApp.campaigns()
