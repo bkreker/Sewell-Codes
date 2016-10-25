@@ -18,7 +18,7 @@ var GP_SHEET_NAME = 'GPs';
 var DECIMAL_PLACES = 2;
 
 
-var TIME_PERIOD =CustomDateRange();
+var TIME_PERIOD = CustomDateRange(91,'YYYYMMdd');
 
 var DEFAULT_CONV_VAL = 10;
 var DEFAULT_COST = 0;
@@ -63,10 +63,10 @@ function main() {
     // Update the spreadsheet,
 	//TIME_PERIOD = [_today(), _daysAgo(91)];
 	info(TIME_PERIOD.string());
-     getDefaults();
-     updateConvValReport();
-     CheckItAll();
-     emailResults();
+  //   getDefaults();
+     updateConvValReport(TIME_PERIOD, false);
+   //  CheckItAll();
+   //  emailResults();
 }
 
 function getDefaults() {
@@ -81,14 +81,14 @@ function getDefaults() {
 
 function CheckItAll() {
     info("Beginning.\nUsing Data from " + TIME_PERIOD.text + '\n' + TITLES);
-    var kw_iter = buildSelector();
+    var kw_iter = buildSelector(TIME_PERIOD, false);
     var alreadyLogged = '';
     var logError;
     var i = 0;
     while (kw_iter.hasNext()) {
 
         var kw = kw_iter.next();
-        var kw_stats = kw.getStatsFor(TIME_PERIOD);
+        var kw_stats = getStats(kw,TIME_PERIOD, false);
         var bidType = kw.getCampaign().getBiddingStrategyType();
         var campaign = kw.getCampaign().getName();
         if (bidStrategy(bidType) && isIncluded(campaign)) {
@@ -158,6 +158,16 @@ function CheckItAll() {
 
 }
 
+function getStats(entity, dateRange, isString){
+	var stats;
+	if(isString){
+	 stats = entity.getStatsFor(dateRange);
+	}
+	else{
+	 stats = entity.getStatsFor(dateRange.fromObj, dateRange.toObj);
+	}
+	return stats;
+}
 //-----------------------------------
 // Reduce Bids on High Cost per Conversion Keywords
 //-----------------------------------
@@ -479,8 +489,11 @@ function GetStat(campaign, adGroup, kwId, _stat) {
 //
 //  Update the Sheet to contain the most accurate conversion data
 // 
-function updateConvValReport(TimePeriod) {
-
+function updateConvValReport(TimePeriod, isString) {
+	var dateRange;
+	print(TimePeriod.string());
+	isString ? dateRange = TimePeriod : dateRange = TimePeriod.string();
+	
     var ss = SpreadsheetApp.openByUrl(CONV_SPREADSHEET_URL);
     var sheet = ss.getSheetByName(CONV_SHEET_NAME);
     var date = _getDateTime();
@@ -507,7 +520,7 @@ function updateConvValReport(TimePeriod) {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = MANUAL_CPC ' +
-            'DURING ' + TimePeriod.string()
+            'DURING ' + dateRange
         );
 
         // Two reports since OR operator doesn't exist in AWQL
@@ -515,7 +528,7 @@ function updateConvValReport(TimePeriod) {
             'SELECT  ' + fields +
             'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
             'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = ENHANCED_CPC ' +
-            'DURING ' + TimePeriod.string()
+            'DURING ' + dateRange
         );
 
         var array = report.rows();
@@ -583,7 +596,7 @@ function updateConvValReport(TimePeriod) {
 // Clear the named ranges
 //
 
-/* function clearSheet(ss) {
+function clearSheet(ss) {
     var campRange = ss.getRangeByName('CampaignName');
     var adGrpRange = ss.getRangeByName('AdGroupName');
     var kwIdRange = ss.getRangeByName('KwId');
@@ -602,7 +615,7 @@ function updateConvValReport(TimePeriod) {
     convValRange.clear({contentsOnly: true});
     cpcRange.clear({contentsOnly: true});
     cpaRange.clear({contentsOnly: true});
-} */
+}
 
 /* function emailResults() {
     var Subject = 'AdWords Alert: ' + REPORT_NAME.join(' ');
@@ -687,16 +700,30 @@ function bidStrategy(bidType) {
  
 }
 
-function buildSelector() {
-    var kw_iter = AdWordsApp.keywords()
-        .forDateRange(TIME_PERIOD.string())
+function buildSelector(dateRange, isString) {
+  var kw_iter;
+  if(isString) {
+     kw_iter = AdWordsApp.keywords()
+        .forDateRange(dateRange)
         .withCondition("Status = ENABLED")
         .withCondition("AdGroupStatus = ENABLED")
         .withCondition("CampaignStatus = ENABLED")
         .withCondition("Cost > 0")
         .withCondition("Impressions > 0")
         .get();
-
+  }
+  else{
+    var to = dateRange.toObj;
+    var from = dateRange.fromObj;
+      kw_iter = AdWordsApp.keywords()
+        .forDateRange(from, to)
+        .withCondition("Status = ENABLED")
+        .withCondition("AdGroupStatus = ENABLED")
+        .withCondition("CampaignStatus = ENABLED")
+        .withCondition("Cost > 0")
+        .withCondition("Impressions > 0")
+        .get();
+  }
     return kw_iter;
 
 }
@@ -738,4 +765,4 @@ function hasDifferentLabel(kw, label) {
 }
 
 
-function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();d=""==a?"MM-dd-yyyy":a;var e=Utilities.formatDate(b,c,d);return e}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d=AdWordsApp.currentAccount().getTimeZone(),e="MM-dd-yyyy";e=""==b?"MM-dd-yyyy":b;var f=Utilities.formatDate(c,d,e);return f}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function CustomDateRange(a){var b=_daysAgo(91,a),c={from:b,to:_today(a),string:function(){return this.from+","+this.to}};return c}function CustomDateRange(){var a="yyyyMMdd",b={from:_daysAgo(91,a),to:_today(a),string:function(){return this.from+","+this.to}};return b}function CustomDateRange(a,b){var c=_daysAgo(a,b),d={from:c,to:_today(b),string:function(){return this.from+","+this.to}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
+function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function CustomDateRange(a,b){null!==a&&void 0!==a||(a=91),void 0!==b&&""!==b&&null!==b||(b="YYYYMMdd");var c=_daysAgo(a,b).toString(),d=_today(b).toString(),e=_today(),f=_daysAgo(a),g={fromStr:c,toStr:d,fromObj:f,toObj:e,string:function(){return c+","+d}};return g}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={day:c.getDate(),month:c.getMonth(),year:c.getYear()};return d}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear()}}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function getStandardDev(a,b,c){var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}function getMean(a,b){var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
