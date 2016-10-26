@@ -18,7 +18,7 @@ var GP_SHEET_NAME = 'GPs';
 var DECIMAL_PLACES = 2;
 
 
-var TIME_PERIOD = CustomDateRange(91,'YYYYMMdd');
+var TIME_PERIOD = CustomDateRange(91, 'YYYYMMdd');
 
 var DEFAULT_CONV_VAL = 10;
 var DEFAULT_COST = 0;
@@ -61,12 +61,12 @@ var MAINTENANCE_LABELS = [
 
 function main() {
     // Update the spreadsheet,
-	//TIME_PERIOD = [_today(), _daysAgo(91)];
-	info(TIME_PERIOD.string());
-  //   getDefaults();
-     updateConvValReport(TIME_PERIOD, false);
-   //  CheckItAll();
-   //  emailResults();
+
+    info(TIME_PERIOD.string());
+    getDefaults();
+    updateConvValReport(TIME_PERIOD, false);
+    CheckItAll();
+    EmailResults(REPORT_NAME);
 }
 
 function getDefaults() {
@@ -80,7 +80,7 @@ function getDefaults() {
 
 
 function CheckItAll() {
-    info("Beginning.\nUsing Data from " + TIME_PERIOD.text + '\n' + TITLES);
+    info("Beginning Maintenance checks.\nUsing Data from " + TIME_PERIOD.string() + '\n' + TITLES);
     var kw_iter = buildSelector(TIME_PERIOD, false);
     var alreadyLogged = '';
     var logError;
@@ -88,12 +88,12 @@ function CheckItAll() {
     while (kw_iter.hasNext()) {
 
         var kw = kw_iter.next();
-        var kw_stats = getStats(kw,TIME_PERIOD, false);
+       // var kw_stats = getStats(kw, TIME_PERIOD, false);
         var bidType = kw.getCampaign().getBiddingStrategyType();
         var campaign = kw.getCampaign().getName();
         if (bidStrategy(bidType) && isIncluded(campaign)) {
             i++;
-            var matchType = kw.getMatchType();
+            var matchType = GetMatchType(kw);
             var keyW = kw.getText();
             var kwId = kw.getId();
             var keyword = formatKeyword(keyW);
@@ -102,7 +102,7 @@ function CheckItAll() {
             try {
                 var kwNum = kw.getAdGroup().keywords().withCondition('Status = ENABLED').get().totalNumEntities();
                 var gpReport = getMaxGP(campaign, adGroup);
-                var sku = gpReport.SKU;
+                var sku = getSku( gpReport.SKU);
                 var maxCPA = gpReport.GP;
                 var qs = kw.getQualityScore();
                 var oldBid = kw.getMaxCpc();
@@ -110,10 +110,10 @@ function CheckItAll() {
 
                 // ConvVal: convVal, 	  AvgCPC: cpc, 	  Cost: cost,	  Conversions: conversions, list: all listed out
                 var convReport = getConvValue(campaign, adGroup, kwId, keyW);
-                //var cost = convReport.Cost;
-                //var conversions = convReport.Conversions;	
-                var cost = kw_stats.getCost();
-                var conversions = kw_stats.getConversions();
+                var cost = convReport.Cost;
+                var conversions = convReport.Conversions;	
+                //var cost = kw_stats.getCost();
+               // var conversions = kw_stats.getConversions();
                 var avgCPC = convReport.AvgCPC;
                 var convVal = convReport.ConvVal;
                 var ltProfit = getLifeTimeProfit(ag, kw);
@@ -121,10 +121,8 @@ function CheckItAll() {
                 var netProfit;
                 var npPerConv;
                 var roi;
-                var reg = /(((SW-)|(sw-))+[SW0-9]+[\S]+[A-z0-9])/g;
-                if (!sku.toString().match(reg)) {
-                    sku = adGroup.match(reg);
-                }
+				
+             
                 var msg = [kw, sku, campaign, adGroup, keyword, matchType, qs, oldBid, kwBidMax, avgCPC, cost, convVal, netProfit, conversions, npPerConv, cpa, maxCPA, kwNum, roi, ltProfit];
 
                 if (conversions === 0) {
@@ -158,15 +156,39 @@ function CheckItAll() {
 
 }
 
-function getStats(entity, dateRange, isString){
-	var stats;
-	if(isString){
-	 stats = entity.getStatsFor(dateRange);
+function GetSku(sku, adGroup){
+	var reg = /(((SW-)|(sw-))+[SW0-9]+[\S]+[A-z0-9])/g;
+	if (!sku.toString().match(reg)) {
+		return sku;
 	}
-	else{
-	 stats = entity.getStatsFor(dateRange.fromObj, dateRange.toObj);
+	else if(adGroup.match(reg)){
+		var tmp = adGroup.match(reg).split(',');
+		return = adGroup.match(reg).join(';');						
 	}
-	return stats;
+	else {
+		return = 'Not Set';
+	}
+
+}
+function GetMatchType(kw){
+	var keyW = kw.getText();
+	 var matchType = kw.getMatchType();
+	 var BroadModPattern = /([+])\w+/g;
+	 
+	 if (matchType === 'BROAD' && keyW.match(BroadModPattern)){
+		 matchType = 'BROAD_MOD';		 
+	 }
+	 return matchType;
+	
+}
+function getStats(entity, dateRange, isString) {
+    var stats;
+    if (isString) {
+        stats = entity.getStatsFor(dateRange);
+    } else {
+        stats = entity.getStatsFor(dateRange.fromObj, dateRange.toObj);
+    }
+    return stats;
 }
 //-----------------------------------
 // Reduce Bids on High Cost per Conversion Keywords
@@ -206,6 +228,8 @@ function reduceHighCPCbids(kw, sku, campaign, adGroup, keyword, matchType, qs, o
 
     addLabel(kw, REDUCED_LABEL);
     var bidChange = round(newBid - oldBid);
+
+    // ['\nSKU', 'Campaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'OldBid', 'NewBid', 'BidChange', 'KwBidMax', 'AvgCPC', 'Cost', 'ConversionValue', 'NetProfit', 'Conversions', 'NP_PerConv', 'CPA', 'MaxCPA', 'kwNum', 'ROI', 'Criteria', 'LifeTimeProfit'];
     var message = ['\n' + sku, campaign, adGroup, keyword, matchType, qs, oldBid, round(newBid), bidChange, round(kwBidMax), avgCPC, cost, convVal, round(netProfit), conversions, round(npPerConv), round(cpa), maxCPA, kwNum, round(roi), criteria, ltProfit];
     infoReduced(message);
     reducedNum++;
@@ -460,7 +484,7 @@ function getConvValue(campaign, adGroup, kwId, keyW) {
 
         // ERROR_LOG = ERROR_LOG.concat('\n' + e + campaign, adGroup, keyW);
         // convVal = 10;
-		print(e);
+        print(e);
     }
 
     return result;
@@ -468,7 +492,7 @@ function getConvValue(campaign, adGroup, kwId, keyW) {
 
 function GetStat(campaign, adGroup, kwId, _stat) {
     var report = AdWordsApp.keywords()
-        .forDateRange(TIME_PERIOD)
+        .forDateRange(TIME_PERIOD.fromObj,TIME_PERIOD.toObj)
         .withCondition("Campaign = " + campaign)
         .withCondition("AdGroup = " + adGroup)
         .withCondition("Id = " + kwId)
@@ -490,28 +514,29 @@ function GetStat(campaign, adGroup, kwId, _stat) {
 //  Update the Sheet to contain the most accurate conversion data
 // 
 function updateConvValReport(TimePeriod, isString) {
-	var dateRange;
-	print(TimePeriod.string());
-	isString ? dateRange = TimePeriod : dateRange = TimePeriod.string();
-	
+    var dateRange;
+    print(TimePeriod.string());
+    isString ? dateRange = TimePeriod : dateRange = TimePeriod.string();
+
     var ss = SpreadsheetApp.openByUrl(CONV_SPREADSHEET_URL);
     var sheet = ss.getSheetByName(CONV_SHEET_NAME);
     var date = _getDateTime();
-	var today =date.day;
+    var today = date.day;
     var time = date.time;
     var timeZone = AdWordsApp.currentAccount().getTimeZone();
     var timeCell = ss.getRangeByName('UpdateTime');
     var dayCell = ss.getRangeByName('UpdateDay');
     var dayCellVal = Utilities.formatDate(dayCell.getValue(), timeZone, "MM-dd-yyyy");
-    var periodRange = ss.getRangeByName("TimePeriod");
+    var periodCell = ss.getRangeByName("TimePeriod");
     var updateTime = today + ', ' + time;
     info('Date: ' + updateTime);
     var DATE = updateTime + ',' + TimePeriod.to + '\n\n';
 
     // Only update it a max of once per day
-    if (dayCellVal != today || periodRange.getValue() != TimePeriod.text) {
+    if (dayCellVal != today && periodCell.getValue() != dateRange) {
+        dayCell.setValue(today);
         Logger.log('Updating ConvVal Report');
-        periodRange.setValue(TimePeriod.string());
+        periodCell.setValue(TimePeriod.string());
         var fields = 'CampaignName, AdGroupName, Id, Cost, ConversionValue, AverageCpc, Cost, Conversions ';
         var startRange = 'A';
         var endRange = 'H';
@@ -539,7 +564,7 @@ function updateConvValReport(TimePeriod, isString) {
             var range = sheet.getRange(startRange + i + ':' + endRange + i);
             var rowTotal = array.next();
             var cpa;
-			
+
             rowTotal.Conversions === 0 ? cpa = '-' : cpa = (rowTotal.Cost / rowTotal.Conversions);
 
             var row = [
@@ -588,8 +613,10 @@ function updateConvValReport(TimePeriod, isString) {
         range.sort([1, 2]);
 
         timeCell.setValue(time);
-        dayCell.setValue(today);
-    }
+    } 
+	else{
+		print('Already updated Conv. Report. Skipping.');
+	}
 }
 
 //
@@ -616,37 +643,6 @@ function clearSheet(ss) {
     cpcRange.clear({contentsOnly: true});
     cpaRange.clear({contentsOnly: true});
 }
-
-/* function emailResults() {
-    var Subject = 'AdWords Alert: ' + REPORT_NAME.join(' ');
-    var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-    var Message = emailMessage() + signature;
-    var Attachment = emailAttachment();
-    var file_name = _getDateTime().day + '_' + REPORT_NAME.join('_') + TIME_PERIOD.text;
-    var To;
-    var isPreview = '';
-
-    if (AdWordsApp.getExecutionInfo().isPreview()) {
-        To = EMAILS[0]
-        isPreview = 'Preview; No changes actually made.\n';
-    } else {
-        To = EMAILS.join();
-    }
-
-    if (Message != '') {
-        MailApp.sendEmail({
-            to: To,
-            subject: Subject,
-            body: isPreview + Message,
-            attachments: [{
-                fileName: file_name + '.csv',
-                mimeType: 'text/csv',
-                content: file_name + '\n' + Attachment
-            }]
-        });
-        info('Email sent to: ' + To);
-    }
-} */
 
 function emailMessage() {
     var message = '';
@@ -697,33 +693,32 @@ function emailAttachment() {
 function bidStrategy(bidType) {
     //if( bidType != "TARGET_GP" && bidType != "CONVERSION_OPTIMIZER"){
     return (bidType == "MANUAL_CPC" || bidType == "MANUAL_CPM");
- 
+
 }
 
 function buildSelector(dateRange, isString) {
-  var kw_iter;
-  if(isString) {
-     kw_iter = AdWordsApp.keywords()
-        .forDateRange(dateRange)
-        .withCondition("Status = ENABLED")
-        .withCondition("AdGroupStatus = ENABLED")
-        .withCondition("CampaignStatus = ENABLED")
-        .withCondition("Cost > 0")
-        .withCondition("Impressions > 0")
-        .get();
-  }
-  else{
-    var to = dateRange.toObj;
-    var from = dateRange.fromObj;
-      kw_iter = AdWordsApp.keywords()
-        .forDateRange(from, to)
-        .withCondition("Status = ENABLED")
-        .withCondition("AdGroupStatus = ENABLED")
-        .withCondition("CampaignStatus = ENABLED")
-        .withCondition("Cost > 0")
-        .withCondition("Impressions > 0")
-        .get();
-  }
+    var kw_iter;
+    if (isString) {
+        kw_iter = AdWordsApp.keywords()
+            .forDateRange(dateRange)
+            .withCondition("Status = ENABLED")
+            .withCondition("AdGroupStatus = ENABLED")
+            .withCondition("CampaignStatus = ENABLED")
+            .withCondition("Cost > 0")
+            .withCondition("Impressions > 0")
+            .get();
+    } else {
+        var to = dateRange.toObj;
+        var from = dateRange.fromObj;
+        kw_iter = AdWordsApp.keywords()
+            .forDateRange(from, to)
+            .withCondition("Status = ENABLED")
+            .withCondition("AdGroupStatus = ENABLED")
+            .withCondition("CampaignStatus = ENABLED")
+            .withCondition("Cost > 0")
+            .withCondition("Impressions > 0")
+            .get();
+    }
     return kw_iter;
 
 }
@@ -764,5 +759,4 @@ function hasDifferentLabel(kw, label) {
     };
 }
 
-
-function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function CustomDateRange(a,b){null!==a&&void 0!==a||(a=91),void 0!==b&&""!==b&&null!==b||(b="YYYYMMdd");var c=_daysAgo(a,b).toString(),d=_today(b).toString(),e=_today(),f=_daysAgo(a),g={fromStr:c,toStr:d,fromObj:f,toObj:e,string:function(){return c+","+d}};return g}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={day:c.getDate(),month:c.getMonth(),year:c.getYear()};return d}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear()}}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function getStandardDev(a,b,c){var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}function getMean(a,b){var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
+function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function CustomDateRange(a,b){null!==a&&void 0!==a||(a=91),void 0!==b&&""!==b&&null!==b||(b="YYYYMMdd");var c=_daysAgo(a,b).toString(),d=_today(b).toString(),e=_today(),f=_daysAgo(a),g={fromStr:c,toStr:d,fromObj:f,toObj:e,string:function(){return c+","+d}};return g}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={day:c.getDate(),month:c.getMonth(),year:c.getYear()};return d}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear()}}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function getStandardDev(a,b,c){var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}function getMean(a,b){var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function EmailResults(a){var g,b="AdWords Alert: "+a.join(" "),c="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",d=emailMessage()+c,e=emailAttachment(),f=_getDateString()+"_"+a.join("_"),h="";AdWordsApp.getExecutionInfo().isPreview()?(g=EMAILS[0],h="Preview; No changes actually made.\n"):g=EMAILS.join(),""!=d&&MailApp.sendEmail({to:g,subject:b,body:d,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:e}]}),Logger.log("Email sent to: "+g)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
