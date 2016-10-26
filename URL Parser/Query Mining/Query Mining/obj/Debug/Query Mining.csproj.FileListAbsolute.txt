@@ -1,0 +1,8 @@
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\bin\Debug\Query Mining.exe.config
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\obj\Debug\Query Mining.csprojResolveAssemblyReference.cache
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\bin\Debug\Query Mining.exe
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\bin\Debug\Query Mining.pdb
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\obj\Debug\Query Mining.exe
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\obj\Debug\Query Mining.pdb
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\obj\Debug\Query_Mining.Form1.resources
+C:\Users\jdegr_000\Documents\GitHub\School Codes\CS-1410 Local\Labs\Query Mining\Query Mining\obj\Debug\Query Mining.csproj.GenerateResource.Cache
