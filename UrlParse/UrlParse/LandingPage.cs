@@ -8,10 +8,22 @@ namespace UrlParse
 {
     class LandingPage
     {
-        private string _url, _stm_type, _stm_source, _stm_sku, _product_id, _creative, _targetid, _feeditemid, _matchtype;
+        private string _url, _stm_type, _stm_source, _stm_sku, _product_id, _creative, _targetid, _feeditemid, _matchtype, _values;
 
 
-        public LandingPage() { }
+        public LandingPage()
+        {
+            _url = "";
+            _stm_type = "";
+            _stm_source = "";
+            _stm_sku = "";
+            _product_id = "";
+            _creative = "";
+            _targetid = "";
+            _feeditemid = "";
+            _matchtype = "";
+            _values = "";
+        }
 
         public string url
         {
@@ -64,6 +76,17 @@ namespace UrlParse
         {
             get { return this._matchtype; }
             set { this._matchtype = value; }
+        }
+
+        public string values
+        {
+            get { return this._values; }
+            set { this._values = value; }
+        }
+
+        public string Concatenate()
+        {
+            return this._url + "," + this.values + "," + this._stm_type + "," + this._stm_source + "," + this._stm_sku + "," + this._product_id + "," + this._creative + "," + this._targetid + "," + this._feeditemid + "," + this._matchtype;
         }
     }
 }
