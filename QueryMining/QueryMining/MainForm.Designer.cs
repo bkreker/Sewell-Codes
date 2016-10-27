@@ -33,7 +33,7 @@
             this.btnSelectFolder = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
             this.btnGo = new System.Windows.Forms.Button();
-            this.txtBoxInFIle = new System.Windows.Forms.TextBox();
+            this.txtBoxInFile = new System.Windows.Forms.TextBox();
             this.txtBoxOutFile = new System.Windows.Forms.TextBox();
             this.outFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
@@ -86,12 +86,12 @@
             // 
             // txtBoxInFIle
             // 
-            this.txtBoxInFIle.Location = new System.Drawing.Point(12, 16);
-            this.txtBoxInFIle.Name = "txtBoxInFIle";
-            this.txtBoxInFIle.ReadOnly = true;
-            this.txtBoxInFIle.Size = new System.Drawing.Size(216, 22);
-            this.txtBoxInFIle.TabIndex = 1;
-            this.txtBoxInFIle.Text = "Select a .csv file to import...";
+            this.txtBoxInFile.Location = new System.Drawing.Point(12, 16);
+            this.txtBoxInFile.Name = "txtBoxInFIle";
+            this.txtBoxInFile.ReadOnly = true;
+            this.txtBoxInFile.Size = new System.Drawing.Size(216, 22);
+            this.txtBoxInFile.TabIndex = 1;
+            this.txtBoxInFile.Text = "Select a .csv file to import...";
             // 
             // txtBoxOutFile
             // 
@@ -113,7 +113,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(369, 161);
             this.Controls.Add(this.txtBoxOutFile);
-            this.Controls.Add(this.txtBoxInFIle);
+            this.Controls.Add(this.txtBoxInFile);
             this.Controls.Add(this.btnGo);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnSelectFolder);
@@ -129,7 +129,7 @@
 
         private System.Windows.Forms.OpenFileDialog inFileDialog;
         private System.Windows.Forms.TextBox txtBoxOutFile;
-        private System.Windows.Forms.TextBox txtBoxInFIle;
+        private System.Windows.Forms.TextBox txtBoxInFile;
         private System.Windows.Forms.Button btnGo;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Button btnSelectFolder;

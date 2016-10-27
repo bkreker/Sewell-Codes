@@ -16,6 +16,10 @@ namespace QueryMining
         public MainForm()
         {
             InitializeComponent();
+            _inFileName = "Shopping Search Terms csv.csv";
+            txtBoxInFile.Text = _inFileName;
+            _outFileName = "test.csv";
+            txtBoxOutFile.Text = _outFileName;
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -91,58 +95,49 @@ namespace QueryMining
 
         private void ProcessData(ref StreamReader inFile, ref StreamWriter outFile)
         {
-            List<string> firstRow = inFile.ReadLine().Split(',').ToList<string>();
-            int queryColumn = firstRow.IndexOf("Search term");
-            string headers = string.Join(",", firstRow);
-            string headerRow = $"Word,{headers}";
-            outFile.Write(headerRow);
-            //while (!inFile.EndOfStream)
-            //{
-            //    var fullRow = (inFile.ReadLine().Split(',')).ToArray<string>();
-            //    string query = fullRow[0].ToString();
-            //    List<string[]> words = SplitQuery(ref query);
-            //    foreach (string[] key in words)
-            //    { 
-            //        try
-            //        {
-            //            if (!data[key])
-            //            {
-            //                data[key] = true;
-            //                WriteToNewFile(ref outFile, ref fullRow, ref words, ref query);
-            //            }
-            //        }
-            //        catch (Exception)
-            //        {
-            //            //data[key]
-            //            //   data[key].Add(row);
-            //        }
-            //    }
-            //}
-        }
-
-        private void WriteToNewFile
-            (ref StreamWriter outFile, ref string[] fullRow, ref List<string[]> queryWords, ref string query, int queryColumn)
-        {
-            foreach (string[] words in queryWords)
+            try
             {
-                List<string> row = new List<string>();
-                row.Add(words[queryColumn]);
-                foreach (var stat in fullRow)
+                List<string> firstRow = inFile.ReadLine().Split(',').ToList<string>();
+                int queryColumn = firstRow.IndexOf("Search term");
+                Console.WriteLine($"Word,{string.Join(",", firstRow)}");
+                outFile.WriteLine($"Word,{string.Join(",", firstRow)}");
+
+                while (!inFile.EndOfStream)
                 {
-                    row.Add(stat);
+                    List<string> fullRow = (inFile.ReadLine().Split(',')).ToList<string>();
+                    string query = fullRow[queryColumn].ToString();
+                    List<string> queryWords = SplitQuery(query);
+                
+                    foreach (string word in queryWords)
+                    {
+                        try
+                        {
+                          //  data[key] = true;
+                            string newRow = $"{word},{string.Join(",", fullRow)}";
+                            Console.WriteLine(newRow);
+                            outFile.WriteLine(newRow);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Something Went Wrong");
+                        }
+                    }
                 }
-                Console.WriteLine(row.ToString());
-                //outFile.WriteLine(row.ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Something Went Wrong");
             }
         }
 
-        private static List<string[]> SplitQuery(ref string query)
+        private static List<string> SplitQuery(string query)
         {
-            List<string[]> result = new List<string[]>();
+            List<string> result = new List<string>();
+
             foreach (string word in query.Split(' '))
             {
-                string[] duo = { query, word };
-                result.Add(duo);
+                result.Add(word);
             }
             return result;
 
@@ -151,7 +146,7 @@ namespace QueryMining
         private void inFileDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _inFileName = inFileDialog.FileName;
-            txtBoxInFIle.Text = _inFileName;
+            txtBoxInFile.Text = _inFileName;
 
 
         }
