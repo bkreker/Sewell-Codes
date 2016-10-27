@@ -28,12 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.inFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.outFileFolderDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
-            // openFileDialog1
+            // inFileDialog
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.inFileDialog.Title = "Select File To Read From";
             // 
             // Form1
             // 
@@ -49,6 +50,7 @@
 
         #endregion
 
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.OpenFileDialog inFileDialog;
+        private System.Windows.Forms.FolderBrowserDialog outFileFolderDialog;
     }
 }

@@ -17,13 +17,12 @@ namespace Query_Mining
     class Program
     {
 
-            [STAThread]
+        [STAThread]
         static void Main(string[] args)
         {
             Application.EnableVisualStyles();
-            //   Application.SetCompatibleTextRenderingDefault(false);
-            Console.WriteLine("Select the csv file to upload.");
-            Console.ReadLine();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Console.WriteLine("Select the csv file to upload.");            
             Application.Run(new Form1());
 
         }

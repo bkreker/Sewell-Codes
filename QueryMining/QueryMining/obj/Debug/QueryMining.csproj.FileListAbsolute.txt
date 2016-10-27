@@ -1,0 +1,9 @@
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\bin\Debug\QueryMining.exe.config
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\bin\Debug\QueryMining.exe
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\bin\Debug\QueryMining.pdb
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.csprojResolveAssemblyReference.cache
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.MainForm.resources
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.Properties.Resources.resources
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.csproj.GenerateResource.Cache
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.exe
+C:\Users\jdegr_000\Documents\GitHub\Work Codes\QueryMining\QueryMining\obj\Debug\QueryMining.pdb

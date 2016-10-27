@@ -12,23 +12,24 @@ namespace Query_Mining
 
         public Form1()
         {
+            this.Visible = false;
             InitializeComponent();
+            this.Visible = false;
             DoThings();
         }
 
         private void DoThings()
         {
-            var inDialog = openFileDialog1;//.ShowDialog();
-            var outDialog = openFileDialog1;
-            DialogResult s = this.openFileDialog1.ShowDialog();
-
-            if (s == DialogResult.OK)
+            DialogResult s = inFileDialog.ShowDialog();
+            if (s == DialogResult.OK)// && o == DialogResult.OK)
             {
-                Console.WriteLine($"Chosen file:\n{openFileDialog1.FileName}");
+                string inFileName = inFileDialog.FileName;
+                Console.WriteLine($"Chosen file:\n{inFileName}");
+                //string outFileName = inFileDialog;
                 Console.ReadLine();
                 try
                 {
-                    ReadData(openFileDialog1.FileName);
+                    ReadData(inFileDialog.FileName, outFileFolderDialog.SelectedPath);
                 }
                 catch (Exception ex)
                 {
@@ -42,51 +43,71 @@ namespace Query_Mining
             Console.ReadLine();
         }
 
-        private void ReadData(string fileName)
+        private void ReadData(string fileName, string outFileFolderName)
         {
+            string outFileName = outFileFolderName + fileName + "Query_Mining.csv";
             Console.WriteLine("Processing Data...");
             try
             {
                 StreamReader inFile = File.OpenText(fileName);
-                ProcessData(inFile);
-                Console.WriteLine("Done Processing");
+                StreamWriter outFile = new StreamWriter(outFileName);
+                ProcessData(ref inFile, ref outFile);
+                inFile.Close();
+                outFile.Close();
+                Console.WriteLine($"Done Processing. File saved at:\n{outFileName}");
                 Console.ReadLine();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Something went wrong: {ex.Message}");
-
             }
-
-
         }
 
-        private static void WriteNewFile()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void ProcessData(StreamReader inFile)
+        private void ProcessData(ref StreamReader inFile, ref StreamWriter outFile)
         {
             string[] headers = inFile.ReadLine().Split(',');
             data.Headers = headers;
             while (!inFile.EndOfStream)
             {
-                var a = (inFile.ReadLine().Split(',')).ToArray<string>();
-                string query = a[0].ToString();
+                var fullRow = (inFile.ReadLine().Split(',')).ToArray<string>();
+                string query = fullRow[0].ToString();
                 List<string[]> words = SplitQuery(ref query);
                 foreach (string[] key in words)
                 {
                     try
                     {
-                        data[key].Add(a);
+                        if (!data[key])
+                        {
+                            data[key] = true;
+                            WriteToNewFile(ref outFile, ref fullRow, ref words, ref query);
+                        }
+                        else
+                        {
+
+                        }
                     }
                     catch (Exception)
                     {
-                        data[key] = new List<string[]>();
-                        data[key].Add(a);
+                        //data[key]
+                        //   data[key].Add(row);
                     }
                 }
+            }
+        }
+
+        private void WriteToNewFile
+            (ref StreamWriter outFile, ref string[] fullRow, ref List<string[]> queryWords, ref string query)
+        {
+            foreach (string[] words in queryWords)
+            {
+                List<string> row = new List<string>();
+                row.Add(words[1]);
+                foreach (var stat in fullRow)
+                {
+                    row.Add(stat);
+                }
+                Console.WriteLine(row.ToString());
+                //outFile.WriteLine(row.ToString());
             }
         }
 

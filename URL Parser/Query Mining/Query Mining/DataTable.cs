@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Query_Mining
 {
-    public class DataTable : Dictionary<string[], List<string[]>>
+    public class DataTable : Dictionary<string[], bool>
     {
         public string[] Headers { get; set; }
         public DataTable()
