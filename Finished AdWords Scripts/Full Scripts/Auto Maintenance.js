@@ -102,7 +102,7 @@ function CheckItAll() {
             try {
                 var kwNum = kw.getAdGroup().keywords().withCondition('Status = ENABLED').get().totalNumEntities();
                 var gpReport = getMaxGP(campaign, adGroup);
-                var sku = getSku( gpReport.SKU);
+                var sku = getSku( gpReport.SKU, adGroup);
                 var maxCPA = gpReport.GP;
                 var qs = kw.getQualityScore();
                 var oldBid = kw.getMaxCpc();
@@ -156,19 +156,31 @@ function CheckItAll() {
 
 }
 
-function GetSku(sku, adGroup){
-	var reg = /(((SW-)|(sw-))+[SW0-9]+[\S]+[A-z0-9])/g;
-	if (!sku.toString().match(reg)) {
+function getSku(sku, adGroup){
+	try{
+	var reg = /([Ss][Ww]-[0-9]{4,}){1}(-[A-z0-9]*)*/g;
+	
+	if (sku.toString().match(reg)) {
+	//	print('sku: '+sku);
 		return sku;
 	}
 	else if(adGroup.match(reg)){
-		var tmp = adGroup.match(reg).split(',');
-		return = adGroup.match(reg).join(';');						
+		var tmp = adGroup.match(reg);
+	//	print('tmp: ' + tmp);
+				
+		var joined = tmp.join(';');						
+	//	print('joined: ' + joined);
+		
+		return joined;
 	}
 	else {
-		return = 'Not Set';
+		return 'Not Set';
 	}
-
+	}
+	catch(e){
+		print('Error getting Sku for '+ adGroup +' ' + e);
+		
+	}
 }
 function GetMatchType(kw){
 	var keyW = kw.getText();
