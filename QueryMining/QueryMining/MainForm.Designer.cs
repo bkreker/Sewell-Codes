@@ -48,9 +48,10 @@
             // 
             // btnImport
             // 
-            this.btnImport.Location = new System.Drawing.Point(527, 12);
+            this.btnImport.Location = new System.Drawing.Point(395, 10);
+            this.btnImport.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(123, 29);
+            this.btnImport.Size = new System.Drawing.Size(92, 24);
             this.btnImport.TabIndex = 0;
             this.btnImport.Text = "&Import CSV File";
             this.btnImport.UseVisualStyleBackColor = true;
@@ -58,19 +59,21 @@
             // 
             // btnSelectFolder
             // 
-            this.btnSelectFolder.Location = new System.Drawing.Point(527, 62);
+            this.btnSelectFolder.Location = new System.Drawing.Point(395, 50);
+            this.btnSelectFolder.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnSelectFolder.Name = "btnSelectFolder";
-            this.btnSelectFolder.Size = new System.Drawing.Size(123, 29);
+            this.btnSelectFolder.Size = new System.Drawing.Size(92, 24);
             this.btnSelectFolder.TabIndex = 0;
             this.btnSelectFolder.Text = "Select";
             this.btnSelectFolder.UseVisualStyleBackColor = true;
-            this.btnSelectFolder.Click += new System.EventHandler(this.btnSelectFolder_Click);
+            this.btnSelectFolder.Click += new System.EventHandler(this.btnSelectOutFile_Click);
             // 
             // btnClose
             // 
-            this.btnClose.Location = new System.Drawing.Point(527, 107);
+            this.btnClose.Location = new System.Drawing.Point(395, 87);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(123, 73);
+            this.btnClose.Size = new System.Drawing.Size(92, 59);
             this.btnClose.TabIndex = 0;
             this.btnClose.Text = "&Close";
             this.btnClose.UseVisualStyleBackColor = true;
@@ -78,9 +81,10 @@
             // 
             // btnGo
             // 
-            this.btnGo.Location = new System.Drawing.Point(12, 107);
+            this.btnGo.Location = new System.Drawing.Point(9, 87);
+            this.btnGo.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnGo.Name = "btnGo";
-            this.btnGo.Size = new System.Drawing.Size(509, 43);
+            this.btnGo.Size = new System.Drawing.Size(382, 35);
             this.btnGo.TabIndex = 0;
             this.btnGo.Text = "&Go!";
             this.btnGo.UseVisualStyleBackColor = true;
@@ -88,19 +92,19 @@
             // 
             // txtBoxInFile
             // 
-            this.txtBoxInFile.Location = new System.Drawing.Point(12, 15);
+            this.txtBoxInFile.Location = new System.Drawing.Point(9, 12);
+            this.txtBoxInFile.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtBoxInFile.Name = "txtBoxInFile";
-            this.txtBoxInFile.ReadOnly = true;
-            this.txtBoxInFile.Size = new System.Drawing.Size(509, 22);
+            this.txtBoxInFile.Size = new System.Drawing.Size(383, 20);
             this.txtBoxInFile.TabIndex = 1;
             this.txtBoxInFile.Text = "Select a .csv file to import...";
             // 
             // txtBoxOutFile
             // 
-            this.txtBoxOutFile.Location = new System.Drawing.Point(12, 65);
+            this.txtBoxOutFile.Location = new System.Drawing.Point(9, 53);
+            this.txtBoxOutFile.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtBoxOutFile.Name = "txtBoxOutFile";
-            this.txtBoxOutFile.ReadOnly = true;
-            this.txtBoxOutFile.Size = new System.Drawing.Size(509, 22);
+            this.txtBoxOutFile.Size = new System.Drawing.Size(383, 20);
             this.txtBoxOutFile.TabIndex = 1;
             this.txtBoxOutFile.Text = "Select where to save the new file...";
             // 
@@ -111,23 +115,24 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(13, 157);
+            this.progressBar1.Location = new System.Drawing.Point(10, 128);
+            this.progressBar1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.progressBar1.MarqueeAnimationSpeed = 0;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(508, 23);
+            this.progressBar1.Size = new System.Drawing.Size(381, 19);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 2;
             // 
-            // bw
+            // backGroundWorker
             // 
             this.backGroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
             this.backGroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(662, 190);
+            this.ClientSize = new System.Drawing.Size(496, 154);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.txtBoxOutFile);
             this.Controls.Add(this.txtBoxInFile);
@@ -136,7 +141,8 @@
             this.Controls.Add(this.btnSelectFolder);
             this.Controls.Add(this.btnImport);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MinimumSize = new System.Drawing.Size(402, 47);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.MinimumSize = new System.Drawing.Size(306, 45);
             this.Name = "MainForm";
             this.Text = "QueryWizard";
             this.ResumeLayout(false);

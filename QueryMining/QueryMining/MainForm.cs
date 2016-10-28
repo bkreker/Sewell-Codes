@@ -12,16 +12,18 @@ namespace QueryMining
 {
     public partial class MainForm : Form
     {
-        public Dictionary<string[], bool> data = new Dictionary<string[], bool>();
-        string _inFileName = "";
-        string _outFileName = "";
+        //   public Dictionary<string[], bool> data = new Dictionary<string[], bool>();
+        string _inFileName { get { return txtBoxInFile.Text; } }
+        string _outFileName { get { return txtBoxOutFile.Text; } }
+        StringWriter _outPutStringStream = new StringWriter();
+        bool _outFileSavedCorrectly = false;
+        bool _inFileReadCorrectly = false;
+
         public MainForm()
         {
             InitializeComponent();
-            _inFileName = "Shopping Search Terms csv.csv";
-            txtBoxInFile.Text = _inFileName;
-            _outFileName = "test.csv";
-            txtBoxOutFile.Text = _outFileName;
+            txtBoxInFile.Text = "New Test in File.csv";
+            txtBoxOutFile.Text = "test.csv";
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -36,13 +38,13 @@ namespace QueryMining
             }
         }
 
-        private void btnSelectFolder_Click(object sender, EventArgs e)
+        private void btnSelectOutFile_Click(object sender, EventArgs e)
         {
             try
             {
                 if (outFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    _outFileName = outFileDialog.FileName;
+                    txtBoxOutFile.Text = outFileDialog.FileName;
                 }
             }
             catch (Exception ex)
@@ -74,40 +76,35 @@ namespace QueryMining
             }
         }
 
-        private async void Analyze()
-        {
-            try
-            {
-                await Task.Run(() => ReadData(_inFileName, _outFileName));
-
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something Went Wrong");
-            }
-        }
-
-
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
             // INSERT TIME CONSUMING OPERATIONS HERE
             // THAT DON'T REPORT PROGRESS
             //Thread.Sleep(10000);
-            Console.WriteLine("Processing Data...");
-            try
+            if (txtBoxOutFile.Text != "" && txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
-                StreamReader inFile = File.OpenText(_inFileName);
-                StreamWriter outFile = new StreamWriter(_outFileName);
-                ProcessData(ref inFile, ref outFile);
+                Console.WriteLine("Processing Data...");
+                try
+                {
+                    ReadData();
+                    if (_inFileReadCorrectly)
+                    {
+                        SaveData();
+                    }
+                    else
+                    {
+                        MessageBox.Show("The file was not read in correctly. Nothing was saved.");
+                    }
 
-                inFile.Close();
-                outFile.Close();
-
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Something went wrong while running the application");
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Something went wrong: {ex.Message}");
+
             }
         }
 
@@ -121,7 +118,15 @@ namespace QueryMining
             btnImport.Enabled = true;
             btnSelectFolder.Enabled = true;
             btnClose.Text = "Close";
-            MessageBox.Show($"File saved at:\n{_outFileName}", "Done Processing");
+            if (_outFileSavedCorrectly)
+            {
+                MessageBox.Show($"File saved at:\n{_outFileName}", "Done Processing");
+
+            }
+            else
+            {
+                MessageBox.Show("The new file was not saved");
+            }
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -129,58 +134,75 @@ namespace QueryMining
             this.Close();
         }
 
-        private void ReadData(string fileName, string outFileName)
+        private void ReadData()
         {
             Console.WriteLine("Processing Data...");
             try
             {
-                StreamReader inFile = File.OpenText(fileName);
-                StreamWriter outFile = new StreamWriter(outFileName);
-                ProcessData(ref inFile, ref outFile);
-                inFile.Close();
-                outFile.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Something went wrong: {ex.Message}");
-            }
-        }
-
-        private void ProcessData(ref StreamReader inFile, ref StreamWriter outFile)
-        {
-            try
-            {
-                List<string> firstRow = inFile.ReadLine().Split(',').ToList<string>();
-                int queryColumn = firstRow.IndexOf("Search term");
-                Console.WriteLine($"Word,{string.Join(",", firstRow)}");
-                outFile.WriteLine($"Word,{string.Join(",", firstRow)}");
-
-                while (!inFile.EndOfStream)
+                try
                 {
-                    List<string> fullRow = (inFile.ReadLine().Split(',')).ToList<string>();
-                    string query = fullRow[queryColumn].ToString();
-                    List<string> queryWords = SplitQuery(query);
+                    StreamReader inFile = File.OpenText(_inFileName);
+                    string firstRowString = inFile.ReadLine();
+                    List<string> firstRow = firstRowString.Split('\t').ToList<string>();
+                    ColumnHeaderSelect c = new ColumnHeaderSelect(firstRow);
+                    c.ShowDialog();
+                    int queryColumn = c.SelectedIndex;
 
-                    foreach (string word in queryWords)
+                    string newFirstRow = $"Word,{string.Join(",", firstRow)}";
+                    Console.WriteLine(newFirstRow);
+                    _outPutStringStream.WriteLine(newFirstRow);
+                    // outFile.WriteLine(newFirstRow);
+
+                    while (!inFile.EndOfStream)
                     {
-                        try
-                        {
-                            //  data[key] = true;
-                            string newRow = $"{word},{string.Join(",", fullRow)}";
-                            Console.WriteLine($"Query: {query}, Word: {word}");
-                            outFile.WriteLine(newRow);
+                        List<string> fullRow = (inFile.ReadLine().Split(',')).ToList<string>();
+                        string query = fullRow[queryColumn].ToString();
+                        List<string> queryWords = SplitQuery(query);
 
-                        }
-                        catch (Exception ex)
+                        foreach (string word in queryWords)
                         {
-                            MessageBox.Show(ex.Message, "Something Went Wrong");
+                            try
+                            {
+                                //  data[key] = true;
+                                string newRow = $"{word},{string.Join(",", fullRow)}";
+                                Console.WriteLine($"Query: {query}, Word: {word}");
+                                _outPutStringStream.WriteLine(newRow);
+
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"Something Went Wrong Processing the file: {ex.Message}");
+                            }
                         }
                     }
+                    inFile.Close();
+                    _inFileReadCorrectly = true;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Something Went Wrong Processing the file: {ex.Message}");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Something Went Wrong");
+                throw new Exception($"Something went wrong: {ex.Message}");
+            }
+        }
+
+
+
+        private void SaveData()
+        {
+            try
+            {
+                StreamWriter outFile = new StreamWriter(_outFileName);
+                outFile.Write(_outPutStringStream);
+                outFile.Close();
+                _outFileSavedCorrectly = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error saving file");
             }
         }
 
@@ -198,18 +220,12 @@ namespace QueryMining
 
         private void inFileDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _inFileName = inFileDialog.FileName;
-            txtBoxInFile.Text = _inFileName;
-
-
+            txtBoxInFile.Text = inFileDialog.FileName; ;
         }
 
         private void outFileFolderDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _outFileName = outFileDialog.FileName;
-            txtBoxOutFile.Text = _outFileName;
-
-
+            txtBoxOutFile.Text = outFileDialog.FileName;
         }
     }
 
