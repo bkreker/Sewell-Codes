@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Linq.Expressions;
 using System.Windows.Forms;
 
@@ -50,33 +52,76 @@ namespace QueryMining
 
         }
 
-        private async void btnGo_Click(object sender, EventArgs e)
+        private void btnGo_Click(object sender, EventArgs e)
+        {
+            if (_inFileName != "" && _outFileName != "")
+            {
+                progressBar1.Style = ProgressBarStyle.Marquee;
+                progressBar1.MarqueeAnimationSpeed = 50;
+
+                btnGo.Enabled = false;
+                btnImport.Enabled = false;
+                btnSelectFolder.Enabled = false;
+                btnClose.Text = "Cancel and Close";
+                BackgroundWorker bw = new BackgroundWorker();
+                bw.DoWork += bw_DoWork;
+                bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+                bw.RunWorkerAsync();
+            }
+            else
+            {
+                MessageBox.Show("Select Valid Names for file and Folder.");
+            }
+        }
+
+        private async void Analyze()
         {
             try
             {
-                if (_inFileName != "" && _outFileName != "")
-                {
-                    btnGo.Enabled = false;
-                    btnImport.Enabled = false;
-                    btnSelectFolder.Enabled = false;
-                    progressBar1.Style = ProgressBarStyle.Marquee;
-                    progressBar1.MarqueeAnimationSpeed = 30;
-                    await Task.Run(() => ReadData(_inFileName, _outFileName));
-                    progressBar1.Style = ProgressBarStyle.Continuous;
-                    progressBar1.MarqueeAnimationSpeed = 0;
-                    btnGo.Enabled = true;
-                    btnImport.Enabled = true;
-                    btnSelectFolder.Enabled = true;
-                }
-                else
-                {
-                    MessageBox.Show("Select Valid Names for file and Folder.");
-                }
+                await Task.Run(() => ReadData(_inFileName, _outFileName));
+
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Something Went Wrong");
             }
+        }
+
+
+        private void bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // INSERT TIME CONSUMING OPERATIONS HERE
+            // THAT DON'T REPORT PROGRESS
+            //Thread.Sleep(10000);
+            Console.WriteLine("Processing Data...");
+            try
+            {
+                StreamReader inFile = File.OpenText(_inFileName);
+                StreamWriter outFile = new StreamWriter(_outFileName);
+                ProcessData(ref inFile, ref outFile);
+
+                inFile.Close();
+                outFile.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Something went wrong: {ex.Message}");
+            }
+        }
+
+        private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            progressBar1.Style = ProgressBarStyle.Continuous;
+            progressBar1.Value = progressBar1.Minimum;
+            progressBar1.MarqueeAnimationSpeed = 0;
+
+            btnGo.Enabled = true;
+            btnImport.Enabled = true;
+            btnSelectFolder.Enabled = true;
+            btnClose.Text = "Close";
+            MessageBox.Show($"File saved at:\n{_outFileName}", "Done Processing");
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -94,9 +139,6 @@ namespace QueryMining
                 ProcessData(ref inFile, ref outFile);
                 inFile.Close();
                 outFile.Close();
-                MessageBox.Show($"File saved at:\n{outFileName}", "Done Processing");
-
-
             }
             catch (Exception ex)
             {
@@ -106,7 +148,6 @@ namespace QueryMining
 
         private void ProcessData(ref StreamReader inFile, ref StreamWriter outFile)
         {
-            progressBar1 = new ProgressBar();
             try
             {
                 List<string> firstRow = inFile.ReadLine().Split(',').ToList<string>();
