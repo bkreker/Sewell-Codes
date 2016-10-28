@@ -56,7 +56,17 @@ namespace QueryMining
             {
                 if (_inFileName != "" && _outFileName != "")
                 {
+                    btnGo.Enabled = false;
+                    btnImport.Enabled = false;
+                    btnSelectFolder.Enabled = false;
+                    progressBar1.Style = ProgressBarStyle.Marquee;
+                    progressBar1.MarqueeAnimationSpeed = 30;
                     await Task.Run(() => ReadData(_inFileName, _outFileName));
+                    progressBar1.Style = ProgressBarStyle.Continuous;
+                    progressBar1.MarqueeAnimationSpeed = 0;
+                    btnGo.Enabled = true;
+                    btnImport.Enabled = true;
+                    btnSelectFolder.Enabled = true;
                 }
                 else
                 {
@@ -86,6 +96,7 @@ namespace QueryMining
                 outFile.Close();
                 MessageBox.Show($"File saved at:\n{outFileName}", "Done Processing");
 
+
             }
             catch (Exception ex)
             {
@@ -95,6 +106,7 @@ namespace QueryMining
 
         private void ProcessData(ref StreamReader inFile, ref StreamWriter outFile)
         {
+            progressBar1 = new ProgressBar();
             try
             {
                 List<string> firstRow = inFile.ReadLine().Split(',').ToList<string>();
@@ -107,14 +119,14 @@ namespace QueryMining
                     List<string> fullRow = (inFile.ReadLine().Split(',')).ToList<string>();
                     string query = fullRow[queryColumn].ToString();
                     List<string> queryWords = SplitQuery(query);
-                
+
                     foreach (string word in queryWords)
                     {
                         try
                         {
-                          //  data[key] = true;
+                            //  data[key] = true;
                             string newRow = $"{word},{string.Join(",", fullRow)}";
-                            Console.WriteLine(newRow);
+                            Console.WriteLine($"Query: {query}, Word: {word}");
                             outFile.WriteLine(newRow);
 
                         }
