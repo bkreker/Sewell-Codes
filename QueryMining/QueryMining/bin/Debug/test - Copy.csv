@@ -218,7 +218,7 @@ white,red white auxiliary cable,0.25,10.01,9.76,39.04,9.76,10.01,1,1,2,40.04,0.5
 auxiliary,red white auxiliary cable,0.25,10.01,9.76,39.04,9.76,10.01,1,1,2,40.04,0.5,0.25,0,0.25,1,0
 cable,red white auxiliary cable,0.25,10.01,9.76,39.04,9.76,10.01,1,1,2,40.04,0.5,0.25,0,0.25,1,0
 usb,usb 3.0 extension cable,0.35,9.99,9.64,27.54,9.64,9.99,1,2,88,28.56,0.0227,0.18,0,0.35,0.5,0
-3.0,usb 3.0 extension cable,0.35,9.99,9.64,27.54,9.64,9.99,1,2,88,28.56,0.0227,0.18,0,0.35,0.5,0
+3,usb 3.0 extension cable,0.35,9.99,9.64,27.54,9.64,9.99,1,2,88,28.56,0.0227,0.18,0,0.35,0.5,0
 extension,usb 3.0 extension cable,0.35,9.99,9.64,27.54,9.64,9.99,1,2,88,28.56,0.0227,0.18,0,0.35,0.5,0
 cable,usb 3.0 extension cable,0.35,9.99,9.64,27.54,9.64,9.99,1,2,88,28.56,0.0227,0.18,0,0.35,0.5,0
 aux,aux adapter stereo,0.45,10.01,9.56,21.24,9.56,10.01,1,2,4,22.24,0.5,0.22,0,0.45,0.5,0
@@ -299,14 +299,14 @@ controller,usb charger for playstation 3 controller,0.1,6.69,6.59,65.9,6.59,6.69
 sewell,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 activelink,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 usb,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
-3.0,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
+3,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 active,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 extension,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 cable,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 16,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 ft,sewell activelink usb 3.0 active extension cable 16 ft,0.01,6.3,6.29,629,6.29,6.3,1,1,2,630.48,0.5,0.01,0,0.01,1,0
 usb,usb 3.0 flat cable,0.16,11.13,10.97,68.56,5.49,5.57,2,1,1,69.57,1,0.16,0,0.08,2,0
-3.0,usb 3.0 flat cable,0.16,11.13,10.97,68.56,5.49,5.57,2,1,1,69.57,1,0.16,0,0.08,2,0
+3,usb 3.0 flat cable,0.16,11.13,10.97,68.56,5.49,5.57,2,1,1,69.57,1,0.16,0,0.08,2,0
 flat,usb 3.0 flat cable,0.16,11.13,10.97,68.56,5.49,5.57,2,1,1,69.57,1,0.16,0,0.08,2,0
 cable,usb 3.0 flat cable,0.16,11.13,10.97,68.56,5.49,5.57,2,1,1,69.57,1,0.16,0,0.08,2,0
 ps3,ps3 charging cable,4.37,20.08,15.71,3.59,5.24,6.69,3,40,550,4.6,0.0727,0.11,0,1.46,0.075,0
@@ -525,7 +525,7 @@ playstation,sony playstation controller charger, -   , -   , -   ,#DIV/0!, $-   
 controller,sony playstation controller charger, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 charger,sony playstation controller charger, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 usb,usb 3.0 header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,5,0,0,0,0,0,0,0
-3.0,usb 3.0 header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,5,0,0,0,0,0,0,0
+3,usb 3.0 header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,5,0,0,0,0,0,0,0
 header,usb 3.0 header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,5,0,0,0,0,0,0,0
 adapter,usb 3.0 header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,5,0,0,0,0,0,0,0
 wireless,wireless controller charger for ps3, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
@@ -603,7 +603,7 @@ usb,usb sound card, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,16,0,0,0,0,0,0,0
 sound,usb sound card, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,16,0,0,0,0,0,0,0
 card,usb sound card, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,16,0,0,0,0,0,0,0
 usb,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
-3.0,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
+3,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
 19,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
 pin,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
 adapter,usb 3.0 19 pin adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
@@ -681,7 +681,7 @@ charging,cable for charging ps3 controller, -   , -   , -   ,#DIV/0!, $-   ,#DIV
 ps3,cable for charging ps3 controller, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
 controller,cable for charging ps3 controller, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
 usb,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
-3.0,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
+3,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 motherboard,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 header,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 adapter,usb 3.0 motherboard header adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
@@ -712,7 +712,7 @@ tape,tape speaker wire, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,8,0,0,0,0,0,
 speaker,tape speaker wire, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,8,0,0,0,0,0,0,0
 wire,tape speaker wire, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,8,0,0,0,0,0,0,0
 usb,usb 3.0 motherboard adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,4,0,0,0,0,0,0,0
-3.0,usb 3.0 motherboard adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,4,0,0,0,0,0,0,0
+3,usb 3.0 motherboard adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,4,0,0,0,0,0,0,0
 motherboard,usb 3.0 motherboard adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,4,0,0,0,0,0,0,0
 adapter,usb 3.0 motherboard adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,4,0,0,0,0,0,0,0
 s4,s4 wallet, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,2,0,0,0,0,0,0,0
@@ -1027,7 +1027,7 @@ audio,laptop with audio line input, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,
 line,laptop with audio line input, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 input,laptop with audio line input, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 usb,usb 3.0 over cat6, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,3,0,0,0,0,0,0,0
-3.0,usb 3.0 over cat6, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,3,0,0,0,0,0,0,0
+3,usb 3.0 over cat6, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,3,0,0,0,0,0,0,0
 over,usb 3.0 over cat6, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,3,0,0,0,0,0,0,0
 cat6,usb 3.0 over cat6, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,3,0,0,0,0,0,0,0
 audio,audio aux adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,18,0,0,0,0,0,0,0
@@ -1361,7 +1361,7 @@ tape,led tape light kit, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,9,0,0,0,0,0
 light,led tape light kit, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,9,0,0,0,0,0,0,0
 kit,led tape light kit, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,9,0,0,0,0,0,0,0
 usb,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
-3.0,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
+3,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 plug,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 into,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 motherboard,usb 3.0 plug into motherboard, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
@@ -1501,9 +1501,9 @@ to,ps2 to usb active, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,
 usb,ps2 to usb active, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 active,ps2 to usb active, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 minideck,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
-3.0,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
+3,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 usb,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
-3.0,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
+3,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 to,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 hdmi,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
 display,minideck 3.0 usb 3.0 to hdmi display adapter, -   , -   , -   ,#DIV/0!, $-   ,#DIV/0!,0,0,1,0,0,0,0,0,0,0
