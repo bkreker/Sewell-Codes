@@ -13,14 +13,15 @@ namespace QueryMining
     public partial class ColumnHeaderSelect : Form
     {
         private int _index;
+        public int SelectedIndex { get { return _index; } }
         public ColumnHeaderSelect()
         {
             InitializeComponent();
         }
 
-        public ColumnHeaderSelect(List<string> headerRow) :this()
+        public ColumnHeaderSelect(List<string> headerRow) : this()
         {
-            foreach (var item in headerRow)
+            foreach (string item in headerRow)
             {
                 lstBxColumnNames.Items.Add(item.Trim());
 
@@ -31,6 +32,19 @@ namespace QueryMining
         {
             _index = lstBxColumnNames.SelectedIndex;
         }
-        public int SelectedIndex { get { return _index; } }
+
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+            _index = lstBxColumnNames.SelectedIndex;
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            throw new OperationCanceledException();
+        }
     }
+    
 }

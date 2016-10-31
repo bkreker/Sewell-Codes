@@ -43,13 +43,14 @@
             // inFileDialog
             // 
             this.inFileDialog.DefaultExt = "csv";
+            this.inFileDialog.Filter = "CSV Files|*.csv";
             this.inFileDialog.Title = "Select the File To Mine From";
             this.inFileDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.inFileDialog_FileOk);
             // 
             // btnImport
             // 
             this.btnImport.Location = new System.Drawing.Point(395, 10);
-            this.btnImport.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnImport.Margin = new System.Windows.Forms.Padding(2);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(92, 24);
             this.btnImport.TabIndex = 0;
@@ -60,7 +61,7 @@
             // btnSelectFolder
             // 
             this.btnSelectFolder.Location = new System.Drawing.Point(395, 50);
-            this.btnSelectFolder.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSelectFolder.Margin = new System.Windows.Forms.Padding(2);
             this.btnSelectFolder.Name = "btnSelectFolder";
             this.btnSelectFolder.Size = new System.Drawing.Size(92, 24);
             this.btnSelectFolder.TabIndex = 0;
@@ -71,7 +72,7 @@
             // btnClose
             // 
             this.btnClose.Location = new System.Drawing.Point(395, 87);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(2);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(92, 59);
             this.btnClose.TabIndex = 0;
@@ -82,7 +83,7 @@
             // btnGo
             // 
             this.btnGo.Location = new System.Drawing.Point(9, 87);
-            this.btnGo.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnGo.Margin = new System.Windows.Forms.Padding(2);
             this.btnGo.Name = "btnGo";
             this.btnGo.Size = new System.Drawing.Size(382, 35);
             this.btnGo.TabIndex = 0;
@@ -93,7 +94,7 @@
             // txtBoxInFile
             // 
             this.txtBoxInFile.Location = new System.Drawing.Point(9, 12);
-            this.txtBoxInFile.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtBoxInFile.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxInFile.Name = "txtBoxInFile";
             this.txtBoxInFile.Size = new System.Drawing.Size(383, 20);
             this.txtBoxInFile.TabIndex = 1;
@@ -102,7 +103,7 @@
             // txtBoxOutFile
             // 
             this.txtBoxOutFile.Location = new System.Drawing.Point(9, 53);
-            this.txtBoxOutFile.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtBoxOutFile.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxOutFile.Name = "txtBoxOutFile";
             this.txtBoxOutFile.Size = new System.Drawing.Size(383, 20);
             this.txtBoxOutFile.TabIndex = 1;
@@ -111,12 +112,13 @@
             // outFileDialog
             // 
             this.outFileDialog.DefaultExt = "csv";
+            this.outFileDialog.Filter = "CSV Files|*.csv";
             this.outFileDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.outFileFolderDialog_FileOk);
             // 
             // progressBar1
             // 
             this.progressBar1.Location = new System.Drawing.Point(10, 128);
-            this.progressBar1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.MarqueeAnimationSpeed = 0;
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(381, 19);
@@ -132,7 +134,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(496, 154);
+            this.ClientSize = new System.Drawing.Size(496, 155);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.txtBoxOutFile);
             this.Controls.Add(this.txtBoxInFile);
@@ -141,7 +143,7 @@
             this.Controls.Add(this.btnSelectFolder);
             this.Controls.Add(this.btnImport);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.MinimumSize = new System.Drawing.Size(306, 45);
             this.Name = "MainForm";
             this.Text = "QueryWizard";

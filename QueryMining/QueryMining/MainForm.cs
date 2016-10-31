@@ -8,17 +8,29 @@ using System.Threading;
 using System.Linq.Expressions;
 using System.Windows.Forms;
 
+
+/**
+*    What search queries have high impressions but no clicks? 
+*    What search queries have resulted in a conversion? 
+*    What search queries have a below-average CTR for the ad group? 
+*    What search queries have an above-average cost/conversion?
+*    Do I have a problem with ad poaching and duplication?
+**/
+
 namespace QueryMining
 {
     public partial class MainForm : Form
     {
-        //   public Dictionary<string[], bool> data = new Dictionary<string[], bool>();
+        //   public Dictionary<string[], List<>> dataTable = new Dictionary<string[], bool>();
         string _inFileName { get { return txtBoxInFile.Text; } }
         string _outFileName { get { return txtBoxOutFile.Text; } }
         StringWriter _outPutStringStream = new StringWriter();
-        bool _outFileSavedCorrectly = false;
-        bool _inFileReadCorrectly = false;
-
+        bool _outFileSavedCorrectly = false,
+            _inFileReadCorrectly = false,
+            _operationCancelled = false,
+            _processing = false;
+        int _queryColumn = -1,
+             _wordColumn = -1;
         public MainForm()
         {
             InitializeComponent();
@@ -84,6 +96,7 @@ namespace QueryMining
             if (txtBoxOutFile.Text != "" && txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
+                _processing = true;
                 try
                 {
                     ReadData();
@@ -91,7 +104,7 @@ namespace QueryMining
                     {
                         SaveData();
                     }
-                    else
+                    else if (!_operationCancelled)
                     {
                         MessageBox.Show("The file was not read in correctly. Nothing was saved.");
                     }
@@ -104,12 +117,13 @@ namespace QueryMining
             }
             else
             {
-
+                MessageBox.Show("Couldn't open the selected file.");
             }
         }
 
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            _processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
@@ -118,12 +132,19 @@ namespace QueryMining
             btnImport.Enabled = true;
             btnSelectFolder.Enabled = true;
             btnClose.Text = "Close";
+
             if (_outFileSavedCorrectly)
             {
-                MessageBox.Show($"File saved at:\n{_outFileName}", "Done Processing");
+
+                if (MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    var k = new AnalyzeForm(_outPutStringStream, _wordColumn, _queryColumn);
+                    k.ShowDialog();
+                    this.Hide();
+                }
 
             }
-            else
+            else if (!_operationCancelled)
             {
                 MessageBox.Show("The new file was not saved");
             }
@@ -131,6 +152,10 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
+            if (_processing)
+            {
+                MessageBox.Show("The operation was cancelled.");
+            }
             this.Close();
         }
 
@@ -139,53 +164,63 @@ namespace QueryMining
             Console.WriteLine("Processing Data...");
             try
             {
-                try
+                StreamReader inFile = File.OpenText(_inFileName);
+                string firstRowString = inFile.ReadLine();
+                char delimChar = ',';
+                string writeDelim = ",";
+
+                // if it detects it's actually .tsv, switch delimiters
+                if (firstRowString.IndexOf('\t') >= 0)
                 {
-                    StreamReader inFile = File.OpenText(_inFileName);
-                    string firstRowString = inFile.ReadLine();
-                    List<string> firstRow = firstRowString.Split('\t').ToList<string>();
-                    ColumnHeaderSelect c = new ColumnHeaderSelect(firstRow);
-                    c.ShowDialog();
+                    delimChar = '\t';
+                }
+                List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
+
+                ColumnHeaderSelect c = new ColumnHeaderSelect(firstRow);
+                c.ShowDialog();
+
+                if (c.DialogResult == DialogResult.OK)
+                {
                     int queryColumn = c.SelectedIndex;
 
-                    string newFirstRow = $"Word,{string.Join(",", firstRow)}";
+                    string newFirstRow = $"Word,{string.Join(writeDelim, firstRow)}";
                     Console.WriteLine(newFirstRow);
                     _outPutStringStream.WriteLine(newFirstRow);
-                    // outFile.WriteLine(newFirstRow);
 
+                    // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        List<string> fullRow = (inFile.ReadLine().Split(',')).ToList<string>();
+                        List<string> fullRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
                         string query = fullRow[queryColumn].ToString();
                         List<string> queryWords = SplitQuery(query);
 
                         foreach (string word in queryWords)
                         {
-                            try
-                            {
-                                //  data[key] = true;
-                                string newRow = $"{word},{string.Join(",", fullRow)}";
-                                Console.WriteLine($"Query: {query}, Word: {word}");
-                                _outPutStringStream.WriteLine(newRow);
+                            string newRow = $"{word},{string.Join(writeDelim, fullRow)}";
+                            Console.WriteLine($"Query: {query}, Word: {word}");
+                            _outPutStringStream.WriteLine(newRow);
 
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new Exception($"Something Went Wrong Processing the file: {ex.Message}");
-                            }
                         }
                     }
-                    inFile.Close();
+                    _wordColumn = 0;
+                    _queryColumn = 1;
                     _inFileReadCorrectly = true;
                 }
-                catch (Exception ex)
+                else
                 {
-                    throw new Exception($"Something Went Wrong Processing the file: {ex.Message}");
+                    _inFileReadCorrectly = false;
                 }
+
+                inFile.Close();
+            }
+            catch (OperationCanceledException)
+            {
+                _operationCancelled = true;
+                MessageBox.Show("The operation was cancelled.");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Something went wrong: {ex.Message}");
+                throw new Exception($"Something went wrong reading the file: {ex.Message}");
             }
         }
 

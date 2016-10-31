@@ -26,3 +26,4 @@ C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.Col
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.MainForm.resources
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.Properties.Resources.resources
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.csproj.GenerateResource.Cache
+C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.AnalyzeForm.resources
