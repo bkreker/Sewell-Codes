@@ -13,6 +13,13 @@ namespace QueryMining
 {
     public partial class AnalyzeForm : Form
     {
+        StringWriter _outPutStringStream;
+        int _wordColumn = -1,
+            _queryColumn = -1;
+        bool _processing = false,
+            _operationCancelled = false;
+        //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
+        Dictionary<string, DataTable> _dataDictionary = new Dictionary<string, DataTable>();
 
         public AnalyzeForm()
         {
@@ -21,17 +28,85 @@ namespace QueryMining
 
         public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
         {
-            string k = outPutStringStream.ToString();
-            var l = k.Split('\n').ToList();
-            var headers = l[0];
-            l.RemoveAt(0);
-            var data = new Dictionary<string[], List<List<double>>>();
-            foreach (string fullRow in l)
+            _outPutStringStream = outPutStringStream;
+            _wordColumn = wordColumn;
+            _queryColumn = queryColumn;
+            try
+            {
+                progressBar1.Style = ProgressBarStyle.Marquee;
+                progressBar1.MarqueeAnimationSpeed = 50;
+
+                backgroundWorker.RunWorkerAsync();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Something Went Wrong.");
+            }
+        }
+
+        private void Analyze()
+        {
+            Console.WriteLine("Analyze Started.");
+            dgvResults.DataSource = (from a in _dataDictionary
+                                     select a).ToList();
+            Console.WriteLine("Analyze Started.");
+        }
+
+        private void bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // INSERT TIME CONSUMING OPERATIONS HERE
+            // THAT DON'T REPORT PROGRESS
+
+            Console.WriteLine("Processing Data...");
+            try
+            {
+                _processing = true;
+                Sort();
+            }
+            catch (Exception ex)
+            {
+                _processing = false;
+                MessageBox.Show(ex.Message, "Something went wrong while running the application");
+            }
+
+        }
+
+        private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Console.WriteLine("Worker completed");
+            _processing = false;
+            progressBar1.Style = ProgressBarStyle.Continuous;
+            progressBar1.Value = progressBar1.Minimum;
+            progressBar1.MarqueeAnimationSpeed = 0;
+
+
+            if (!_operationCancelled)
+            {
+                MessageBox.Show("Finished!");
+               
+            }
+            else if (_operationCancelled)
+            {
+                MessageBox.Show("The new file was not saved");
+            }
+        }
+
+        private void Sort()
+        {
+            Console.WriteLine("Sort Started.");
+            string fileString = _outPutStringStream.ToString();
+            List<string> statsList = fileString.Split('\n').ToList();
+            string headers = statsList[0];
+            statsList.RemoveAt(0);
+            foreach (string fullRow in statsList)
             {
                 var rowStats = fullRow.Split(',').ToList();
-                string[] key = { rowStats[wordColumn], rowStats[queryColumn] };
-                rowStats.RemoveAt(queryColumn);
-                rowStats.RemoveAt(wordColumn);
+                string word = rowStats[_wordColumn];
+                string query = rowStats[_queryColumn];
+                string key = word; //, rowStats[_queryColumn] };
+                rowStats.RemoveAt(_queryColumn);
+                rowStats.RemoveAt(_wordColumn);
                 List<double> newList = new List<double>();
                 foreach (string item in rowStats)
                 {
@@ -39,23 +114,48 @@ namespace QueryMining
                     if (double.TryParse(item, out stat))
                     {
                         newList.Add(stat);
-
+                    }
+                    else
+                    {
+                        newList.Add(0);
                     }
                 }
                 try
                 {
-                    data[key].Add(newList);
+                    _dataDictionary[key].Stats.Add(newList);
                 }
                 catch (KeyNotFoundException)
                 {
-                    data[key] = new List<List<double>>();
-                    data[key].Add(newList);
-                }
-            }
-        }
+                    _dataDictionary[key] = new DataTable(word, query, newList);
 
-        private void Analyze()
+                    _dataDictionary[key].Stats.Add(newList);
+                }
+                Console.WriteLine($"Key: {word}. Rows: {_dataDictionary[key].Stats.Count}");
+            }
+            Console.WriteLine("Sort Finished.");
+
+            Analyze();
+        }
+    }
+
+    public class DataTable
+    {
+        public string Word { get; set; }
+        public string Query { get; set; }
+        public List<List<double>> Stats { get; set; }
+
+        public DataTable()
         {
+            Stats = new List<List<double>>();
+            Word = "Not Set";
+            Query = "Not Set";
+        }
+        public DataTable(string word, string query, List<double> list)
+        {
+            this.Stats = new List<List<double>>();
+            this.Stats.Add(list);
+            this.Word = word;
+            this.Query = query;
 
         }
     }

@@ -37,7 +37,7 @@
             this.txtBoxOutFile = new System.Windows.Forms.TextBox();
             this.outFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.backGroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // inFileDialog
@@ -125,10 +125,10 @@
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 2;
             // 
-            // backGroundWorker
+            // backgroundWorker
             // 
-            this.backGroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
-            this.backGroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
             // 
             // MainForm
             // 
@@ -163,7 +163,7 @@
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.SaveFileDialog outFileDialog;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.ComponentModel.BackgroundWorker backGroundWorker;
+        private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }
 
