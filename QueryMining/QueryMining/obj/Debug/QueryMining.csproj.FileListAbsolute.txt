@@ -27,3 +27,5 @@ C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.Mai
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.Properties.Resources.resources
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.csproj.GenerateResource.Cache
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\obj\Debug\QueryMining.AnalyzeForm.resources
+C:\Users\10642520\Documents\Local Repos\work-scripts\QueryMining\QueryMining\obj\Debug\QueryMining.AnalyzeForm.resources
+C:\Users\10642520\Documents\Local Repos\work-scripts\QueryMining\QueryMining\obj\Debug\QueryMining.ColumnHeaderSelect.resources

@@ -14,7 +14,8 @@ namespace QueryMining
 {
     public class StatsTable : Dictionary<string, QueryWord>
     {
-        static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
+        static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled;// | RegexOptions.ExplicitCapture;
+
         public List<string> Headers { get; set; }
 
         public int Word_ColIndex { get; set; }
@@ -44,7 +45,7 @@ namespace QueryMining
         private string ROI_regex = @"ROI|ROAS";
         private string NPPerConv_regex = @"NP ?\/ ?Conv|NPPerConv";
         private string GPPerConv_regex = @"GP ?\/ ?Conv\.?|GPPerConv";
-        private string Conversions_regex = @"Conversions|Conv\.?";
+        private string Conversions_regex = @"Conversion(s)?";
         private string Clicks_regex = @"Clicks";
         private string Impressions_regex = @"Impressions|Imp\.?";
         private string ConvValPerCost_regex = @"Conv\.? ?value ?\/ ?cost|ConvValPerCost";
@@ -55,10 +56,7 @@ namespace QueryMining
         private string ConvRate_regex = @"(Conv\.?|Conversion) ?Rate";
         private string ViewThroughConv_regex = @"View\-?through ?Conv\.?";
 
-        private enum StatType
-        {
-            Word, Query, NetProfit, ROI, NPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv
-        }
+
 
         public StatsTable()
         {
@@ -66,34 +64,43 @@ namespace QueryMining
 
         public StatsTable(ref StringWriter stream)
         {
+            Fill(ref stream);
+        }
+        public void Fill(ref StringWriter stream)
+        {
             string fileString = stream.ToString();
             List<string> statsList = fileString.Split('\n').ToList();
-            Fill(ref statsList);
-        }
 
+            setHeaders(statsList[0].Split(',').ToList());
+            Fill(ref statsList);
+
+        }
         public void setHeaders(List<string> headerRow)
         {
-            this.Headers = headerRow;
-            string rowString = headerRow.ToString();
+            List<string> newHeaderRow = (from s in headerRow
+                                         select s.Trim()).ToList();
+            this.Headers = newHeaderRow;
 
-            this.Word_ColIndex = SetStatColumns(Word_regex, ref rowString, ref headerRow);
-            this.Query_ColIndex = SetStatColumns(Query_regex, ref rowString, ref headerRow);
-            this.Cost_ColIndex = SetStatColumns(Cost_regex, ref rowString, ref headerRow);
-            this.GP_ColIndex = SetStatColumns(GP_regex, ref rowString, ref headerRow);
-            this.NetProfit_ColIndex = SetStatColumns(NetProfit_regex, ref rowString, ref headerRow);
-            this.ROI_ColIndex = SetStatColumns(ROI_regex, ref rowString, ref headerRow);
-            this.NPPerConv_ColIndex = SetStatColumns(NPPerConv_regex, ref rowString, ref headerRow);
-            this.GPPerConv_ColIndex = SetStatColumns(GPPerConv_regex, ref rowString, ref headerRow);
-            this.Conversions_ColIndex = SetStatColumns(Conversions_regex, ref rowString, ref headerRow);
-            this.Clicks_ColIndex = SetStatColumns(Clicks_regex, ref rowString, ref headerRow);
-            this.Impressions_ColIndex = SetStatColumns(Impressions_regex, ref rowString, ref headerRow);
-            this.ConvValPerCost_ColIndex = SetStatColumns(ConvValPerCost_regex, ref rowString, ref headerRow);
-            this.CTR_ColIndex = SetStatColumns(CTR_regex, ref rowString, ref headerRow);
-            this.AvgCPC_ColIndex = SetStatColumns(AvgCPC_regex, ref rowString, ref headerRow);
-            this.AvgPosition_ColIndex = SetStatColumns(AvgPosition_regex, ref rowString, ref headerRow);
-            this.CostPerConv_ColIndex = SetStatColumns(CostPerConv_regex, ref rowString, ref headerRow);
-            this.ConvRate_ColIndex = SetStatColumns(ConvRate_regex, ref rowString, ref headerRow);
-            this.ViewThroughConv_ColIndex = SetStatColumns(ViewThroughConv_regex, ref rowString, ref headerRow);
+            string rowString = string.Join(",", newHeaderRow);
+
+            this.Word_ColIndex = SetStatColumns(Word_regex, ref rowString, ref newHeaderRow);
+            this.Query_ColIndex = SetStatColumns(Query_regex, ref rowString, ref newHeaderRow);
+            this.Cost_ColIndex = SetStatColumns(Cost_regex, ref rowString, ref newHeaderRow);
+            this.GP_ColIndex = SetStatColumns(GP_regex, ref rowString, ref newHeaderRow);
+            this.NetProfit_ColIndex = SetStatColumns(NetProfit_regex, ref rowString, ref newHeaderRow);
+            this.ROI_ColIndex = SetStatColumns(ROI_regex, ref rowString, ref newHeaderRow);
+            this.NPPerConv_ColIndex = SetStatColumns(NPPerConv_regex, ref rowString, ref newHeaderRow);
+            this.GPPerConv_ColIndex = SetStatColumns(GPPerConv_regex, ref rowString, ref newHeaderRow);
+            this.Conversions_ColIndex = SetStatColumns(Conversions_regex, ref rowString, ref newHeaderRow);
+            this.Clicks_ColIndex = SetStatColumns(Clicks_regex, ref rowString, ref newHeaderRow);
+            this.Impressions_ColIndex = SetStatColumns(Impressions_regex, ref rowString, ref newHeaderRow);
+            this.ConvValPerCost_ColIndex = SetStatColumns(ConvValPerCost_regex, ref rowString, ref newHeaderRow);
+            this.CTR_ColIndex = SetStatColumns(CTR_regex, ref rowString, ref newHeaderRow);
+            this.AvgCPC_ColIndex = SetStatColumns(AvgCPC_regex, ref rowString, ref newHeaderRow);
+            this.AvgPosition_ColIndex = SetStatColumns(AvgPosition_regex, ref rowString, ref newHeaderRow);
+            this.CostPerConv_ColIndex = SetStatColumns(CostPerConv_regex, ref rowString, ref newHeaderRow);
+            this.ConvRate_ColIndex = SetStatColumns(ConvRate_regex, ref rowString, ref newHeaderRow);
+            this.ViewThroughConv_ColIndex = SetStatColumns(ViewThroughConv_regex, ref rowString, ref newHeaderRow);
 
         }
 
@@ -104,7 +111,8 @@ namespace QueryMining
                 if (Regex.IsMatch(rowString, regex, options))
                 {
                     string wordMatch = Regex.Match(rowString, regex, options).ToString();
-                    return headerRow.IndexOf(wordMatch);
+                    int index = headerRow.IndexOf(wordMatch);
+                    return index;
                 }
                 else
                 {
@@ -120,47 +128,50 @@ namespace QueryMining
 
         public void Fill(ref List<string> statsList)
         {
-            setHeaders(statsList[0].Split(',').ToList());
             statsList.RemoveAt(0);
 
             foreach (string fullRow in statsList)
             {
-                var rowStats = fullRow.Split(',').ToList();
-                string word = rowStats[this.Word_ColIndex];
-                string query = rowStats[this.Query_ColIndex];
-                string key = word; //, rowStats[_queryColumn] };
-                rowStats.RemoveAt(this.Query_ColIndex);
-                rowStats.RemoveAt(this.Word_ColIndex);
-
-                List<double> newList = new List<double>();
-                for (int i = 0; i < rowStats.Count; i++)
-                {
-                    string item = rowStats[i];
-                    double stat;
-                    StatType statType = getStatType(i);
-                    SetStat(item, statType);
-                    if (double.TryParse(item, out stat))
-                    {
-                        newList.Add(stat);
-                    }
-                    else
-                    {
-                        newList.Add(0);
-                    }
-
-                }
                 try
                 {
-                    this[key].Stats.Add(newList);
-                }
-                catch (KeyNotFoundException)
-                {
-                    this[key] = new QueryWord(word, query, newList);
+                    var rowStats = fullRow.Split(',').ToList();
 
-                    this[key].Stats.Add(newList);
+                    string word = rowStats[this.Word_ColIndex];
+                    string query = rowStats[this.Query_ColIndex];
+                    //, rowStats[_queryColumn] };
+
+
+                    var newList = new List<Stat>();
+                    for (int i = 0; i < rowStats.Count; i++)
+                    {
+                        if (i != this.Word_ColIndex && i != this.Query_ColIndex)
+                        {
+                            StatType statType = getStatType(i);
+                            string value = rowStats[i];
+                            Stat stat = new Stat(value, getStatType(i));
+                            SetStat(value, statType);
+                            newList.Add(stat);
+                        }
+                    }
+
+                    try
+                    {
+                        this[word].Stats.Add(newList);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        this[word] = new QueryWord(word, query, newList);
+                        this[word].Stats.Add(newList);
+                    }
+
+                    Console.WriteLine($"Key: {word}. Rows: {this[word].Stats.Count}");
                 }
-                Console.WriteLine($"Key: {word}. Rows: {this[key].Stats.Count}");
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error filling StatsList: {ex.Message}");
+                }
             }
+
             Console.WriteLine("Sort Finished.");
         }
 
@@ -169,9 +180,88 @@ namespace QueryMining
             throw new NotImplementedException();
         }
 
-        private StatType getStatType(int i)
+        private StatType getStatType(int columnIndex)
         {
-            throw new NotImplementedException();
+
+            if (columnIndex == Cost_ColIndex)
+            {
+                return StatType.Cost;
+            }
+            else if (columnIndex == Word_ColIndex)
+            {
+                return StatType.Word;
+
+            }
+            else if (columnIndex == Query_ColIndex)
+            {
+                return StatType.Query;
+            }
+            else if (columnIndex == Clicks_ColIndex)
+            {
+                return StatType.Clicks;
+            }
+            else if (columnIndex == AvgCPC_ColIndex)
+            {
+                return StatType.AvgCPC;
+            }
+            else if (columnIndex == AvgPosition_ColIndex)
+            {
+                return StatType.AvgPosition;
+            }
+            else if (columnIndex == Conversions_ColIndex)
+            {
+                return StatType.Conversions;
+            }
+            else if (columnIndex == ConvRate_ColIndex)
+            {
+                return StatType.ConvRate;
+            }
+            else if (columnIndex == ConvValPerCost_ColIndex)
+            {
+                return StatType.ConvValPerCost;
+            }
+            else if (columnIndex == CostPerConv_ColIndex)
+            {
+                return StatType.CostPerConv;
+            }
+            else if (columnIndex == CTR_ColIndex)
+            {
+                return StatType.CTR;
+            }
+            else if (columnIndex == GPPerConv_ColIndex)
+            {
+                return StatType.GPPerConv;
+            }
+            else if (columnIndex == GP_ColIndex)
+            {
+                return StatType.GP;
+            }
+            else if (columnIndex == Impressions_ColIndex)
+            {
+                return StatType.Impressions;
+            }
+            else if (columnIndex == NetProfit_ColIndex)
+            {
+                return StatType.NetProfit;
+            }
+            else if (columnIndex == NPPerConv_ColIndex)
+            {
+                return StatType.NPPerConv;
+            }
+            else if (columnIndex == ROI_ColIndex)
+            {
+                return StatType.ROI;
+            }
+            else if (columnIndex == ViewThroughConv_ColIndex)
+            {
+                return StatType.ViewThroughConv;
+            }
+            else
+            {
+                throw new Exception($"Stat type not found at column {columnIndex}");
+            }
+
+
         }
     }
 }

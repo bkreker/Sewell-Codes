@@ -33,17 +33,17 @@ namespace QueryMining
         public double ConvRate { get; set; }
         public int ViewThroughConv { get; set; }
 
-        public List<List<double>> Stats { get; set; }
+        public List<List<Stat>> Stats { get; set; }
 
         public QueryWord()
         {
-            Stats = new List<List<double>>();
+            Stats = new List<List<Stat>>();
             Word = "Not Set";
             Query = "Not Set";
         }
-        public QueryWord(string word, string query, List<double> list)
+        public QueryWord(string word, string query, List<Stat> list)
         {
-            this.Stats = new List<List<double>>();
+            this.Stats = new List<List<Stat>>();
             this.Stats.Add(list);
             this.Word = word;
             this.Query = query;

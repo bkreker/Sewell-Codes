@@ -138,8 +138,9 @@ namespace QueryMining
 
                 if (MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    var k = new AnalyzeForm(_outPutStringStream, _wordColumn, _queryColumn);
-                    k.ShowDialog();
+
+                    var analysis = new AnalyzeForm(_outPutStringStream, _wordColumn, _queryColumn);
+                    analysis.ShowDialog();
                     this.Hide();
                 }
 
@@ -162,6 +163,7 @@ namespace QueryMining
         private void ReadData()
         {
             Console.WriteLine("Processing Data...");
+            _processing = true;
             try
             {
                 StreamReader inFile = File.OpenText(_inFileName);
@@ -199,7 +201,6 @@ namespace QueryMining
                             string newRow = $"{word},{string.Join(writeDelim, fullRow)}";
                             Console.WriteLine($"Query: {query}, Word: {word}");
                             _outPutStringStream.WriteLine(newRow);
-
                         }
                     }
                     _wordColumn = 0;

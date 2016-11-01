@@ -58,7 +58,7 @@
     <Compile Include="ColumnHeaderSelect.Designer.cs">
       <DependentUpon>ColumnHeaderSelect.cs</DependentUpon>
     </Compile>
-    <Compile Include="Headers.cs" />
+    <Compile Include="Stat.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

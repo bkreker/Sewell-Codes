@@ -19,7 +19,7 @@ namespace QueryMining
         bool _processing = false,
             _operationCancelled = false;
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
-        Dictionary<string, QueryWord> _dataDictionary = new Dictionary<string, QueryWord>();
+        StatsTable _dataDictionary = new StatsTable();
 
         public AnalyzeForm()
         {
@@ -29,6 +29,7 @@ namespace QueryMining
         public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
         {
             _outPutStringStream = outPutStringStream;
+            _dataDictionary = new StatsTable(ref outPutStringStream);
             _wordColumn = wordColumn;
             _queryColumn = queryColumn;
             try
@@ -47,10 +48,10 @@ namespace QueryMining
 
         private void Analyze()
         {
-            Console.WriteLine("Analyze Started.");
-            dgvResults.DataSource = (from a in _dataDictionary
-                                     select a).ToList();
-            Console.WriteLine("Analyze Started.");
+            //Console.WriteLine("Analyze Started.");
+            //dgvResults.DataSource = (from a in _dataDictionary
+            //                         select a).ToList();
+            //Console.WriteLine("Analyze Started.");
         }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -84,7 +85,7 @@ namespace QueryMining
             if (!_operationCancelled)
             {
                 MessageBox.Show("Finished!");
-               
+
             }
             else if (_operationCancelled)
             {
@@ -94,47 +95,47 @@ namespace QueryMining
 
         private void Sort()
         {
-            Console.WriteLine("Sort Started.");
-            string fileString = _outPutStringStream.ToString();
-            List<string> statsList = fileString.Split('\n').ToList();
-            string headers = statsList[0];
-            statsList.RemoveAt(0);
-            foreach (string fullRow in statsList)
-            {
-                var rowStats = fullRow.Split(',').ToList();
-                string word = rowStats[_wordColumn];
-                string query = rowStats[_queryColumn];
-                string key = word; //, rowStats[_queryColumn] };
-                rowStats.RemoveAt(_queryColumn);
-                rowStats.RemoveAt(_wordColumn);
-                List<double> newList = new List<double>();
-                foreach (string item in rowStats)
-                {
-                    double stat;
-                    if (double.TryParse(item, out stat))
-                    {
-                        newList.Add(stat);
-                    }
-                    else
-                    {
-                        newList.Add(0);
-                    }
-                }
-                try
-                {
-                    _dataDictionary[key].Stats.Add(newList);
-                }
-                catch (KeyNotFoundException)
-                {
-                    _dataDictionary[key] = new QueryWord(word, query, newList);
+            //Console.WriteLine("Sort Started.");
+            //string fileString = _outPutStringStream.ToString();
+            //List<string> statsList = fileString.Split('\n').ToList();
+            //string headers = statsList[0];
+            //statsList.RemoveAt(0);
+            //foreach (string fullRow in statsList)
+            //{
+            //    var rowStats = fullRow.Split(',').ToList();
+            //    string word = rowStats[_wordColumn];
+            //    string query = rowStats[_queryColumn];
+            //    string key = word; //, rowStats[_queryColumn] };
+            //    rowStats.RemoveAt(_queryColumn);
+            //    rowStats.RemoveAt(_wordColumn);
+            //   var newList = new List<Stat>();
+            //    foreach (string item in rowStats)
+            //    {
+            //        double stat;
+            //        if (double.TryParse(item, out stat))
+            //        {
+            //            newList.Add(stat);
+            //        }
+            //        else
+            //        {
+            //            newList.Add(0);
+            //        }
+            //    }
+            //    try
+            //    {
+            //        _dataDictionary[key].Stats.Add(newList);
+            //    }
+            //    catch (KeyNotFoundException)
+            //    {
+            //        _dataDictionary[key] = new QueryWord(word, query, newList);
 
-                    _dataDictionary[key].Stats.Add(newList);
-                }
-                Console.WriteLine($"Key: {word}. Rows: {_dataDictionary[key].Stats.Count}");
-            }
-            Console.WriteLine("Sort Finished.");
+            //        _dataDictionary[key].Stats.Add(newList);
+            //    }
+            //    Console.WriteLine($"Key: {word}. Rows: {_dataDictionary[key].Stats.Count}");
+            //}
+            //Console.WriteLine("Sort Finished.");
 
-            Analyze();
+         //   Analyze();
         }
     }
 
