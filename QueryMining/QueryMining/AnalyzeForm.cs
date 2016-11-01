@@ -19,7 +19,7 @@ namespace QueryMining
         bool _processing = false,
             _operationCancelled = false;
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
-        Dictionary<string, DataTable> _dataDictionary = new Dictionary<string, DataTable>();
+        Dictionary<string, QueryWord> _dataDictionary = new Dictionary<string, QueryWord>();
 
         public AnalyzeForm()
         {
@@ -126,7 +126,7 @@ namespace QueryMining
                 }
                 catch (KeyNotFoundException)
                 {
-                    _dataDictionary[key] = new DataTable(word, query, newList);
+                    _dataDictionary[key] = new QueryWord(word, query, newList);
 
                     _dataDictionary[key].Stats.Add(newList);
                 }
@@ -138,25 +138,4 @@ namespace QueryMining
         }
     }
 
-    public class DataTable
-    {
-        public string Word { get; set; }
-        public string Query { get; set; }
-        public List<List<double>> Stats { get; set; }
-
-        public DataTable()
-        {
-            Stats = new List<List<double>>();
-            Word = "Not Set";
-            Query = "Not Set";
-        }
-        public DataTable(string word, string query, List<double> list)
-        {
-            this.Stats = new List<List<double>>();
-            this.Stats.Add(list);
-            this.Word = word;
-            this.Query = query;
-
-        }
-    }
 }
