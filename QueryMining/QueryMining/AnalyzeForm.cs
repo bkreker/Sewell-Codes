@@ -92,8 +92,17 @@ namespace QueryMining
 
         private void SortRecursive()
         {
+            foreach (QueryWord word1 in _dataDictionary.Values)
+            {
+                recursiveSortHelper(_dataDictionary, word1);
+            }
+        }
+
+        private void recursiveSortHelper(StatsTable s, QueryWord word1)
+        {
 
         }
+
         private void Sort()
         {
             Console.WriteLine("Sort Started.");
