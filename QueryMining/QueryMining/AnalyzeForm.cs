@@ -20,7 +20,7 @@ namespace QueryMining
             _operationCancelled = false;
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
 
-        StatsTable data = new StatsTable();
+        StatsTable _dataDictionary = new StatsTable();
 
         public AnalyzeForm()
         {
@@ -30,7 +30,6 @@ namespace QueryMining
         public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
         {
             _outPutStringStream = outPutStringStream;
-            _dataDictionary = new StatsTable(ref outPutStringStream);
             _wordColumn = wordColumn;
             _queryColumn = queryColumn;
             try
@@ -81,7 +80,7 @@ namespace QueryMining
 
             if (!_operationCancelled)
             {
-                AddToDataGridView(ref data);
+                AddToDataGridView(ref _dataDictionary);
                 MessageBox.Show("Finished!");
 
             }
@@ -91,23 +90,27 @@ namespace QueryMining
             }
         }
 
+        private void SortRecursive()
+        {
+
+        }
         private void Sort()
         {
             Console.WriteLine("Sort Started.");
-            data = new StatsTable(ref _outPutStringStream);
-          //  AddToDataGridView(ref data);
+            _dataDictionary = new StatsTable(ref _outPutStringStream);
+            //  AddToDataGridView(ref data);
             StatsTable data2 = new StatsTable();
             try
             {
-                foreach (QueryWord word1 in data.Values)
+                foreach (QueryWord word1 in _dataDictionary.Values)
                 {
                     var word1Row = word1.Rows;
 
-                    foreach (QueryWord word2 in data.Values)
+                    foreach (QueryWord word2 in _dataDictionary.Values)
                     {
                         if (word2 != word1)
                         {
-                            foreach (QueryWord word3 in data.Values)
+                            foreach (QueryWord word3 in _dataDictionary.Values)
                             {
                                 if (word3 != word1)
                                 {
@@ -118,7 +121,7 @@ namespace QueryMining
                                         if (!data2.ContainsKey(word1.Word + " " + word2.Word) && !data2.ContainsKey(newWord.Word))
                                         {
                                             data2[newWord.Word] = newWord;
-                                         //   AddToDataGridView(newWord);
+                                            //   AddToDataGridView(newWord);
                                         }
                                     }
                                 }
@@ -128,7 +131,7 @@ namespace QueryMining
                 }
                 foreach (var item in data2)
                 {
-                    data.Add(item.Key,item.Value);
+                    _dataDictionary.Add(item.Key, item.Value);
                 }
             }
             catch (Exception ex)
@@ -136,14 +139,14 @@ namespace QueryMining
                 MessageBox.Show(ex.Message, "Something went wrong.");
             }
 
-         //   Analyze();
+            //   Analyze();
         }
 
-        private void AddToDataGridView( ref StatsTable data)
+        private void AddToDataGridView(ref StatsTable data)
         {
             //dgvResults = new DataGridView();
             data.Headers.ForEach(h => dgvResults.Columns.Add(h, h));
-            var dk =  (from row in data
+            var dk = (from row in data
                       select row.Key + row.Value.GetTotalRowString()).ToList();
             dgvResults.DataSource = dk;
         }

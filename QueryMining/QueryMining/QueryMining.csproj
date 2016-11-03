@@ -58,7 +58,6 @@
     <Compile Include="ColumnHeaderSelect.Designer.cs">
       <DependentUpon>ColumnHeaderSelect.cs</DependentUpon>
     </Compile>
-    <Compile Include="Stat.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -70,9 +69,7 @@
     <Compile Include="QueryWord.cs" />
     <Compile Include="Stat.cs" />
     <Compile Include="StatsTable.cs" />
-    <EmbeddedResource Include="AnalyzeForm.resx">
-      <DependentUpon>AnalyzeForm.cs</DependentUpon>
-    </EmbeddedResource>
+   
     <EmbeddedResource Include="ColumnHeaderSelect.resx">
       <DependentUpon>ColumnHeaderSelect.cs</DependentUpon>
     </EmbeddedResource>
