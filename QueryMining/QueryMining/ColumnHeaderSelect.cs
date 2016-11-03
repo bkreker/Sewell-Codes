@@ -24,8 +24,8 @@ namespace QueryMining
             foreach (string item in headerRow)
             {
                 lstBxColumnNames.Items.Add(item.Trim());
-
             }
+            lstBxColumnNames.SelectedIndex = 0;
         }
 
         private void lvHeaderSelect_SelectedIndexChanged(object sender, EventArgs e)
@@ -46,5 +46,5 @@ namespace QueryMining
             throw new OperationCanceledException();
         }
     }
-    
+
 }

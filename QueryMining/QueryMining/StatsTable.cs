@@ -12,8 +12,10 @@ using System.Windows.Forms;
 
 namespace QueryMining
 {
+
     public class StatsTable : Dictionary<string, QueryWord>
     {
+        public const string numberRegex = @"-?[0-9]*(.?[0-9]*)?";
         static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
         public List<string> Headers { get; set; }
 
@@ -44,7 +46,7 @@ namespace QueryMining
         private string ROI_regex = @"ROI|ROAS";
         private string NPPerConv_regex = @"NP ?\/ ?Conv|NPPerConv";
         private string GPPerConv_regex = @"GP ?\/ ?Conv\.?|GPPerConv";
-        private string Conversions_regex = @"Conversions|Conv\.?";
+        private string Conversions_regex = @"Conversion(s)?";
         private string Clicks_regex = @"Clicks";
         private string Impressions_regex = @"Impressions|Imp\.?";
         private string ConvValPerCost_regex = @"Conv\.? ?value ?\/ ?cost|ConvValPerCost";
@@ -63,37 +65,42 @@ namespace QueryMining
         public StatsTable(ref StringWriter stream)
         {
             string fileString = stream.ToString();
-            List<string> statsList = fileString.Split('\n').ToList();
-            Fill(ref statsList);
+            List<string> rows = fileString.Split('\n').ToList();
+
+            List<string> headerRow = (from s in rows[0].Split(',')
+                                      select s.Trim()).ToList();
+            setHeaders(headerRow);
+            rows.RemoveAt(0);
+            Fill(ref rows);
         }
 
         public void setHeaders(List<string> headerRow)
         {
             this.Headers = headerRow;
-            string rowString = headerRow.ToString();
+            string rowString = string.Join(",", headerRow);
 
-            this.Word_ColIndex = SetStatColumns(Word_regex, ref rowString, ref headerRow);
-            this.Query_ColIndex = SetStatColumns(Query_regex, ref rowString, ref headerRow);
-            this.Cost_ColIndex = SetStatColumns(Cost_regex, ref rowString, ref headerRow);
-            this.GP_ColIndex = SetStatColumns(GP_regex, ref rowString, ref headerRow);
-            this.NetProfit_ColIndex = SetStatColumns(NetProfit_regex, ref rowString, ref headerRow);
-            this.ROI_ColIndex = SetStatColumns(ROI_regex, ref rowString, ref headerRow);
-            this.NPPerConv_ColIndex = SetStatColumns(NPPerConv_regex, ref rowString, ref headerRow);
-            this.GPPerConv_ColIndex = SetStatColumns(GPPerConv_regex, ref rowString, ref headerRow);
-            this.Conversions_ColIndex = SetStatColumns(Conversions_regex, ref rowString, ref headerRow);
-            this.Clicks_ColIndex = SetStatColumns(Clicks_regex, ref rowString, ref headerRow);
-            this.Impressions_ColIndex = SetStatColumns(Impressions_regex, ref rowString, ref headerRow);
-            this.ConvValPerCost_ColIndex = SetStatColumns(ConvValPerCost_regex, ref rowString, ref headerRow);
-            this.CTR_ColIndex = SetStatColumns(CTR_regex, ref rowString, ref headerRow);
-            this.AvgCPC_ColIndex = SetStatColumns(AvgCPC_regex, ref rowString, ref headerRow);
-            this.AvgPosition_ColIndex = SetStatColumns(AvgPosition_regex, ref rowString, ref headerRow);
-            this.CostPerConv_ColIndex = SetStatColumns(CostPerConv_regex, ref rowString, ref headerRow);
-            this.ConvRate_ColIndex = SetStatColumns(ConvRate_regex, ref rowString, ref headerRow);
-            this.ViewThroughConv_ColIndex = SetStatColumns(ViewThroughConv_regex, ref rowString, ref headerRow);
+            this.Word_ColIndex = SetStatColumn(Word_regex, ref rowString, ref headerRow);
+            this.Query_ColIndex = SetStatColumn(Query_regex, ref rowString, ref headerRow);
+            this.Cost_ColIndex = SetStatColumn(Cost_regex, ref rowString, ref headerRow);
+            this.GP_ColIndex = SetStatColumn(GP_regex, ref rowString, ref headerRow);
+            this.NetProfit_ColIndex = SetStatColumn(NetProfit_regex, ref rowString, ref headerRow);
+            this.ROI_ColIndex = SetStatColumn(ROI_regex, ref rowString, ref headerRow);
+            this.NPPerConv_ColIndex = SetStatColumn(NPPerConv_regex, ref rowString, ref headerRow);
+            this.GPPerConv_ColIndex = SetStatColumn(GPPerConv_regex, ref rowString, ref headerRow);
+            this.Conversions_ColIndex = SetStatColumn(Conversions_regex, ref rowString, ref headerRow);
+            this.Clicks_ColIndex = SetStatColumn(Clicks_regex, ref rowString, ref headerRow);
+            this.Impressions_ColIndex = SetStatColumn(Impressions_regex, ref rowString, ref headerRow);
+            this.ConvValPerCost_ColIndex = SetStatColumn(ConvValPerCost_regex, ref rowString, ref headerRow);
+            this.CTR_ColIndex = SetStatColumn(CTR_regex, ref rowString, ref headerRow);
+            this.AvgCPC_ColIndex = SetStatColumn(AvgCPC_regex, ref rowString, ref headerRow);
+            this.AvgPosition_ColIndex = SetStatColumn(AvgPosition_regex, ref rowString, ref headerRow);
+            this.CostPerConv_ColIndex = SetStatColumn(CostPerConv_regex, ref rowString, ref headerRow);
+            this.ConvRate_ColIndex = SetStatColumn(ConvRate_regex, ref rowString, ref headerRow);
+            this.ViewThroughConv_ColIndex = SetStatColumn(ViewThroughConv_regex, ref rowString, ref headerRow);
 
         }
 
-        private int SetStatColumns(string regex, ref string rowString, ref List<string> headerRow)
+        private int SetStatColumn(string regex, ref string rowString, ref List<string> headerRow)
         {
             try
             {
@@ -114,56 +121,68 @@ namespace QueryMining
             }
         }
 
+        /// <summary>
+        /// Fill the underlying Dictionary from a list of rows
+        /// </summary>
+        /// <param name="statsList"></param>
         public void Fill(ref List<string> statsList)
         {
-            setHeaders(statsList[0].Split(',').ToList());
             statsList.RemoveAt(0);
-
-            foreach (string fullRow in statsList)
+            for (int i = 0; i < statsList.Count; i++)
             {
-                var rowStats = fullRow.Split(',').ToList();
-                string word = rowStats[this.Word_ColIndex];
-                string query = rowStats[this.Query_ColIndex];
-                string key = word; //, rowStats[_queryColumn] };
-                rowStats.RemoveAt(this.Query_ColIndex);
-                rowStats.RemoveAt(this.Word_ColIndex);
-                QueryWord newWord = new QueryWord();
-                List<decimal> newList = new List<decimal>();
-                for (int i = 0; i < rowStats.Count; i++)
-                {
-                    string item = rowStats[i];
-                    StatType statType = getStatType(i);
-                    SetStat(ref newList, item, statType);
-                }
-                newWord.Fill(word, query, newList);
                 try
                 {
-                    this[key].Stats.Add(newList);
-                }
-                catch (KeyNotFoundException)
-                {
-                    this[key] = newWord;
+                    string fullRow = statsList[i];
 
-                    this[key].Stats.Add(newList);
+                    List<string> rowStats = fullRow.Split(',').ToList();
+                    List<decimal> newList = new List<decimal>();
+                    string word = rowStats[this.Word_ColIndex],
+                        query = rowStats[this.Query_ColIndex];
+
+                    if (!this.ContainsKey(word))
+                    {
+                        this[word] = new QueryWord();
+                    }
+
+                    for (int j = 0; j < rowStats.Count; j++)
+                    {
+                        try
+                        {
+                            string stat = rowStats[j];
+
+                            StatType statType = getStatType(j);
+                            this[word].SetStat(stat, statType);
+
+                            if (Regex.IsMatch(stat, numberRegex))
+                            {
+                                string str;
+                                decimal num;
+                                str = Regex.Match(stat, numberRegex).Value;
+                                if (decimal.TryParse(str, out num))
+                                {
+                                    newList.Add(num);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error filling Row {i}: {ex.Message}");
+                        }
+                    }
+
+                    this[word].Fill(word, query, newList);
+                    this[word].Rows.Add(newList);
+
+                    Console.WriteLine($"Key: {word}. Rows: {this[word].Rows.Count}");
                 }
-                Console.WriteLine($"Key: {word}. Rows: {this[key].Stats.Count}");
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding row{i} to StatsTable: {ex.Message}");
+                }
             }
             Console.WriteLine("Sort Finished.");
         }
 
-        private void SetStat(ref List<decimal> newList, string item, StatType statType)
-        {
-            decimal stat;
-            if (decimal.TryParse(item, out stat))
-            {
-                newList.Add(stat);
-                newList.AddStat(item, statType);
-            }
-            else
-            {
-                newList.Add(0);
-            }
-        }
 
         private StatType getStatType(int i)
         {
