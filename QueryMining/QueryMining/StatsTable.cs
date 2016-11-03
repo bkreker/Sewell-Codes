@@ -101,26 +101,7 @@ namespace QueryMining
             this.CostPerConv_ColIndex = SetStatColumn(CostPerConv_regex, ref rowString, ref headerRow);
             this.ConvRate_ColIndex = SetStatColumn(ConvRate_regex, ref rowString, ref headerRow);
             this.ViewThroughConv_ColIndex = SetStatColumn(ViewThroughConv_regex, ref rowString, ref headerRow);
-
-            this.Word_ColIndex = SetStatColumns(Word_regex, ref rowString, ref newHeaderRow);
-            this.Query_ColIndex = SetStatColumns(Query_regex, ref rowString, ref newHeaderRow);
-            this.Cost_ColIndex = SetStatColumns(Cost_regex, ref rowString, ref newHeaderRow);
-            this.GP_ColIndex = SetStatColumns(GP_regex, ref rowString, ref newHeaderRow);
-            this.NetProfit_ColIndex = SetStatColumns(NetProfit_regex, ref rowString, ref newHeaderRow);
-            this.ROI_ColIndex = SetStatColumns(ROI_regex, ref rowString, ref newHeaderRow);
-            this.NPPerConv_ColIndex = SetStatColumns(NPPerConv_regex, ref rowString, ref newHeaderRow);
-            this.GPPerConv_ColIndex = SetStatColumns(GPPerConv_regex, ref rowString, ref newHeaderRow);
-            this.Conversions_ColIndex = SetStatColumns(Conversions_regex, ref rowString, ref newHeaderRow);
-            this.Clicks_ColIndex = SetStatColumns(Clicks_regex, ref rowString, ref newHeaderRow);
-            this.Impressions_ColIndex = SetStatColumns(Impressions_regex, ref rowString, ref newHeaderRow);
-            this.ConvValPerCost_ColIndex = SetStatColumns(ConvValPerCost_regex, ref rowString, ref newHeaderRow);
-            this.CTR_ColIndex = SetStatColumns(CTR_regex, ref rowString, ref newHeaderRow);
-            this.AvgCPC_ColIndex = SetStatColumns(AvgCPC_regex, ref rowString, ref newHeaderRow);
-            this.AvgPosition_ColIndex = SetStatColumns(AvgPosition_regex, ref rowString, ref newHeaderRow);
-            this.CostPerConv_ColIndex = SetStatColumns(CostPerConv_regex, ref rowString, ref newHeaderRow);
-            this.ConvRate_ColIndex = SetStatColumns(ConvRate_regex, ref rowString, ref newHeaderRow);
-            this.ViewThroughConv_ColIndex = SetStatColumns(ViewThroughConv_regex, ref rowString, ref newHeaderRow);
-
+            
         }
 
         private int SetStatColumn(string regex, ref string rowString, ref List<string> headerRow)
@@ -193,11 +174,6 @@ namespace QueryMining
                             Console.WriteLine($"Error filling Row {i}: {ex.Message}");
                         }
                     }
-                    catch (KeyNotFoundException)
-                    {
-                        this[word] = new QueryWord(word, query, newList);
-                        this[word].Stats.Add(newList);
-                    }
 
                     this[word].Fill(word, query, newList);
                     this[word].Rows.Add(newList);
@@ -215,83 +191,83 @@ namespace QueryMining
 
         private StatType getStatType(int columnIndex)
         {
-            if (i >= 0)
+            if (columnIndex >= 0)
             {
-                if (i == AvgCPC_ColIndex)
+                if (columnIndex == AvgCPC_ColIndex)
                 {
                     return StatType.AvgCPC;
                 }
-                else if (i == AvgPosition_ColIndex)
+                else if (columnIndex == AvgPosition_ColIndex)
                 {
                     return StatType.AvgPosition;
                 }
-                else if (i == Clicks_ColIndex)
+                else if (columnIndex == Clicks_ColIndex)
                 {
                     return StatType.Clicks;
                 }
-                else if (i == Conversions_ColIndex)
+                else if (columnIndex == Conversions_ColIndex)
                 {
                     return StatType.Conversions;
                 }
-                else if (i == ConvRate_ColIndex)
+                else if (columnIndex == ConvRate_ColIndex)
                 {
                     return StatType.ConvRate;
                 }
-                else if (i == ConvValPerCost_ColIndex)
+                else if (columnIndex == ConvValPerCost_ColIndex)
                 {
                     return StatType.ConvValPerCost;
                 }
-                else if (i == CostPerConv_ColIndex)
+                else if (columnIndex == CostPerConv_ColIndex)
                 {
                     return StatType.CostPerConv;
                 }
-                else if (i == Cost_ColIndex)
+                else if (columnIndex == Cost_ColIndex)
                 {
                     return StatType.Cost;
                 }
-                else if (i == CTR_ColIndex)
+                else if (columnIndex == CTR_ColIndex)
                 {
                     return StatType.CTR;
                 }
-                else if (i == GPPerConv_ColIndex)
+                else if (columnIndex == GPPerConv_ColIndex)
                 {
                     return StatType.GPPerConv;
                 }
-                else if (i == GP_ColIndex)
+                else if (columnIndex == GP_ColIndex)
                 {
                     return StatType.GP;
                 }
-                else if (i == Impressions_ColIndex)
+                else if (columnIndex == Impressions_ColIndex)
                 {
                     return StatType.Impressions;
                 }
-                else if (i == NetProfit_ColIndex)
+                else if (columnIndex == NetProfit_ColIndex)
                 {
                     return StatType.NetProfit;
                 }
-                else if (i == NPPerConv_ColIndex)
+                else if (columnIndex == NPPerConv_ColIndex)
                 {
                     return StatType.NPPerConv;
                 }
-                else if (i == Query_ColIndex)
+                else if (columnIndex == Query_ColIndex)
                 {
                     return StatType.Query;
                 }
-                else if (i == ROI_ColIndex)
+                else if (columnIndex == ROI_ColIndex)
                 {
                     return StatType.ROI;
                 }
-                else if (i == ViewThroughConv_ColIndex)
+                else if (columnIndex == ViewThroughConv_ColIndex)
                 {
                     return StatType.ViewThroughConv;
                 }
-                else if (i == Word_ColIndex)
+                else if (columnIndex == Word_ColIndex)
                 {
                     return StatType.Word;
                 }
                 else
                 {
-                    throw new Exception($"The index {i} does not correspond to any existing stat column.");
+                    throw new Exception($"The index {columnIndex} does not correspond to any existing stat column.");
                 }
             }
             else
