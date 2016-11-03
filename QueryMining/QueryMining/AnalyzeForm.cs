@@ -19,7 +19,8 @@ namespace QueryMining
         bool _processing = false,
             _operationCancelled = false;
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
-        StatsTable _dataDictionary = new StatsTable();
+
+        StatsTable data = new StatsTable();
 
         public AnalyzeForm()
         {
@@ -56,9 +57,6 @@ namespace QueryMining
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            // INSERT TIME CONSUMING OPERATIONS HERE
-            // THAT DON'T REPORT PROGRESS
-
             Console.WriteLine("Processing Data...");
             try
             {
@@ -81,9 +79,9 @@ namespace QueryMining
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
 
-
             if (!_operationCancelled)
             {
+                AddToDataGridView(ref data);
                 MessageBox.Show("Finished!");
 
             }
@@ -95,47 +93,63 @@ namespace QueryMining
 
         private void Sort()
         {
-            //Console.WriteLine("Sort Started.");
-            //string fileString = _outPutStringStream.ToString();
-            //List<string> statsList = fileString.Split('\n').ToList();
-            //string headers = statsList[0];
-            //statsList.RemoveAt(0);
-            //foreach (string fullRow in statsList)
-            //{
-            //    var rowStats = fullRow.Split(',').ToList();
-            //    string word = rowStats[_wordColumn];
-            //    string query = rowStats[_queryColumn];
-            //    string key = word; //, rowStats[_queryColumn] };
-            //    rowStats.RemoveAt(_queryColumn);
-            //    rowStats.RemoveAt(_wordColumn);
-            //   var newList = new List<Stat>();
-            //    foreach (string item in rowStats)
-            //    {
-            //        double stat;
-            //        if (double.TryParse(item, out stat))
-            //        {
-            //            newList.Add(stat);
-            //        }
-            //        else
-            //        {
-            //            newList.Add(0);
-            //        }
-            //    }
-            //    try
-            //    {
-            //        _dataDictionary[key].Stats.Add(newList);
-            //    }
-            //    catch (KeyNotFoundException)
-            //    {
-            //        _dataDictionary[key] = new QueryWord(word, query, newList);
+            Console.WriteLine("Sort Started.");
+            data = new StatsTable(ref _outPutStringStream);
+          //  AddToDataGridView(ref data);
+            StatsTable data2 = new StatsTable();
+            try
+            {
+                foreach (QueryWord word1 in data.Values)
+                {
+                    var word1Row = word1.Rows;
 
-            //        _dataDictionary[key].Stats.Add(newList);
-            //    }
-            //    Console.WriteLine($"Key: {word}. Rows: {_dataDictionary[key].Stats.Count}");
-            //}
-            //Console.WriteLine("Sort Finished.");
+                    foreach (QueryWord word2 in data.Values)
+                    {
+                        if (word2 != word1)
+                        {
+                            foreach (QueryWord word3 in data.Values)
+                            {
+                                if (word3 != word1)
+                                {
+                                    if (word3.Query.Contains(word1.Word) && word3.Query.Contains(word2.Word) && word3 != word2)
+                                    {
+                                        QueryWord newWord = word2 + word1;
+                                        Console.WriteLine(newWord.Word);
+                                        if (!data2.ContainsKey(word1.Word + " " + word2.Word) && !data2.ContainsKey(newWord.Word))
+                                        {
+                                            data2[newWord.Word] = newWord;
+                                         //   AddToDataGridView(newWord);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                foreach (var item in data2)
+                {
+                    data.Add(item.Key,item.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Something went wrong.");
+            }
 
          //   Analyze();
+        }
+
+        private void AddToDataGridView( ref StatsTable data)
+        {
+            //dgvResults = new DataGridView();
+            data.Headers.ForEach(h => dgvResults.Columns.Add(h, h));
+            var dk =  (from row in data
+                      select row.Key + row.Value.GetTotalRowString()).ToList();
+            dgvResults.DataSource = dk;
+        }
+        private void AddToDataGridView(QueryWord newWord)
+        {
+            throw new NotImplementedException();
         }
     }
 

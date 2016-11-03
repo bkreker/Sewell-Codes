@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 
 namespace QueryMining
 {
-    public enum StatType
-    {
-        Word, Query, NetProfit, Cost, ROI, GP, GPPerConv, NPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv
-    }
-
     public class Stat
     {
         public string Name { get; set; }

@@ -24,13 +24,17 @@ namespace QueryMining
         //   public Dictionary<string[], List<>> dataTable = new Dictionary<string[], bool>();
         string _inFileName { get { return txtBoxInFile.Text; } }
         string _outFileName { get { return txtBoxOutFile.Text; } }
+
         StringWriter _outPutStringStream = new StringWriter();
+
         bool _outFileSavedCorrectly = false,
             _inFileReadCorrectly = false,
             _operationCancelled = false,
             _processing = false;
+
         int _queryColumn = -1,
              _wordColumn = -1;
+
         public MainForm()
         {
             InitializeComponent();

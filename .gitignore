@@ -7,6 +7,8 @@
 *.userosscache
 *.sln.docstates
 *.vshost.exe.manifest
+*.vshost.exe
+*.exe.config
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

@@ -46,5 +46,5 @@ namespace QueryMining
             throw new OperationCanceledException();
         }
     }
-    
+
 }
