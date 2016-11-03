@@ -55,10 +55,6 @@ namespace QueryMining
         private string ConvRate_regex = @"(Conv\.?|Conversion) ?Rate";
         private string ViewThroughConv_regex = @"View\-?through ?Conv\.?";
 
-        private enum StatType
-        {
-            Word, Query, NetProfit, ROI, NPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv
-        }
 
         public StatsTable()
         {
@@ -131,31 +127,22 @@ namespace QueryMining
                 string key = word; //, rowStats[_queryColumn] };
                 rowStats.RemoveAt(this.Query_ColIndex);
                 rowStats.RemoveAt(this.Word_ColIndex);
-
-                List<double> newList = new List<double>();
+                QueryWord newWord = new QueryWord();
+                List<decimal> newList = new List<decimal>();
                 for (int i = 0; i < rowStats.Count; i++)
                 {
                     string item = rowStats[i];
-                    double stat;
                     StatType statType = getStatType(i);
-                    SetStat(item, statType);
-                    if (double.TryParse(item, out stat))
-                    {
-                        newList.Add(stat);
-                    }
-                    else
-                    {
-                        newList.Add(0);
-                    }
-
+                    SetStat(ref newList, item, statType);
                 }
+                newWord.Fill(word, query, newList);
                 try
                 {
                     this[key].Stats.Add(newList);
                 }
                 catch (KeyNotFoundException)
                 {
-                    this[key] = new QueryWord(word, query, newList);
+                    this[key] = newWord;
 
                     this[key].Stats.Add(newList);
                 }
@@ -164,14 +151,105 @@ namespace QueryMining
             Console.WriteLine("Sort Finished.");
         }
 
-        private void SetStat(string item, StatType statType)
+        private void SetStat(ref List<decimal> newList, string item, StatType statType)
         {
-            throw new NotImplementedException();
+            decimal stat;
+            if (decimal.TryParse(item, out stat))
+            {
+                newList.Add(stat);
+                newList.AddStat(item, statType);
+            }
+            else
+            {
+                newList.Add(0);
+            }
         }
 
         private StatType getStatType(int i)
         {
-            throw new NotImplementedException();
+            if (i >= 0)
+            {
+                if (i == AvgCPC_ColIndex)
+                {
+                    return StatType.AvgCPC;
+                }
+                else if (i == AvgPosition_ColIndex)
+                {
+                    return StatType.AvgPosition;
+                }
+                else if (i == Clicks_ColIndex)
+                {
+                    return StatType.Clicks;
+                }
+                else if (i == Conversions_ColIndex)
+                {
+                    return StatType.Conversions;
+                }
+                else if (i == ConvRate_ColIndex)
+                {
+                    return StatType.ConvRate;
+                }
+                else if (i == ConvValPerCost_ColIndex)
+                {
+                    return StatType.ConvValPerCost;
+                }
+                else if (i == CostPerConv_ColIndex)
+                {
+                    return StatType.CostPerConv;
+                }
+                else if (i == Cost_ColIndex)
+                {
+                    return StatType.Cost;
+                }
+                else if (i == CTR_ColIndex)
+                {
+                    return StatType.CTR;
+                }
+                else if (i == GPPerConv_ColIndex)
+                {
+                    return StatType.GPPerConv;
+                }
+                else if (i == GP_ColIndex)
+                {
+                    return StatType.GP;
+                }
+                else if (i == Impressions_ColIndex)
+                {
+                    return StatType.Impressions;
+                }
+                else if (i == NetProfit_ColIndex)
+                {
+                    return StatType.NetProfit;
+                }
+                else if (i == NPPerConv_ColIndex)
+                {
+                    return StatType.NPPerConv;
+                }
+                else if (i == Query_ColIndex)
+                {
+                    return StatType.Query;
+                }
+                else if (i == ROI_ColIndex)
+                {
+                    return StatType.ROI;
+                }
+                else if (i == ViewThroughConv_ColIndex)
+                {
+                    return StatType.ViewThroughConv;
+                }
+                else if (i == Word_ColIndex)
+                {
+                    return StatType.Word;
+                }
+                else
+                {
+                    throw new Exception($"The index {i} does not correspond to any existing stat column.");
+                }
+            }
+            else
+            {
+                throw new IndexOutOfRangeException();
+            }
         }
     }
 }

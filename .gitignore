@@ -9,7 +9,6 @@
 *.vshost.exe.manifest
 *.vshost.exe
 *.exe.config
-*.vshost.exe
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
