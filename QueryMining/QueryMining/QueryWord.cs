@@ -16,6 +16,7 @@ namespace QueryMining
     {
         Word, Query, Cost, NetProfit, GP, GPPerConv, ROI, NPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv
     }
+
     public class QueryWord
     {
         private List<List<decimal>> _stats;
@@ -45,9 +46,15 @@ namespace QueryMining
             set { _stats = value; }
         }
 
+        public List<string> GetTotalRowString()
+        {
+            throw new NotImplementedException();
+        }
+
         public QueryWord(string word = "Not Set", string query = "Not Set")
         {
             this.Rows = new List<List<decimal>>();
+
             this.Word = word;
             this.Query = query;
             this.Cost = 0;

@@ -19,7 +19,8 @@ namespace QueryMining
         bool _processing = false,
             _operationCancelled = false;
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
-        Dictionary<string, QueryWord> _dataDictionary = new Dictionary<string, QueryWord>();
+
+        StatsTable data = new StatsTable();
 
         public AnalyzeForm()
         {
@@ -79,6 +80,7 @@ namespace QueryMining
 
             if (!_operationCancelled)
             {
+                AddToDataGridView(ref data);
                 MessageBox.Show("Finished!");
 
             }
@@ -91,7 +93,8 @@ namespace QueryMining
         private void Sort()
         {
             Console.WriteLine("Sort Started.");
-            StatsTable data = new StatsTable(ref _outPutStringStream);
+            data = new StatsTable(ref _outPutStringStream);
+          //  AddToDataGridView(ref data);
             StatsTable data2 = new StatsTable();
             try
             {
@@ -114,6 +117,7 @@ namespace QueryMining
                                         if (!data2.ContainsKey(word1.Word + " " + word2.Word) && !data2.ContainsKey(newWord.Word))
                                         {
                                             data2[newWord.Word] = newWord;
+                                         //   AddToDataGridView(newWord);
                                         }
                                     }
                                 }
@@ -132,6 +136,19 @@ namespace QueryMining
             }
 
             Analyze();
+        }
+
+        private void AddToDataGridView( ref StatsTable data)
+        {
+            //dgvResults = new DataGridView();
+            data.Headers.ForEach(h => dgvResults.Columns.Add(h, h));
+            var dk =  (from row in data
+                      select row.Key + row.Value.GetTotalRowString()).ToList();
+            dgvResults.DataSource = dk;
+        }
+        private void AddToDataGridView(QueryWord newWord)
+        {
+            throw new NotImplementedException();
         }
     }
 
