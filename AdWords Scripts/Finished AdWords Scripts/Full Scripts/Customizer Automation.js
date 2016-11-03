@@ -24,8 +24,8 @@ var SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1FCp4YgZJ9pLAuWUZG
 var alreadyCheckedUrls = {};
 var alreadyAddedPrices = {};
 
-var REGEX_SKU_CODE = /(itemprop="mpn">)([sS][wW]-[0-9]{4,})-[A-z0-9]*/g;
-var REGEX_SKU_FORMAT = /([sS][wW]-[0-9]{4,})-[A-z0-9]*/g;
+var REGEX_SKU_CODE = /(itemprop="mpn">)SW-[0-9]+-*[A-z0-9]*/gi; 
+var REGEX_SKU_FORMAT = /SW-[0-9]+-*[A-z0-9]*/gi;
 var REGEX_PRICE_FORMAT = /(\d*\.)\d+/g;
 var REGEX_PRICE_CODE = [/(itemprop="price">\$\d*\.)\d+(<\/div>)/g, /(class="price belowstrike">\$\d*\.)\d+(<\/h2>)/g];
 var REGEX_URL = /(http)s?:\/\//g;
