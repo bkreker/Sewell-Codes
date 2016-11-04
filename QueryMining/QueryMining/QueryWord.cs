@@ -19,31 +19,265 @@ namespace QueryMining
 
     public class QueryWord
     {
-        private List<List<decimal>> _stats;
 
         public string Word { get; set; }
         public string Query { get; set; }
-        public decimal Cost { get; set; }
-        public decimal GP { get; set; }
-        public decimal NetProfit { get; set; }
-        public decimal NPPerConv { get; set; }
-        public decimal GPPerConv { get; set; }
-        public decimal ConvValPerCost { get; set; }
-        public decimal CostPerConv { get; set; }
-        public decimal AvgCPC { get; set; }
-        public double ROI { get; set; }
-        public double CTR { get; set; }
-        public double AvgPosition { get; set; }
-        public double ConvRate { get; set; }
-        public double Conversions { get; set; }
-        public double Clicks { get; set; }
-        public double Impressions { get; set; }
-        public double ViewThroughConv { get; set; }
 
-        public List<List<decimal>> Rows
+        public decimal? Cost
         {
-            get { return _stats; }
-            set { _stats = value; }
+            get { return CostStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    CostStat = new Stat<decimal>((decimal)value, StatType.Cost);
+                }
+            }
+        }
+        public decimal? GP
+        {
+            get { return GPStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    GPStat = new Stat<decimal>((decimal)value, StatType.GP);
+                }
+            }
+        }
+        public decimal? NetProfit
+        {
+            get { return NetProfitStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    NetProfitStat = new Stat<decimal>((decimal)value, StatType.NetProfit);
+                }
+            }
+        }
+        public decimal? NPPerConv
+        {
+            get { return NPPerConvStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    NPPerConvStat = new Stat<decimal>((decimal)value, StatType.NPPerConv);
+                }
+            }
+        }
+        public decimal? GPPerConv
+        {
+            get { return GPPerConvStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    GPPerConvStat = new Stat<decimal>((decimal)value, StatType.GPPerConv);
+                }
+            }
+        }
+        public decimal? ConvValPerCost
+        {
+            get { return ConvValPerCostStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ConvValPerCostStat = new Stat<decimal>((decimal)value, StatType.ConvValPerCost);
+                }
+            }
+        }
+        public decimal? CostPerConv
+        {
+            get { return CostPerConvStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    CostPerConvStat = new Stat<decimal>((decimal)value, StatType.CostPerConv);
+                }
+            }
+        }
+        public decimal? AvgCPC
+        {
+            get { return AvgCPCStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    AvgCPCStat = new Stat<decimal>((decimal)value, StatType.AvgCPC);
+                }
+            }
+        }
+        public double? ROI
+        {
+            get { return ROIStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ROIStat = new Stat<double>((double)value, StatType.ROI);
+                }
+            }
+        }
+        public double? CTR
+        {
+            get { return CTRStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    CTRStat = new Stat<double>((double)value, StatType.CTR);
+                }
+            }
+        }
+        public double? AvgPosition
+        {
+            get { return AvgPositionStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    AvgPositionStat = new Stat<double>((double)value, StatType.AvgPosition);
+                }
+            }
+        }
+        public double? ConvRate
+        {
+            get { return ConvRateStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ConvRateStat = new Stat<double>((double)value, StatType.ConvRate);
+                }
+            }
+        }
+        public double? Conversions
+        {
+            get { return ConversionsStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ConversionsStat = new Stat<double>((double)value, StatType.Conversions);
+                }
+            }
+        }
+        public double? Clicks
+        {
+            get { return ClicksStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ClicksStat = new Stat<double>((double)value, StatType.Clicks);
+                }
+            }
+        }
+        public double? Impressions
+        {
+            get { return ImpressionsStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ImpressionsStat = new Stat<double>((double)value, StatType.Impressions);
+                }
+            }
+        }
+        public double? ViewThroughConv
+        {
+            get { return ViewThroughConvStat.Value; }
+            set
+            {
+                if (value != null)
+                {
+                    ViewThroughConvStat = new Stat<double>((double)value, StatType.ViewThroughConv);
+                }
+            }
+        }
+
+        public Stat<decimal> CostStat { get; set; }
+        public Stat<decimal> GPStat { get; set; }
+        public Stat<decimal> NetProfitStat { get; set; }
+        public Stat<decimal> NPPerConvStat { get; set; }
+        public Stat<decimal> GPPerConvStat { get; set; }
+        public Stat<decimal> ConvValPerCostStat { get; set; }
+        public Stat<decimal> CostPerConvStat { get; set; }
+        public Stat<decimal> AvgCPCStat { get; set; }
+        public Stat<double> ROIStat { get; set; }
+        public Stat<double> CTRStat { get; set; }
+        public Stat<double> AvgPositionStat { get; set; }
+        public Stat<double> ConvRateStat { get; set; }
+        public Stat<double> ConversionsStat { get; set; }
+        public Stat<double> ClicksStat { get; set; }
+        public Stat<double> ImpressionsStat { get; set; }
+        public Stat<double> ViewThroughConvStat { get; set; }
+
+        public List<List<decimal>> Rows { get; set; }
+
+        public string RowString()
+        {
+            Cost = null;
+            return $"{Word},{Query}{Cost},{GP},{NetProfit},{ROI},{NPPerConv},{GPPerConv},{Conversions},{Clicks},{Impressions},{ConvValPerCost},{CTR},{AvgCPC},{AvgPosition},{CostPerConv},{ConvRate},{ViewThroughConv}";
+        }
+
+        public object[] FullRowItems()
+        {
+            var result = new List<object>();
+            if (this.Cost != null)              /**/result.Add(this.Cost);
+            if (this.GP != null)                /**/result.Add(this.GP);
+            if (this.NetProfit != null)         /**/result.Add(this.NetProfit);
+            if (this.ROI != null)               /**/result.Add(this.ROI);
+            if (this.NPPerConv != null)         /**/result.Add(this.NPPerConv);
+            if (this.GPPerConv != null)         /**/result.Add(this.GPPerConv);
+            if (this.Conversions != null)       /**/result.Add(this.Conversions);
+            if (this.Clicks != null)            /**/result.Add(this.Clicks);
+            if (this.Impressions != null)       /**/result.Add(this.Impressions);
+            if (this.ConvValPerCost != null)    /**/result.Add(this.ConvValPerCost);
+            if (this.CTR != null)               /**/result.Add(this.CTR);
+            if (this.AvgCPC != null)            /**/result.Add(this.AvgCPC);
+            if (this.AvgPosition != null)       /**/result.Add(this.AvgPosition);
+            if (this.CostPerConv != null)       /**/result.Add(this.CostPerConv);
+            if (this.ConvRate != null)          /**/result.Add(this.ConvRate);
+            if (this.ViewThroughConv != null)   /**/result.Add(this.ViewThroughConv);
+
+
+            return result.ToArray();
+
+        }
+
+        public List<TopStat> StatsList()
+        {
+            try
+            {
+                List<TopStat> result = new List<TopStat>();
+                if (this.Cost != null)             /**/result.Add(this.CostStat);
+                if (this.GP != null)               /**/result.Add(this.GPStat);
+                if (this.NetProfit != null)        /**/result.Add(this.NetProfitStat);
+                if (this.ROI != null)              /**/result.Add(this.NPPerConvStat);
+                if (this.NPPerConv != null)        /**/result.Add(this.GPPerConvStat);
+                if (this.GPPerConv != null)        /**/result.Add(this.ConvValPerCostStat);
+                if (this.Conversions != null)      /**/result.Add(this.CostPerConvStat);
+                if (this.Clicks != null)           /**/result.Add(this.AvgCPCStat);
+                if (this.Impressions != null)      /**/result.Add(this.ROIStat);
+                if (this.ConvValPerCost != null)   /**/result.Add(this.CTRStat);
+                if (this.CTR != null)              /**/result.Add(this.AvgPositionStat);
+                if (this.AvgCPC != null)           /**/result.Add(this.ConvRateStat);
+                if (this.AvgPosition != null)      /**/result.Add(this.ConversionsStat);
+                if (this.CostPerConv != null)      /**/result.Add(this.ClicksStat);
+                if (this.ConvRate != null)         /**/result.Add(this.ImpressionsStat);
+                if (this.ViewThroughConv != null)  /**/result.Add(this.ViewThroughConvStat);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Filling StatsList: {ex.Message}");
+            }
+
         }
 
         public List<string> GetTotalRowString()
@@ -54,8 +288,9 @@ namespace QueryMining
         public QueryWord(string word = "Not Set", string query = "Not Set")
         {
             this.Rows = new List<List<decimal>>();
-
+            CostStat = new Stat<decimal>(0, StatType.Cost);
             this.Word = word;
+            this.Query = query;
             this.Query = query;
             this.Cost = 0;
             this.GP = 0;
@@ -155,8 +390,6 @@ namespace QueryMining
             {
                 throw new Exception($"Error Setting {statType} for QueryWord");
             }
-
-
         }
 
         public void SetStat(double num, StatType statType)
@@ -250,6 +483,11 @@ namespace QueryMining
             }
         }
 
+        public List<string> GetRow()
+        {
+            return (RowString().Split(',').ToList());
+        }
+
 
         /// <summary>
         /// Adds every single value of the QueryWord
@@ -263,22 +501,23 @@ namespace QueryMining
 
             result.Word = left.Word + " " + right.Word;
             result.Query = left.Query + " / " + right.Query;
-            result.Cost = left.Cost + right.Cost;
-            result.GP = left.GP + right.GP;
-            result.NetProfit = left.NetProfit + right.NetProfit;
-            result.ROI = (left.ROI + right.ROI) / 2;
-            result.NPPerConv = (left.NPPerConv + right.NPPerConv) / 2;
-            result.GPPerConv = (left.GPPerConv + right.GPPerConv) / 2;
-            result.Conversions = left.Conversions + right.Conversions;
-            result.Clicks = left.Clicks + right.Clicks;
-            result.Impressions = left.Impressions + right.Impressions;
-            result.ConvValPerCost = (left.ConvValPerCost + right.ConvValPerCost) / 2;
-            result.CTR = (left.CTR + right.CTR) / 2;
-            result.AvgCPC = (left.AvgCPC + right.AvgCPC) / 2;
-            result.AvgPosition = (left.AvgPosition + right.AvgPosition) / 2;
-            result.CostPerConv = (left.CostPerConv + right.CostPerConv) / 2;
-            result.ConvRate = (left.ConvRate + right.ConvRate) / 2;
-            result.ViewThroughConv = left.ViewThroughConv + right.ViewThroughConv;
+
+            result.Cost           /**/  = left.Cost            /**/ + right.Cost           /**/ ;
+            result.GP             /**/  = left.GP              /**/ + right.GP             /**/ ;
+            result.NetProfit      /**/  = left.NetProfit       /**/ + right.NetProfit      /**/ ;
+            result.ROI            /**/  = (left.ROI            /**/ + right.ROI            /**/ ) / 2;
+            result.NPPerConv      /**/  = (left.NPPerConv      /**/ + right.NPPerConv      /**/ ) / 2;
+            result.GPPerConv      /**/  = (left.GPPerConv      /**/ + right.GPPerConv      /**/ ) / 2;
+            result.Conversions    /**/  = left.Conversions     /**/ + right.Conversions    /**/ ;
+            result.Clicks         /**/  = left.Clicks          /**/ + right.Clicks         /**/ ;
+            result.Impressions    /**/  = left.Impressions     /**/ + right.Impressions    /**/ ;
+            result.ConvValPerCost /**/  = left.ConvValPerCost  /**/ + right.ConvValPerCost /**/ ;
+            result.CTR            /**/  = (left.CTR            /**/ + right.CTR            /**/ ) / 2;
+            result.AvgCPC         /**/  = (left.AvgCPC         /**/ + right.AvgCPC         /**/ ) / 2;
+            result.AvgPosition    /**/  = (left.AvgPosition    /**/ + right.AvgPosition    /**/ ) / 2;
+            result.CostPerConv    /**/  = (left.CostPerConv    /**/ + right.CostPerConv    /**/ ) / 2;
+            result.ConvRate       /**/  = (left.ConvRate       /**/ + right.ConvRate       /**/ ) / 2;
+            result.ViewThroughConv/**/  = left.ViewThroughConv /**/ + right.ViewThroughConv/**/ ;
 
             return result;
         }
@@ -292,22 +531,22 @@ namespace QueryMining
         static public QueryWord operator *(QueryWord left, QueryWord right)
         {
             QueryWord result = new QueryMining.QueryWord();
-            result.Cost = left.Cost * right.Cost;
-            result.GP = left.GP * right.GP;
-            result.NetProfit = left.NetProfit * right.NetProfit;
-            result.ROI = left.ROI * right.ROI;
-            result.NPPerConv = left.NPPerConv * right.NPPerConv;
-            result.GPPerConv = left.GPPerConv * right.GPPerConv;
-            result.Conversions = left.Conversions * right.Conversions;
-            result.Clicks = left.Clicks * right.Clicks;
-            result.Impressions = left.Impressions * right.Impressions;
-            result.ConvValPerCost = left.ConvValPerCost * right.ConvValPerCost;
-            result.CTR = left.CTR * right.CTR;
-            result.AvgCPC = left.AvgCPC * right.AvgCPC;
-            result.AvgPosition = left.AvgPosition * right.AvgPosition;
-            result.CostPerConv = left.CostPerConv * right.CostPerConv;
-            result.ConvRate = left.ConvRate * right.ConvRate;
-            result.ViewThroughConv = left.ViewThroughConv * right.ViewThroughConv;
+            result.Cost           /**/  = left.Cost            /**/  * right.Cost           /**/  ;
+            result.GP             /**/  = left.GP              /**/  * right.GP             /**/  ;
+            result.NetProfit      /**/  = left.NetProfit       /**/  * right.NetProfit      /**/  ;
+            result.ROI            /**/  = left.ROI             /**/  * right.ROI            /**/  ;
+            result.NPPerConv      /**/  = left.NPPerConv       /**/  * right.NPPerConv      /**/  ;
+            result.GPPerConv      /**/  = left.GPPerConv       /**/  * right.GPPerConv      /**/  ;
+            result.Conversions    /**/  = left.Conversions     /**/  * right.Conversions    /**/  ;
+            result.Clicks         /**/  = left.Clicks          /**/  * right.Clicks         /**/  ;
+            result.Impressions    /**/  = left.Impressions     /**/  * right.Impressions    /**/  ;
+            result.ConvValPerCost /**/  = left.ConvValPerCost  /**/  * right.ConvValPerCost /**/  ;
+            result.CTR            /**/  = left.CTR             /**/  * right.CTR            /**/  ;
+            result.AvgCPC         /**/  = left.AvgCPC          /**/  * right.AvgCPC         /**/  ;
+            result.AvgPosition    /**/  = left.AvgPosition     /**/  * right.AvgPosition    /**/  ;
+            result.CostPerConv    /**/  = left.CostPerConv     /**/  * right.CostPerConv    /**/  ;
+            result.ConvRate       /**/  = left.ConvRate        /**/  * right.ConvRate       /**/  ;
+            result.ViewThroughConv/**/  = left.ViewThroughConv /**/  * right.ViewThroughConv/**/  ;
 
             return result;
         }
@@ -321,22 +560,22 @@ namespace QueryMining
         static public QueryWord operator /(QueryWord left, QueryWord right)
         {
             QueryWord result = new QueryMining.QueryWord();
-            result.Cost = left.Cost / right.Cost;
-            result.GP = left.GP / right.GP;
-            result.NetProfit = left.NetProfit / right.NetProfit;
-            result.ROI = left.ROI / right.ROI;
-            result.NPPerConv = left.NPPerConv / right.NPPerConv;
-            result.GPPerConv = left.GPPerConv / right.GPPerConv;
-            result.Conversions = left.Conversions / right.Conversions;
-            result.Clicks = left.Clicks / right.Clicks;
-            result.Impressions = left.Impressions / right.Impressions;
-            result.ConvValPerCost = left.ConvValPerCost / right.ConvValPerCost;
-            result.CTR = left.CTR / right.CTR;
-            result.AvgCPC = left.AvgCPC / right.AvgCPC;
-            result.AvgPosition = left.AvgPosition / right.AvgPosition;
-            result.CostPerConv = left.CostPerConv / right.CostPerConv;
-            result.ConvRate = left.ConvRate / right.ConvRate;
-            result.ViewThroughConv = left.ViewThroughConv / right.ViewThroughConv;
+            result.Cost           /**/ = left.Cost            /**/  / right.Cost           /**/ ;
+            result.GP             /**/ = left.GP              /**/  / right.GP             /**/ ;
+            result.NetProfit      /**/ = left.NetProfit       /**/  / right.NetProfit      /**/ ;
+            result.ROI            /**/ = left.ROI             /**/  / right.ROI            /**/ ;
+            result.NPPerConv      /**/ = left.NPPerConv       /**/  / right.NPPerConv      /**/ ;
+            result.GPPerConv      /**/ = left.GPPerConv       /**/  / right.GPPerConv      /**/ ;
+            result.Conversions    /**/ = left.Conversions     /**/  / right.Conversions    /**/ ;
+            result.Clicks         /**/ = left.Clicks          /**/  / right.Clicks         /**/ ;
+            result.Impressions    /**/ = left.Impressions     /**/  / right.Impressions    /**/ ;
+            result.ConvValPerCost /**/ = left.ConvValPerCost  /**/  / right.ConvValPerCost /**/ ;
+            result.CTR            /**/ = left.CTR             /**/  / right.CTR            /**/ ;
+            result.AvgCPC         /**/ = left.AvgCPC          /**/  / right.AvgCPC         /**/ ;
+            result.AvgPosition    /**/ = left.AvgPosition     /**/  / right.AvgPosition    /**/ ;
+            result.CostPerConv    /**/ = left.CostPerConv     /**/  / right.CostPerConv    /**/ ;
+            result.ConvRate       /**/ = left.ConvRate        /**/  / right.ConvRate       /**/ ;
+            result.ViewThroughConv/**/ = left.ViewThroughConv /**/  / right.ViewThroughConv/**/ ;
 
             return result;
         }
@@ -350,22 +589,22 @@ namespace QueryMining
         static public QueryWord operator -(QueryWord left, QueryWord right)
         {
             QueryWord result = new QueryMining.QueryWord();
-            result.Cost           /**/ = left.Cost              /**/   - right.Cost;
-            result.GP             /**/ = left.GP                /**/   - right.GP;
-            result.NetProfit      /**/ = left.NetProfit         /**/   - right.NetProfit;
-            result.ROI            /**/ = left.ROI               /**/   - right.ROI;
-            result.NPPerConv      /**/ = left.NPPerConv         /**/   - right.NPPerConv;
-            result.GPPerConv      /**/ = left.GPPerConv         /**/   - right.GPPerConv;
-            result.Conversions    /**/ = left.Conversions       /**/   - right.Conversions;
-            result.Clicks         /**/ = left.Clicks            /**/   - right.Clicks;
-            result.Impressions    /**/ = left.Impressions       /**/   - right.Impressions;
-            result.ConvValPerCost /**/ = left.ConvValPerCost    /**/   - right.ConvValPerCost;
-            result.CTR            /**/ = left.CTR               /**/   - right.CTR;
-            result.AvgCPC         /**/ = left.AvgCPC            /**/   - right.AvgCPC;
-            result.AvgPosition    /**/ = left.AvgPosition       /**/   - right.AvgPosition;
-            result.CostPerConv    /**/ = left.CostPerConv       /**/   - right.CostPerConv;
-            result.ConvRate       /**/ = left.ConvRate          /**/   - right.ConvRate;
-            result.ViewThroughConv/**/ = left.ViewThroughConv   /**/   - right.ViewThroughConv;
+            result.Cost           /**/ = left.Cost            /**/  - right.Cost           /**/  ;
+            result.GP             /**/ = left.GP              /**/  - right.GP             /**/  ;
+            result.NetProfit      /**/ = left.NetProfit       /**/  - right.NetProfit      /**/  ;
+            result.ROI            /**/ = left.ROI             /**/  - right.ROI            /**/  ;
+            result.NPPerConv      /**/ = left.NPPerConv       /**/  - right.NPPerConv      /**/  ;
+            result.GPPerConv      /**/ = left.GPPerConv       /**/  - right.GPPerConv      /**/  ;
+            result.Conversions    /**/ = left.Conversions     /**/  - right.Conversions    /**/  ;
+            result.Clicks         /**/ = left.Clicks          /**/  - right.Clicks         /**/  ;
+            result.Impressions    /**/ = left.Impressions     /**/  - right.Impressions    /**/  ;
+            result.ConvValPerCost /**/ = left.ConvValPerCost  /**/  - right.ConvValPerCost /**/  ;
+            result.CTR            /**/ = left.CTR             /**/  - right.CTR            /**/  ;
+            result.AvgCPC         /**/ = left.AvgCPC          /**/  - right.AvgCPC         /**/  ;
+            result.AvgPosition    /**/ = left.AvgPosition     /**/  - right.AvgPosition    /**/  ;
+            result.CostPerConv    /**/ = left.CostPerConv     /**/  - right.CostPerConv    /**/  ;
+            result.ConvRate       /**/ = left.ConvRate        /**/  - right.ConvRate       /**/  ;
+            result.ViewThroughConv/**/ = left.ViewThroughConv /**/  - right.ViewThroughConv/**/  ;
 
             return result;
         }

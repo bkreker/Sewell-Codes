@@ -7,33 +7,46 @@ using System.Threading.Tasks;
 
 namespace QueryMining
 {
-    public class Stat
+    public abstract class TopStat
+    {
+        public abstract string getName();
+        public abstract object getValue();
+        public abstract StatType? getType();
+    }
+
+    public class Stat<T> : TopStat
     {
         public string Name { get; set; }
-        public double? Value { get; set; }
+        public T Value { get; set; }
         public StatType? StatType { get; set; }
 
         public Stat()
         {
-            Name = "Unassigned";
-            Value = null;
+            Name = "-";
+            Value = default(T);
             StatType = null;
         }
-
-        public Stat(List<string> row)
+        public Stat(T value, StatType statType)
         {
-
+            Name = statType.ToString();
+            Value = value;
+            StatType = statType;
         }
 
-        public Stat(string value, StatType statType)
+        public override object getValue()
         {
-            double temp;
-            if (double.TryParse(value, out temp))
-            {
-                this.Value = temp;
-            }
-            this.Name = statType.ToString();
-            this.StatType = statType;
+            return this.Value;
         }
+        public override string getName()
+        {
+            return this.Name;
+        }
+        public override StatType? getType()
+        {
+            return this.StatType;
+        }
+        
+       
+
     }
 }

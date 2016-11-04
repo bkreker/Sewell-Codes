@@ -57,16 +57,21 @@ namespace QueryMining
         private string ConvRate_regex = @"(Conv\.?|Conversion) ?Rate";
         private string ViewThroughConv_regex = @"View\-?through ?Conv\.?";
 
-
+        public List<string> Columns { get; set; }
 
         public StatsTable()
         {
+            this.Columns = new List<string>();
+            this.Headers = new List<string>();
         }
 
         public StatsTable(ref StringWriter stream)
         {
+            this.Columns = new List<string>();
+            this.Headers = new List<string>();
             Fill(ref stream);
         }
+
         public void Fill(ref StringWriter stream)
         {
             string fileString = stream.ToString();
@@ -78,6 +83,7 @@ namespace QueryMining
             rows.RemoveAt(0);
             Fill(ref rows);
         }
+
         public void setHeaders(List<string> headerRow)
         {
             this.Headers = headerRow;
@@ -101,28 +107,55 @@ namespace QueryMining
             this.CostPerConv_ColIndex = SetStatColumn(CostPerConv_regex, ref rowString, ref headerRow);
             this.ConvRate_ColIndex = SetStatColumn(ConvRate_regex, ref rowString, ref headerRow);
             this.ViewThroughConv_ColIndex = SetStatColumn(ViewThroughConv_regex, ref rowString, ref headerRow);
-            
+
         }
 
         private int SetStatColumn(string regex, ref string rowString, ref List<string> headerRow)
         {
             try
             {
+                int index = -1;
                 if (Regex.IsMatch(rowString, regex, options))
                 {
                     string wordMatch = Regex.Match(rowString, regex, options).ToString();
-                    int index = headerRow.IndexOf(wordMatch);
-                    return index;
+                    index = headerRow.IndexOf(wordMatch);
+                    this.Columns.Add(wordMatch);
                 }
-                else
-                {
-                    return -1;
-                }
+                return index;
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error setting stat info: {ex.Message}");
                 return -1;
+            }
+        }
+
+        public DataTable ToDataTable()
+        {
+            try
+            {
+                DataTable table = new DataTable();
+                for (int i = 0; i < this.Columns.Count; i++)
+                {
+                    var column = this.Columns[i];
+                    if (column != "" && column != null)
+                    {
+                        table.Columns.Add(column);
+                    }
+                }
+
+                foreach (var item in this.Values)
+                {
+                    table.Rows.Add(item.FullRowItems());
+                }
+
+
+                return table;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Filling table: {ex.Message}");
             }
         }
 

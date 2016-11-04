@@ -21,6 +21,7 @@ namespace QueryMining
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
 
         StatsTable _dataDictionary = new StatsTable();
+        StatsTable minedQueries = new StatsTable();
 
         public AnalyzeForm()
         {
@@ -37,6 +38,7 @@ namespace QueryMining
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
 
+                _processing = true;
                 backgroundWorker.RunWorkerAsync();
 
             }
@@ -59,7 +61,6 @@ namespace QueryMining
             Console.WriteLine("Processing Data...");
             try
             {
-                _processing = true;
                 Sort();
             }
             catch (Exception ex)
@@ -73,6 +74,7 @@ namespace QueryMining
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Console.WriteLine("Worker completed");
+
             _processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
@@ -81,7 +83,15 @@ namespace QueryMining
             if (!_operationCancelled)
             {
                 AddToDataGridView(ref _dataDictionary);
-                MessageBox.Show("Finished!");
+                if (dgvResults.Rows.Count > 0)
+                {
+                    MessageBox.Show("Finished!");
+
+                }
+                else
+                {
+                    MessageBox.Show("Something went wrong populating the table.");
+                }
 
             }
             else if (_operationCancelled)
@@ -108,7 +118,6 @@ namespace QueryMining
             Console.WriteLine("Sort Started.");
             _dataDictionary = new StatsTable(ref _outPutStringStream);
             //  AddToDataGridView(ref data);
-            StatsTable data2 = new StatsTable();
             try
             {
                 foreach (QueryWord word1 in _dataDictionary.Values)
@@ -127,9 +136,9 @@ namespace QueryMining
                                     {
                                         QueryWord newWord = word2 + word1;
                                         Console.WriteLine(newWord.Word);
-                                        if (!data2.ContainsKey(word1.Word + " " + word2.Word) && !data2.ContainsKey(newWord.Word))
+                                        if (!minedQueries.ContainsKey(word1.Word + " " + word2.Word) && !minedQueries.ContainsKey(newWord.Word))
                                         {
-                                            data2[newWord.Word] = newWord;
+                                            minedQueries[newWord.Word] = newWord;
                                             //   AddToDataGridView(newWord);
                                         }
                                     }
@@ -138,7 +147,7 @@ namespace QueryMining
                         }
                     }
                 }
-                foreach (var item in data2)
+                foreach (var item in minedQueries)
                 {
                     _dataDictionary.Add(item.Key, item.Value);
                 }
@@ -151,13 +160,26 @@ namespace QueryMining
             //   Analyze();
         }
 
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+
+        }
+
         private void AddToDataGridView(ref StatsTable data)
         {
-            //dgvResults = new DataGridView();
-            data.Headers.ForEach(h => dgvResults.Columns.Add(h, h));
-            var dk = (from row in data
-                      select row.Key + row.Value.GetTotalRowString()).ToList();
-            dgvResults.DataSource = dk;
+            try
+            {
+                dgvResults.DataSource = data.ToDataTable();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Filling table: {ex.Message}");
+            }
         }
         private void AddToDataGridView(QueryWord newWord)
         {

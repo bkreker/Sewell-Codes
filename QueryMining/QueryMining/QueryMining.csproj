@@ -69,7 +69,9 @@
     <Compile Include="QueryWord.cs" />
     <Compile Include="Stat.cs" />
     <Compile Include="StatsTable.cs" />
-   
+    <EmbeddedResource Include="AnalyzeForm.resx">
+      <DependentUpon>AnalyzeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ColumnHeaderSelect.resx">
       <DependentUpon>ColumnHeaderSelect.cs</DependentUpon>
     </EmbeddedResource>
