@@ -245,7 +245,7 @@ namespace QueryMining
                 char delimChar = ',';
                 string writeDelim = ",";
 
-                _dataTable.SetTableSchema(ref inFile, ref delimChar);
+              List<string> SecondRow =  _dataTable.SetTableSchema(ref inFile, ref delimChar);
 
                 ColumnHeaderSelect c = new ColumnHeaderSelect(_dataTable.Columns);
                 c.ShowDialog();

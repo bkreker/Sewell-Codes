@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -21,8 +22,8 @@ namespace QueryMining
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
 
         StatsTable _dataDictionary = new StatsTable();
-        StatsTable minedQueries = new StatsTable();
-        private DataTable _dataTable;
+        StatsTable _minedQueries = new StatsTable();
+        private StatDataTable _dataTable;
 
         public AnalyzeForm()
         {
@@ -49,11 +50,11 @@ namespace QueryMining
             }
         }
 
-        public AnalyzeForm(DataTable _dataTable, int _wordColumn, int _queryColumn)
+        public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn)
         {
-            this._dataTable = _dataTable;
-            this._wordColumn = _wordColumn;
-            this._queryColumn = _queryColumn;
+            this._dataTable = dataTable;
+            this._wordColumn = wordColumn;
+            this._queryColumn = queryColumn;
         }
 
         private void Analyze()
@@ -69,7 +70,7 @@ namespace QueryMining
             Console.WriteLine("Processing Data...");
             try
             {
-                Sort();
+                Calculate();
             }
             catch (Exception ex)
             {
@@ -120,21 +121,94 @@ namespace QueryMining
         {
 
         }
-        private void SortDataTable()
+       private struct QWord
+        {
+            public string Word { get; set; }
+            public string Query { get; set; }
+            public QWord(string w, string q, DataRow row)
+            {
+                this.Word = w;
+                this.Query = q;
+                List<object> objList = (from i in row.ItemArray
+                               select i).ToList();
+                this.FullRow = objList;
+            }
+            public QWord(string w, string q, List<object> row)
+            {
+                this.Word = w;
+                this.Query = q;
+                this.FullRow = row;
+            }
+
+            public List<object> FullRow { get; set; }
+
+            static public bool operator ==(QWord Left, QWord Right)
+            {
+                return (Left.Word == Right.Word && Left.Query == Right.Query);
+            }
+
+            static public bool operator !=(QWord Left, QWord Right)
+            {
+                return (Left.Word != Right.Word || Left.Query != Right.Query);
+            }
+
+            public QWord Add( QWord Right, DataColumnCollection colHeaders)
+            {
+                QWord result = new QWord();
+                List<object> resultList = new List<object>();
+                result.Word = this.Word + " " + Right.Word;
+                result.Query = this.Query + " / " + Right.Query;
+                result.FullRow = new List<object>();
+                for (int i = 0; i < this.FullRow.Count && i < Right.FullRow.Count; i++)
+                {
+                    if (Regex.IsMatch(this.FullRow[i].ToString(), Regexes.Number) && Regex.IsMatch(Right.FullRow[i].ToString(), Regexes.Number))
+                    {
+                        decimal leftNum = (decimal)this.FullRow[i];
+                        decimal rightNum = (decimal)Right.FullRow[i];
+                        if (isAvg)
+                        {
+
+
+                        }                 
+                    }
+                }
+                return result;
+            }
+        }
+
+        private void CalculateFromDataTable()
         {
             Console.WriteLine("Sort Started.");
             try
             {
                 foreach (DataRow row1 in _dataTable.Rows)
                 {
-                    string query1 = row1[_queryColumn].ToString();
-                    string word1 = row1[_wordColumn].ToString();
-                    string[] queryKey = {word1, query1};
+                    QWord word1 = new QWord(row1[_wordColumn].ToString(), row1[_queryColumn].ToString(), row1);
 
                     foreach (DataRow row2 in _dataTable.Rows)
                     {
+                        QWord word2 = new QWord(row2[_wordColumn].ToString(), row2[_queryColumn].ToString(), row2);
+                        // string[] queryKey2 = { row2[_wordColumn].ToString(), row2[_queryColumn].ToString() };
+                        if (word1 != word2)
+                        {
+                            foreach (DataRow row3 in _dataTable.Rows)
+                            {
+                                QWord word3 = new QWord(row3[_wordColumn].ToString(), row3[_queryColumn].ToString(), row3);
+                                // string[] queryKey3 = { row3[_wordColumn].ToString(), row3[_queryColumn].ToString() };
+                                if (word3 != word1)
+                                {
+                                    QWord newWord;
+                                    // Console.WriteLine(newWord.Word);
+                                    if (!_minedQueries.ContainsKey(word1.Word + " " + word2.Word) && !_minedQueries.ContainsKey(newWord.Word))
+                                    {
+                                        //  _minedQueries[newWord.Word] = newWord;
+                                        //   AddToDataGridView(newWord);
+                                    }
 
-                    }                    
+                                }
+                            }
+                        }
+                    }
                 }
 
             }
@@ -143,7 +217,7 @@ namespace QueryMining
                 MessageBox.Show(ex.Message, "Error");
             }
         }
-        private void Sort()
+        private void Calculate()
         {
             Console.WriteLine("Sort Started.");
             _dataDictionary = new StatsTable(ref _outPutStringStream);
@@ -166,9 +240,9 @@ namespace QueryMining
                                     {
                                         QueryWord newWord = word2 + word1;
                                         Console.WriteLine(newWord.Word);
-                                        if (!minedQueries.ContainsKey(word1.Word + " " + word2.Word) && !minedQueries.ContainsKey(newWord.Word))
+                                        if (!_minedQueries.ContainsKey(word1.Word + " " + word2.Word) && !_minedQueries.ContainsKey(newWord.Word))
                                         {
-                                            minedQueries[newWord.Word] = newWord;
+                                            _minedQueries[newWord.Word] = newWord;
                                             //   AddToDataGridView(newWord);
                                         }
                                     }
@@ -177,7 +251,7 @@ namespace QueryMining
                         }
                     }
                 }
-                foreach (var item in minedQueries)
+                foreach (var item in _minedQueries)
                 {
                     _dataDictionary.Add(item.Key, item.Value);
                 }

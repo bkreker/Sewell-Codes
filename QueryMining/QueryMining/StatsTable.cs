@@ -12,6 +12,29 @@ using System.Windows.Forms;
 
 namespace QueryMining
 {
+    public struct Regexes
+    {
+        public static string Word = @"Word";
+        public static string Query = @"Query|Search ?term";
+        public static string Cost = @"Cost";
+        public static string GP = @"GP|Gross ?Profit|Total ?(Conv\.?|Conversion) (value|val\.?)";
+        public static string NetProfit = @"Net\s?Profit";
+        public static string ROI = @"ROI|ROAS";
+        public static string NPPerConv = @"NP ?\/ ?Conv|NPPerConv";
+        public static string GPPerConv = @"GP ?\/ ?Conv\.?|GPPerConv";
+        public static string Conversions = @"Conversion(s)?";
+        public static string Clicks = @"Clicks";
+        public static string Impressions = @"Impressions|Imp\.?";
+        public static string ConvValPerCost = @"Conv\.? ?value ?\/ ?cost|ConvValPerCost";
+        public static string CTR = @"CTR|Clickthrough ?rate";
+        public static string AvgCPC = @"Avg\.? ?CPC";
+        public static string AvgPosition = @"Avg\.? ?Position";
+        public static string CostPerConv = @"Cost\.? ?\/ ?Conv\.?|CostPerConv(ersion)?";
+        public static string ConvRate = @"(Conv\.?|Conversion) ?Rate";
+        public static string ViewThroughConv = @"View\-?through ?Conv\.?";
+        public static string Number = @"-?\d+(\.{1}\d*)?";
+        public static string Average = @"(Avg\.?)|(Average)";
+    }
 
     public class StatsTable : Dictionary<string, QueryWord>
     {
@@ -366,27 +389,45 @@ namespace QueryMining
 
                 for (int i = 0; i < firstRow.Count; i++)
                 {
-                    string a = firstRow[i], b = secondRow[i];
+                    string colHeader = firstRow[i].Trim(), colVal = secondRow[i].Trim();
+                    Type columnType = typeof(string);
+
                     decimal dec;
                     double dub;
                     int integ;
 
-                    if (decimal.TryParse(b, out dec))
+                    if (decimal.TryParse(colVal, out dec))
                     {
-                        this.Columns.Add(a.Trim(), typeof(decimal));
+                        columnType = typeof(decimal);
+                    }
+                    else if (double.TryParse(colVal, out dub))
+                    {
+                        columnType = typeof(double);
+                    }
+                    else if (int.TryParse(colVal, out integ))
+                    {
+                        columnType = typeof(int);
+                    }
 
-                    }
-                    else if (double.TryParse(b, out dub))
+                    this.Columns.Add(colHeader, columnType);
+
+                }
+                foreach (DataColumn column in this.Columns)
+                {
+                    try
                     {
-                        this.Columns.Add(a.Trim(), typeof(double));
+                        if (Regex.IsMatch(column.Caption, Regexes.Average))
+                        {
+                            column.Expression = $"Avg({column.Caption})";
+                        }
+                        else if (column.DataType != typeof(string))
+                        {
+                            column.Expression = $"Sum({column.Caption})";
+                        }
                     }
-                    else if (int.TryParse(b, out integ))
+                    catch (Exception ex)
                     {
-                        this.Columns.Add(a.Trim(), typeof(int));
-                    }
-                    else
-                    {
-                        this.Columns.Add(a.Trim(), typeof(string));
+                        Console.WriteLine($"Error setting aggregation: {ex.Message}");
                     }
                 }
                 this.Columns.Add("Word", typeof(string));
