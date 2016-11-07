@@ -97,9 +97,6 @@ namespace QueryMining
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            // INSERT TIME CONSUMING OPERATIONS HERE
-            // THAT DON'T REPORT PROGRESS
-            //Thread.Sleep(10000);
             if (txtBoxOutFile.Text != "" && txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
