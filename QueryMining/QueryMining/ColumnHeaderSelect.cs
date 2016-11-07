@@ -13,6 +13,7 @@ namespace QueryMining
     public partial class ColumnHeaderSelect : Form
     {
         private int _index;
+
         public int SelectedIndex { get { return _index; } }
         public ColumnHeaderSelect()
         {
@@ -25,6 +26,23 @@ namespace QueryMining
             {
                 lstBxColumnNames.Items.Add(item.Trim());
             }
+            lstBxColumnNames.SelectedIndex = 0;
+        }
+
+        public ColumnHeaderSelect(DataColumnCollection columns) : this()
+        {
+            foreach (DataColumn column in columns)
+            {
+                try
+                {
+                    lstBxColumnNames.Items.Add(column.Caption);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+
             lstBxColumnNames.SelectedIndex = 0;
         }
 

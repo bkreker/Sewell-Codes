@@ -22,6 +22,7 @@ namespace QueryMining
 
         StatsTable _dataDictionary = new StatsTable();
         StatsTable minedQueries = new StatsTable();
+        private DataTable _dataTable;
 
         public AnalyzeForm()
         {
@@ -46,6 +47,13 @@ namespace QueryMining
             {
                 MessageBox.Show(ex.Message, "Something Went Wrong.");
             }
+        }
+
+        public AnalyzeForm(DataTable _dataTable, int _wordColumn, int _queryColumn)
+        {
+            this._dataTable = _dataTable;
+            this._wordColumn = _wordColumn;
+            this._queryColumn = _queryColumn;
         }
 
         private void Analyze()
@@ -112,7 +120,29 @@ namespace QueryMining
         {
 
         }
+        private void SortDataTable()
+        {
+            Console.WriteLine("Sort Started.");
+            try
+            {
+                foreach (DataRow row1 in _dataTable.Rows)
+                {
+                    string query1 = row1[_queryColumn].ToString();
+                    string word1 = row1[_wordColumn].ToString();
+                    string[] queryKey = {word1, query1};
 
+                    foreach (DataRow row2 in _dataTable.Rows)
+                    {
+
+                    }                    
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+        }
         private void Sort()
         {
             Console.WriteLine("Sort Started.");

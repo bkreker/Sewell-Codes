@@ -309,4 +309,99 @@ namespace QueryMining
             }
         }
     }
+
+    public class StatDataTable : DataTable
+    {
+        public int Word_ColIndex { get; set; }
+        public int Query_ColIndex { get; set; }
+
+        public void Save(string _outFileName, ref bool _outFileSavedCorrectly)
+        {
+            try
+            {
+                StreamWriter outFile = new StreamWriter(_outFileName);
+                var tableList = (from DataRow row in this.Rows
+                                 select (from i in row.ItemArray
+                                         select i.ToString()).ToList<string>()).ToList();
+
+                List<string> headerList = new List<string>();
+                foreach (DataColumn column in this.Columns)
+                {
+                    headerList.Add(column.Caption);
+                }
+
+                outFile.WriteLine(string.Join(",", headerList));
+                tableList.ForEach(a => outFile.WriteLine(string.Join(",", a)));
+
+                //foreach (var row in tableList)
+                //{
+                //    outFile.WriteLine(row);
+                //    Console.WriteLine(row);
+                //}
+                //outFile.Write(_dataTable);
+                outFile.Close();
+                _outFileSavedCorrectly = true;
+            }
+            catch (Exception ex)
+            {
+                _outFileSavedCorrectly = false;
+                MessageBox.Show(ex.Message, "Error saving file");
+            }
+
+        }
+
+        public List<string> SetTableSchema(ref StreamReader inFile, ref char delimChar)
+        {
+            try
+            {
+                string firstRowString = inFile.ReadLine();
+                string secondRowString = inFile.ReadLine();
+                // if it detects it's actually .tsv, switch delimiters
+                if (firstRowString.IndexOf('\t') >= 0)
+                {
+                    delimChar = '\t';
+                }
+                List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
+                List<string> secondRow = secondRowString.Split(delimChar).ToList<string>();
+
+                for (int i = 0; i < firstRow.Count; i++)
+                {
+                    string a = firstRow[i], b = secondRow[i];
+                    decimal dec;
+                    double dub;
+                    int integ;
+
+                    if (decimal.TryParse(b, out dec))
+                    {
+                        this.Columns.Add(a.Trim(), typeof(decimal));
+
+                    }
+                    else if (double.TryParse(b, out dub))
+                    {
+                        this.Columns.Add(a.Trim(), typeof(double));
+                    }
+                    else if (int.TryParse(b, out integ))
+                    {
+                        this.Columns.Add(a.Trim(), typeof(int));
+                    }
+                    else
+                    {
+                        this.Columns.Add(a.Trim(), typeof(string));
+                    }
+                }
+                this.Columns.Add("Word", typeof(string));
+                this.Word_ColIndex = this.Columns.IndexOf("Word");
+                this.Rows.Add(secondRow.ToArray());
+                return secondRow;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Setting Table Schema: {ex.Message}");
+            }
+        }
+
+
+
+    }
+
 }
