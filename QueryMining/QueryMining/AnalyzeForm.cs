@@ -18,7 +18,9 @@ namespace QueryMining
         int _wordColumn = -1,
             _queryColumn = -1;
         bool _processing = false,
-            _operationCancelled = false;
+            _operationCancelled = false,
+            _outFileSavedCorrectly = false;
+        string _outFileName = "default.csv";
         //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
 
         StatsTable _dataDictionary = new StatsTable();
@@ -50,10 +52,11 @@ namespace QueryMining
             }
         }
 
-        public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn) : this()
+        public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn, string outFileName) : this()
         {
+            this._outFileName = outFileName;
             this._dataTable = dataTable;
-            this._wordColumn = dataTable.WordCol;
+            //   this._wordColumn = dataTable.WordCol;
             this._queryColumn = dataTable.QueryCol;
             try
             {
@@ -81,6 +84,7 @@ namespace QueryMining
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
             Console.WriteLine("Processing Data...");
+            _processing = true;
             try
             {
                 CalculateFromDataTable();
@@ -104,7 +108,8 @@ namespace QueryMining
 
             if (!_operationCancelled)
             {
-                AddToDataGridView(ref _dataDictionary);
+                // AddToDataGridView(ref _dataDictionary);
+                AddToDataGridView(ref _dataTable);
                 if (dgvResults.Rows.Count > 0)
                 {
                     MessageBox.Show("Finished!");
@@ -122,119 +127,24 @@ namespace QueryMining
             }
         }
 
-        private struct QWord
+        private void SaveDataFromDataTable()
         {
-            public string Word { get; set; }
-            public string Query { get; set; }
-            public QWord(string w, string q, DataRow row)
+            try
             {
-                this.Word = w;
-                this.Query = q;
-                List<object> objList = (from i in row.ItemArray
-                                        select i).ToList();
-                this.FullRow = objList;
-            }
-            public QWord(string w, string q, List<object> row)
-            {
-                this.Word = w;
-                this.Query = q;
-                this.FullRow = row;
-            }
-
-            public List<object> FullRow { get; set; }
-
-            static public bool operator ==(QWord Left, QWord Right)
-            {
-                return (Left.Word == Right.Word && Left.Query == Right.Query);
-            }
-
-            static public bool operator !=(QWord Left, QWord Right)
-            {
-                return (Left.Query != Right.Query && Left.Word != Right.Word);
-            }
-
-            public QWord Add(QWord Right, DataColumnCollection columns)
-            {
-                QWord result = new QWord();
-                object[] resultList = new object[this.FullRow.Count];
-                result.Word = this.Word + " " + Right.Word;
-                result.Query = this.Query + " / " + Right.Query;
-                if (Right != this)
+                StreamWriter outFile = new StreamWriter(_outFileName);
+                outFile.WriteLine(string.Join(",", _dataTable.Headers));
+                foreach (DataRow row in _dataTable.Rows)
                 {
-                    for (int i = 0; i < this.FullRow.Count && i < Right.FullRow.Count; i++)
-                    {
-                        Type colType = columns[i].DataType;
-                        string colName = columns[i].Caption;
-                        try
-                        {
-                            bool isAvg = Regex.IsMatch(columns[i].Caption, Regexes.Average);
-                            object celval = "N/A";
-                            if (colType == typeof(decimal))
-                            {
-                                decimal leftNum = (decimal)this.FullRow[i];
-                                decimal rightNum = (decimal)Right.FullRow[i];
-
-                                if (isAvg)
-                                {
-                                    celval = (leftNum + rightNum) / 2;
-                                }
-                                else
-                                {
-                                    celval = leftNum + rightNum;
-                                }
-                            }
-                            else if (colType == typeof(double))
-                            {
-                                double leftNum = (double)this.FullRow[i];
-                                double rightNum = (double)Right.FullRow[i];
-
-                                if (isAvg)
-                                {
-                                    celval = (leftNum + rightNum) / 2;
-                                }
-                                else
-                                {
-                                    celval = leftNum + rightNum;
-                                }
-
-                            }
-                            else if (colType == typeof(string))
-                            {
-                                string leftVal = this.FullRow[i].ToString();
-                                string rightval = Right.FullRow[i].ToString();
-
-                                if (Regex.IsMatch(colName, Regexes.Query))
-                                {
-                                    celval = leftVal + " / " + rightval;
-                                }
-                                else if (Regex.IsMatch(leftVal, Regexes.Number) && Regex.IsMatch(rightval, Regexes.Number))
-                                {
-                                    celval = (decimal)this.FullRow[i] + (decimal)Right.FullRow[i];
-                                }
-                                else
-                                {
-                                    celval = leftVal + " " + rightval;
-                                }
-                            }
-
-                            resultList[i] = celval;
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error adding QWords: {ex.Message}");
-                        }
-                    }
-                    result.FullRow = resultList.ToList();
-
-                    return result;
+                    outFile.WriteLine(string.Join(",", row.ItemArray));
                 }
-                else
-                {
-                    return this;
-                }
+                outFile.Close();
+                _outFileSavedCorrectly = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Saving results.");
             }
         }
-
         private void CalculateFromDataTable()
         {
             Console.WriteLine("Sort Started.");
@@ -242,57 +152,42 @@ namespace QueryMining
             try
             {
                 var checkedPairs = new Dictionary<string, List<object>>();
-                var set1 = (from DataRow row in _dataTable.Rows
-                            select row.ItemArray).ToList();
+                var tableRows = (from DataRow row in _dataTable.Rows
+                                 select row.ItemArray).ToList();
 
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
 
                 // for each row
-                foreach (object[] fullRow in set1)
+                foreach (object[] fullRow in tableRows)
                 {
                     string query = fullRow[_queryColumn].ToString();
                     var queryWords = query.Split(' ').ToList();
                     // for each pairing in the query in row i
-                    for (int i = 0; i < queryWords.Count; i++)
+                    for (int queryNum = 0; queryNum < queryWords.Count; queryNum++)
                     {
-                        string word1 = queryWords[i];
-                        for (int j = 0; j < queryWords.Count; j++)
+                        string word1 = queryWords[queryNum];
+
+                        for (int wordNum = 0; wordNum < queryWords.Count; wordNum++)
                         {
-                            string word2 = queryWords[j];
+                            string word2 = queryWords[wordNum];
 
                             if (word1 != word2)
                             {
-                                var pairingList = new object[_dataTable.Columns.Count];
-                                string[] pair = { word1, word2 };
-                                string words = word1 + " " + word2;
-                                string reverseWords = word2 + " " + word1;
-                                if (!checkedPairs.ContainsKey(reverseWords) && !checkedPairs.ContainsKey(words))
-                                {
-                                    try
-                                    {
-                                        var results = (from DataRow row in _dataTable.Rows
-                                                       where row.ItemArray[_queryColumn].ToString().Contains(word1)
-                                                       && row.ItemArray[_queryColumn].ToString().Contains(word2)
-                                                       select row.ItemArray.ToList()).ToList();
-                                        SumColumns(results, _dataTable.Columns, query, ref pair, ref pairingList);
+                                CalculateWords(ref checkedPairs, query, new string[] { word1, word2 });
+                                CalculateWords(ref checkedPairs, query, new string[] { word1, "" });
+                                CalculateWords(ref checkedPairs, query, new string[] { word2, "" });
 
-                                        checkedPairs[words] = pairingList.ToList();
-
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine($"Error Querying for word pair: {ex.Message}");
-                                    } // end try/catch
-                                } // end if word pair already has been analyzed
                             } // end if word1 != word2
+
                         } // end querywords loop 2
+
 
                     } // end querywords loop 1 
                 } // end rows loop
-                foreach (var item in checkedPairs.Values)
+                foreach (List<object> item in checkedPairs.Values)
                 {
-                    _dataTable.Rows.Add(item);
+                    _dataTable.Rows.Add(item.ToArray());
                 }
             }
             catch (Exception ex)
@@ -301,10 +196,81 @@ namespace QueryMining
             }
         }
 
-        private void SumColumns(List<List<object>> results, DataColumnCollection columns, string query, ref string[] pair,
-            ref object[] pairingList)// ref Dictionary<string, List<object>> checkedPairs)
+        /// <summary>
+        /// Calculate the results for individual words and word pairs
+        /// </summary>
+        /// <param name="checkedPairs"></param>
+        /// <param name="pairingList"></param>
+        /// <param name="query"></param>
+        /// <param name="words"></param>
+        private void CalculateWords(ref Dictionary<string, List<object>> checkedPairs, string query, string[] words)
+        {
+            if (words[1] == "")
+            {
+                var pairingList = new object[_dataTable.Columns.Count];
+                string word1 = words[0];
+                if (!checkedPairs.ContainsKey(word1))
+                {
+                    try
+                    {
+                        pairingList[_queryColumn] = word1;
+                        AggregateRowColumns(_dataTable.Columns, query, ref words, ref pairingList);
+                        checkedPairs[word1] = pairingList.ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error Querying for word pair: {ex.Message}");
+                    } // end try/catch
+                }
+            }
+            else
+            {
+                var pairingList = new object[_dataTable.Columns.Count];
+                string wordString = words[0] + " " + words[1];
+                string reverseWords = words[1] + " " + words[0];
+
+                if (!checkedPairs.ContainsKey(wordString) && !checkedPairs.ContainsKey(reverseWords))
+                {
+                    try
+                    {
+                        pairingList[_queryColumn] = wordString;
+                        AggregateRowColumns(_dataTable.Columns, query, ref words, ref pairingList);
+                        checkedPairs[wordString] = pairingList.ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error Querying for word pair: {ex.Message}");
+                    } // end try/catch
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Aggregates all rows of the given criteria
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <param name="query"></param>
+        /// <param name="pair"></param>
+        /// <param name="pairingList"></param>
+        private void AggregateRowColumns(DataColumnCollection columns, string query, ref string[] pair, ref object[] pairingList)
         {
             string word1 = pair[0], word2 = pair[1];
+            List<List<object>> results = new List<List<object>>();
+            if (word2 == "")
+            {
+                results = (from DataRow row in _dataTable.Rows
+                           where row.ItemArray[_queryColumn].ToString().Contains(word1)
+                           select row.ItemArray.ToList()).ToList();
+            }
+            else
+            {
+                results = (from DataRow row in _dataTable.Rows
+                           where row.ItemArray[_queryColumn].ToString().Contains(word1)
+                           && row.ItemArray[_queryColumn].ToString().Contains(word2)
+                           select row.ItemArray.ToList()).ToList();
+            }
+
             for (int col_index = 0; col_index < columns.Count; col_index++)
             {
                 try
@@ -312,38 +278,46 @@ namespace QueryMining
                     object total = "N/A";
                     if (col_index == _queryColumn)
                     {
-                        total = query;
+                        total = string.Join(" ", pair);
                     }
-                    else if (col_index == _wordColumn)
-                    {
-                        total = word1 + " " + word2;
-                    }
+                    //else if (col_index == _wordColumn)
+                    //{
+                    //    total = word1 + " " + word2;
+                    //}
+
                     else
                     {
-                        var columnValues = (from resRow in results
-                                            select resRow[col_index]).ToList();
-                        Type dataType = columns[col_index].DataType;
-                        string colName = columns[col_index].Caption;
-                        if (dataType == typeof(decimal) || dataType == typeof(double))
+                        List<object> columnValues = (from resRow in results
+                                                     select resRow[col_index]).ToList();
+                        if (col_index == _dataTable.QueryCountCol)
                         {
-                            bool isAvg = (Regex.IsMatch(colName, Regexes.Average));
-                            total = (decimal)AggregateValues(columnValues, isAvg);
+                            total = columnValues.Count();
                         }
                         else
                         {
-                            if (Regex.IsMatch(columnValues[col_index].ToString(), Regexes.Number))
+                            Type colDataType = columns[col_index].DataType;
+                            string colName = columns[col_index].Caption;
+                            if (colDataType == typeof(decimal) || colDataType == typeof(double))
                             {
-                                columnValues.ForEach(val => val = decimal.Parse(Regex.Match(val.ToString(), Regexes.Number).ToString()));
-                                bool isAvg = columnValues.Any(a => Regex.IsMatch(a.ToString(), @".\%."));
-                                total = (decimal)AggregateValues(columnValues, isAvg);
+                                bool isAvg = (Regex.IsMatch(colName, Regexes.Average));
+                                total = (decimal)AggregateColumnValues(columnValues, isAvg);
                             }
                             else
                             {
-                                total = columnValues.Aggregate((sum, next) =>
+                                if (columnValues.Any(a => Regex.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
                                 {
-                                    string s = sum.ToString() + " " + next.ToString();
-                                    return s;
-                                });
+                                    columnValues.ForEach(val => val = decimal.Parse(Regex.Match(val.ToString(), Regexes.Number).ToString()));
+                                    bool isAvg = columnValues.Any(a => Regex.IsMatch(a.ToString(), @".*\%.*") || Regex.IsMatch(colName, Regexes.Average));
+                                    total = AggregateColumnValues(columnValues, isAvg).ToString();
+                                }
+                                else
+                                {
+                                    total = columnValues.Aggregate((sum, next) =>
+                                    {
+                                        string s = sum.ToString() + " " + next.ToString();
+                                        return s;
+                                    });
+                                }
                             }
                         }
                     }
@@ -354,29 +328,56 @@ namespace QueryMining
                     Console.WriteLine($"Error Aggregating Column Values: {ex.Message}");
                 }
             } // end for
-        }
 
-        private object AggregateValues(List<object> columnValues, bool isAvg)
+        } // end SumColumns
+
+        /// <summary>
+        /// Aggregates all the values in a single column
+        /// </summary>
+        /// <param name="columnValues"></param>
+        /// <param name="isAvg"></param>
+        /// <returns></returns>
+        private object AggregateColumnValues(List<object> columnValues, bool isAvg)
         {
             try
             {
                 var result = columnValues.Aggregate((sum, next) =>
                     {
-                        decimal num;
-                        if (Regex.IsMatch(next.ToString(), Regexes.Number))
+                        string sumstring = sum.ToString();
+                        string nextString = next.ToString();
+                        decimal sumNum, nextNum;
+                        if (sumstring.Contains("%"))
                         {
-                            next = Regex.Match(next.ToString(), Regexes.Number);
+                            sum = sumstring.Remove(sumstring.IndexOf("%"));
+                            sumstring = sum.ToString();
                         }
-                        if (decimal.TryParse(next.ToString(), out num))
+                        if (nextString.Contains("%"))
                         {
-                            if (isAvg)
+                            next = nextString.Remove(nextString.IndexOf("%"));
+                            next = next.ToString();
+                        }
+                        if (Regex.IsMatch(sum.ToString(), Regexes.Number) && Regex.IsMatch(next.ToString(), Regexes.Number))
+                        {
+                            if (decimal.TryParse(Regex.Match(next.ToString(), Regexes.Number).ToString(), out nextNum)
+                                && decimal.TryParse(Regex.Match(sum.ToString(), Regexes.Number).ToString(), out sumNum))
                             {
-                                sum = ((decimal)sum + num) / 2;
+                                if (isAvg)
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                                else
+                                {
+                                    sum = sumNum + nextNum;
+                                }
                             }
                             else
                             {
-                                sum = (decimal)sum + num;
+                                sum = sumstring + " " + nextString;
                             }
+                        }
+                        else if (sum.GetType() == typeof(string))
+                        {
+                            sum = sumstring + " " + nextString;
                         }
                         return sum;
                     });
@@ -446,11 +447,11 @@ namespace QueryMining
 
         }
 
-        private void AddToDataGridView(ref StatsTable data)
+        private void AddToDataGridView(ref StatDataTable data)
         {
             try
             {
-                dgvResults.DataSource = data.ToDataTable();
+                dgvResults.DataSource = data;
             }
             catch (Exception ex)
             {

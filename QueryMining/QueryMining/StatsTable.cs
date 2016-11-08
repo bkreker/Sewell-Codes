@@ -33,7 +33,7 @@ namespace QueryMining
         public static string ConvRate = @"(Conv\.?|Conversion) ?Rate";
         public static string ViewThroughConv = @"View\-?through ?Conv\.?";
         public static string Number = @"-?\d+(\.{1}\d*)?";
-        public static string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|(\.\%\.)";
+        public static string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
     }
 
     public class StatsTable : Dictionary<string, QueryWord>
@@ -335,9 +335,22 @@ namespace QueryMining
 
     public class StatDataTable : DataTable
     {
-        public int WordCol { get; set; }
+        // public int WordCol { get; set; }
         public int QueryCol { get; set; }
+        public int QueryCountCol { get; set; }
+        public List<string> Headers
+        {
+            get
+            {
+                List<string> result = new List<string>();
+                foreach (DataColumn item in this.Columns)
+                {
+                    result.Add(item.Caption);
+                }
+                return result;
 
+            }
+        }
         public void Save(string _outFileName, ref bool _outFileSavedCorrectly)
         {
             try
@@ -413,9 +426,11 @@ namespace QueryMining
 
                 }
 
-                this.Columns.Add("Word", typeof(string));
-                this.WordCol = this.Columns.IndexOf("Word");
-                this.Rows.Add(secondRow.ToArray());
+                this.Columns.Add("QueryCount", typeof(int));
+                this.Columns["QueryCount"].DefaultValue = 1;
+                this.QueryCountCol = this.Columns.IndexOf("QueryCount");
+                //  this.WordCol = this.Columns.IndexOf("Word");
+                //  this.Rows.Add(secondRow.ToArray());
                 return secondRow;
             }
             catch (Exception ex)
@@ -424,8 +439,7 @@ namespace QueryMining
             }
         }
 
-
-
+     
     }
 
 }

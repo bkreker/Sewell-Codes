@@ -13,6 +13,7 @@ namespace QueryMining
     public partial class ColumnHeaderSelect : Form
     {
         private int _index;
+        private string _outfile;
 
         public int SelectedIndex { get { return _index; } }
         public ColumnHeaderSelect()

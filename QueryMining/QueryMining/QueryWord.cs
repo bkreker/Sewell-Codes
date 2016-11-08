@@ -638,4 +638,118 @@ namespace QueryMining
         }
 
     }
+
+    public struct QWord
+    {
+        public string Word { get; set; }
+        public string Query { get; set; }
+        public QWord(string w, string q, DataRow row)
+        {
+            this.Word = w;
+            this.Query = q;
+            List<object> objList = (from i in row.ItemArray
+                                    select i).ToList();
+            this.FullRow = objList;
+        }
+        public QWord(string w, string q, List<object> row)
+        {
+            this.Word = w;
+            this.Query = q;
+            this.FullRow = row;
+        }
+
+        public List<object> FullRow { get; set; }
+
+        static public bool operator ==(QWord Left, QWord Right)
+        {
+            return (Left.Word == Right.Word && Left.Query == Right.Query);
+        }
+
+        static public bool operator !=(QWord Left, QWord Right)
+        {
+            return (Left.Query != Right.Query && Left.Word != Right.Word);
+        }
+
+        public QWord Add(QWord Right, DataColumnCollection columns)
+        {
+            QWord result = new QWord();
+            object[] resultList = new object[this.FullRow.Count];
+            result.Word = this.Word + " " + Right.Word;
+            result.Query = this.Query + " / " + Right.Query;
+            if (Right != this)
+            {
+                for (int i = 0; i < this.FullRow.Count && i < Right.FullRow.Count; i++)
+                {
+                    Type colType = columns[i].DataType;
+                    string colName = columns[i].Caption;
+                    try
+                    {
+                        bool isAvg = Regex.IsMatch(columns[i].Caption, Regexes.Average);
+                        object celval = "N/A";
+                        if (colType == typeof(decimal))
+                        {
+                            decimal leftNum = (decimal)this.FullRow[i];
+                            decimal rightNum = (decimal)Right.FullRow[i];
+
+                            if (isAvg)
+                            {
+                                celval = (leftNum + rightNum) / 2;
+                            }
+                            else
+                            {
+                                celval = leftNum + rightNum;
+                            }
+                        }
+                        else if (colType == typeof(double))
+                        {
+                            double leftNum = (double)this.FullRow[i];
+                            double rightNum = (double)Right.FullRow[i];
+
+                            if (isAvg)
+                            {
+                                celval = (leftNum + rightNum) / 2;
+                            }
+                            else
+                            {
+                                celval = leftNum + rightNum;
+                            }
+
+                        }
+                        else if (colType == typeof(string))
+                        {
+                            string leftVal = this.FullRow[i].ToString();
+                            string rightval = Right.FullRow[i].ToString();
+
+                            if (Regex.IsMatch(colName, Regexes.Query))
+                            {
+                                celval = leftVal + " / " + rightval;
+                            }
+                            else if (Regex.IsMatch(leftVal, Regexes.Number) && Regex.IsMatch(rightval, Regexes.Number))
+                            {
+                                celval = (decimal)this.FullRow[i] + (decimal)Right.FullRow[i];
+                            }
+                            else
+                            {
+                                celval = leftVal + " " + rightval;
+                            }
+                        }
+
+                        resultList[i] = celval;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error adding QWords: {ex.Message}");
+                    }
+                }
+                result.FullRow = resultList.ToList();
+
+                return result;
+            }
+            else
+            {
+                return this;
+            }
+        }
+    }
+
 }

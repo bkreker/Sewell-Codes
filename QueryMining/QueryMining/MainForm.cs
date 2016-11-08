@@ -141,12 +141,11 @@ namespace QueryMining
 
             if (_outFileSavedCorrectly)
             {
-
-                if (MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                DialogResult result = MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
                 {
-
                     //var analysis = new AnalyzeForm(_outPutStringStream, _wordColumn, _queryColumn);
-                    var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn);
+                    var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _outFileName);
                     analysis.ShowDialog();
                     //this.Hide();
                 }
@@ -192,23 +191,24 @@ namespace QueryMining
                 {
                     int queryColumn = c.SelectedIndex;
 
-                    string newFirstRow = $"Word,{string.Join(writeDelim, firstRow)}";
+                    string newFirstRow = firstRowString;// $"Word,{string.Join(writeDelim, firstRow)}";
                     Console.WriteLine(newFirstRow);
                     _outPutStringStream.WriteLine(newFirstRow);
 
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        List<string> fullRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
-                        string query = fullRow[queryColumn].ToString();
-                        List<string> queryWords = SplitQuery(query);
+                        _outPutStringStream.WriteLine(inFile.ReadLine());
+                        //List<string> fullRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
+                        //string query = fullRow[queryColumn].ToString();
+                        //List<string> queryWords = SplitQuery(query);
 
-                        foreach (string word in queryWords)
-                        {
-                            string newRow = $"{word},{string.Join(writeDelim, fullRow)}";
-                            Console.WriteLine($"Query: {query}, Word: {word}");
-                            _outPutStringStream.WriteLine(newRow);
-                        }
+                        //foreach (string word in queryWords)
+                        //{
+                        //    string newRow = $"{word},{string.Join(writeDelim, fullRow)}";
+                        //    Console.WriteLine($"Query: {query}, Word: {word}");
+                        //    _outPutStringStream.WriteLine(newRow);
+                        //}
                     }
                     _wordColumn = 0;
                     _queryColumn = 1;
@@ -242,7 +242,7 @@ namespace QueryMining
                 char delimChar = ',';
                 string writeDelim = ",";
 
-              List<string> SecondRow =  _dataTable.SetTableSchema(ref inFile, ref delimChar);
+                List<string> SecondRow = _dataTable.SetTableSchema(ref inFile, ref delimChar);
 
                 ColumnHeaderSelect c = new ColumnHeaderSelect(_dataTable.Columns);
                 c.ShowDialog();
@@ -263,17 +263,18 @@ namespace QueryMining
                     {
                         var inputRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
                         string query = inputRow[_dataTable.QueryCol].ToString();
-                        List<string> queryWords = SplitQuery(query);
+                       // List<string> queryWords = SplitQuery(query);
 
-                        foreach (string word in queryWords)
-                        {
-                            outputRow = new List<object>();
-                            inputRow.ForEach(a => outputRow.Add(a));
-                            outputRow.Add(word);
+                        outputRow = new List<object>();
+                        inputRow.ForEach(a => outputRow.Add(a));
 
-                            Console.WriteLine($"Query: {query}, Word: {word}");
-                            _dataTable.Rows.Add(outputRow.ToArray());
-                        }
+                        Console.WriteLine($"Query: {query} read from file.");
+                        _dataTable.Rows.Add(outputRow.ToArray());
+                        //foreach (string word in queryWords)
+                        //{
+                        //    // outputRow.Add(word);
+
+                        //}
                     }
                     _inFileReadCorrectly = true;
                 }
