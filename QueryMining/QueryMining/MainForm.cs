@@ -41,8 +41,8 @@ namespace QueryMining
         public MainForm()
         {
             InitializeComponent();
-            txtBoxInFile.Text = "New Test in File.csv";
-            txtBoxOutFile.Text = "test.csv";
+            txtBoxInFile.Text = @"C:\Users\10642520\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
+            txtBoxOutFile.Text = "test save.csv";
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -199,16 +199,6 @@ namespace QueryMining
                     while (!inFile.EndOfStream)
                     {
                         _outPutStringStream.WriteLine(inFile.ReadLine());
-                        //List<string> fullRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
-                        //string query = fullRow[queryColumn].ToString();
-                        //List<string> queryWords = SplitQuery(query);
-
-                        //foreach (string word in queryWords)
-                        //{
-                        //    string newRow = $"{word},{string.Join(writeDelim, fullRow)}";
-                        //    Console.WriteLine($"Query: {query}, Word: {word}");
-                        //    _outPutStringStream.WriteLine(newRow);
-                        //}
                     }
                     _wordColumn = 0;
                     _queryColumn = 1;
@@ -236,6 +226,9 @@ namespace QueryMining
         {
             Console.WriteLine("Processing Data...");
             _processing = true;
+            _dataTable = new StatDataTable();
+            List<string> inputRow = new List<string>();
+            string query = "";
             try
             {
                 StreamReader inFile = File.OpenText(_inFileName);
@@ -261,20 +254,15 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        var inputRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
-                        string query = inputRow[_dataTable.QueryCol].ToString();
-                       // List<string> queryWords = SplitQuery(query);
-
+                        inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
+                        query = inputRow[_dataTable.QueryCol].ToString();
+                   
                         outputRow = new List<object>();
-                        inputRow.ForEach(a => outputRow.Add(a));
+                        inputRow.ForEach(param => outputRow.Add(param));
 
-                        Console.WriteLine($"Query: {query} read from file.");
                         _dataTable.Rows.Add(outputRow.ToArray());
-                        //foreach (string word in queryWords)
-                        //{
-                        //    // outputRow.Add(word);
+                        Console.WriteLine($"Query: {query} read from file.");
 
-                        //}
                     }
                     _inFileReadCorrectly = true;
                 }
@@ -290,89 +278,11 @@ namespace QueryMining
             catch (Exception ex)
             {
                 _processing = false;
-                throw new Exception($"Something went wrong reading the file: {ex.Message}");
+                throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
             }
 
         }
 
-        //private void SetTableSchema(ref StreamReader inFile, ref char delimChar)
-        //{
-        //    string firstRowString = inFile.ReadLine();
-        //    string secondRowString = inFile.ReadLine();
-        //    // if it detects it's actually .tsv, switch delimiters
-        //    if (firstRowString.IndexOf('\t') >= 0)
-        //    {
-        //        delimChar = '\t';
-        //    }
-
-        //    List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
-        //    List<string> secondRow = secondRowString.Split(delimChar).ToList<string>();
-
-        //    for (int i = 0; i < firstRow.Count; i++)
-        //    {
-        //        string a = firstRow[i], b = secondRow[i];
-        //        decimal dec;
-        //        double dub;
-        //        int integ;
-
-        //        if (decimal.TryParse(b, out dec))
-        //        {
-        //            _dataTable.Columns.Add(a.Trim(), typeof(decimal));
-
-        //        }
-        //        else if (double.TryParse(b, out dub))
-        //        {
-        //            _dataTable.Columns.Add(a.Trim(), typeof(double));
-        //        }
-        //        else if (int.TryParse(b, out integ))
-        //        {
-        //            _dataTable.Columns.Add(a.Trim(), typeof(int));
-        //        }
-        //        else
-        //        {
-        //            _dataTable.Columns.Add(a.Trim(), typeof(string));
-        //        }
-        //    }
-        //    _dataTable.Columns.Add("Word", typeof(string));
-        //    _wordColumn = _dataTable.Columns.IndexOf("Word");
-        //    _dataTable.Rows.Add(secondRow.ToArray());
-
-        //}
-
-        //private void SaveDataTable()
-        //{
-        //    try
-        //    {
-        //        StreamWriter outFile = new StreamWriter(_outFileName);
-        //        var tableList = (from DataRow row in _dataTable.Rows
-        //                         select (from i in row.ItemArray
-        //                                 select i.ToString()).ToList<string>()).ToList();
-
-        //        List<string> headerList = new List<string>();
-        //        foreach (DataColumn column in _dataTable.Columns)
-        //        {
-        //            headerList.Add(column.Caption);
-        //        }
-
-        //        outFile.WriteLine(string.Join(",", headerList));
-        //        tableList.ForEach(a => outFile.WriteLine(string.Join(",", a)));
-
-        //        //foreach (var row in tableList)
-        //        //{
-        //        //    outFile.WriteLine(row);
-        //        //    Console.WriteLine(row);
-        //        //}
-        //        //outFile.Write(_dataTable);
-        //        outFile.Close();
-        //        _outFileSavedCorrectly = true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _outFileSavedCorrectly = false;
-        //        MessageBox.Show(ex.Message, "Error saving file");
-        //    }
-
-        //}
 
         private void SaveData()
         {

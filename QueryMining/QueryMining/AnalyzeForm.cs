@@ -131,6 +131,7 @@ namespace QueryMining
         {
             try
             {
+
                 StreamWriter outFile = new StreamWriter(_outFileName);
                 outFile.WriteLine(string.Join(",", _dataTable.Headers));
                 foreach (DataRow row in _dataTable.Rows)
@@ -189,6 +190,7 @@ namespace QueryMining
                 {
                     _dataTable.Rows.Add(item.ToArray());
                 }
+                Console.WriteLine("Sort Finished");
             }
             catch (Exception ex)
             {
@@ -299,16 +301,16 @@ namespace QueryMining
                             string colName = columns[col_index].Caption;
                             if (colDataType == typeof(decimal) || colDataType == typeof(double))
                             {
-                                bool isAvg = (Regex.IsMatch(colName, Regexes.Average));
-                                total = (decimal)AggregateColumnValues(columnValues, isAvg);
+                                bool isAvg = (Regexes.IsMatch(colName, Regexes.Average));
+                                total = (decimal)AggregateColumnValues(columnValues, isAvg, columns[col_index]);
                             }
                             else
                             {
-                                if (columnValues.Any(a => Regex.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
+                                if (columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
                                 {
-                                    columnValues.ForEach(val => val = decimal.Parse(Regex.Match(val.ToString(), Regexes.Number).ToString()));
-                                    bool isAvg = columnValues.Any(a => Regex.IsMatch(a.ToString(), @".*\%.*") || Regex.IsMatch(colName, Regexes.Average));
-                                    total = AggregateColumnValues(columnValues, isAvg).ToString();
+                                    columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number).ToString()));
+                                    bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), @".*\%.*") || Regexes.IsMatch(colName, Regexes.Average));
+                                    total = AggregateColumnValues(columnValues, isAvg, columns[col_index]).ToString();
                                 }
                                 else
                                 {
@@ -337,7 +339,7 @@ namespace QueryMining
         /// <param name="columnValues"></param>
         /// <param name="isAvg"></param>
         /// <returns></returns>
-        private object AggregateColumnValues(List<object> columnValues, bool isAvg)
+        private object AggregateColumnValues(List<object> columnValues, bool isAvg, DataColumn column)
         {
             try
             {
@@ -346,20 +348,21 @@ namespace QueryMining
                         string sumstring = sum.ToString();
                         string nextString = next.ToString();
                         decimal sumNum, nextNum;
-                        if (sumstring.Contains("%"))
+
+                        if (Regexes.MatchesAnyStat(column.Caption) && Regexes.IsMatch(sum.ToString(), Regexes.Number) && Regexes.IsMatch(next.ToString(), Regexes.Number))
                         {
-                            sum = sumstring.Remove(sumstring.IndexOf("%"));
-                            sumstring = sum.ToString();
-                        }
-                        if (nextString.Contains("%"))
-                        {
-                            next = nextString.Remove(nextString.IndexOf("%"));
-                            next = next.ToString();
-                        }
-                        if (Regex.IsMatch(sum.ToString(), Regexes.Number) && Regex.IsMatch(next.ToString(), Regexes.Number))
-                        {
-                            if (decimal.TryParse(Regex.Match(next.ToString(), Regexes.Number).ToString(), out nextNum)
-                                && decimal.TryParse(Regex.Match(sum.ToString(), Regexes.Number).ToString(), out sumNum))
+                            if (sumstring.Contains("%"))
+                            {
+                                sum = sumstring.Remove(sumstring.IndexOf("%"));
+                                sumstring = sum.ToString();
+                            }
+                            if (nextString.Contains("%"))
+                            {
+                                next = nextString.Remove(nextString.IndexOf("%"));
+                                next = next.ToString();
+                            }
+                            if (decimal.TryParse(Regexes.Match(next.ToString(), Regexes.Number).ToString(), out nextNum)
+                                && decimal.TryParse(Regexes.Match(sum.ToString(), Regexes.Number).ToString(), out sumNum))
                             {
                                 if (isAvg)
                                 {
@@ -374,10 +377,6 @@ namespace QueryMining
                             {
                                 sum = sumstring + " " + nextString;
                             }
-                        }
-                        else if (sum.GetType() == typeof(string))
-                        {
-                            sum = sumstring + " " + nextString;
                         }
                         return sum;
                     });
@@ -444,6 +443,22 @@ namespace QueryMining
 
         private void btnExport_Click(object sender, EventArgs e)
         {
+            try
+            {
+                SaveDataFromDataTable();
+                if (_outFileSavedCorrectly == true)
+                {
+                    MessageBox.Show($"File saved at {_outFileName}", "Success!");
+                }
+                else
+                {
+                    MessageBox.Show($"Couldn't save the file.", "Something happened");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Saving Results.");
+            }
 
         }
 
