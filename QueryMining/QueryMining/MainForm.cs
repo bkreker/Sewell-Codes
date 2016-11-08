@@ -250,7 +250,7 @@ namespace QueryMining
                 if (c.DialogResult == DialogResult.OK)
                 {
                     _queryColumn = c.SelectedIndex;
-                    _dataTable.Query_ColIndex = c.SelectedIndex;
+                    _dataTable.QueryCol = c.SelectedIndex;
 
                     //string newFirstRow = $"Word,{string.Join(writeDelim, firstRow)}";
                     List<string> headerRow = (from DataColumn h in _dataTable.Columns
@@ -262,7 +262,7 @@ namespace QueryMining
                     while (!inFile.EndOfStream)
                     {
                         var inputRow = (inFile.ReadLine().Split(delimChar)).ToList<string>();
-                        string query = inputRow[_dataTable.Query_ColIndex].ToString();
+                        string query = inputRow[_dataTable.QueryCol].ToString();
                         List<string> queryWords = SplitQuery(query);
 
                         foreach (string word in queryWords)

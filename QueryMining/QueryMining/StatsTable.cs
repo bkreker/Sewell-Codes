@@ -33,7 +33,7 @@ namespace QueryMining
         public static string ConvRate = @"(Conv\.?|Conversion) ?Rate";
         public static string ViewThroughConv = @"View\-?through ?Conv\.?";
         public static string Number = @"-?\d+(\.{1}\d*)?";
-        public static string Average = @"(Avg\.?)|(Average)";
+        public static string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|(\.\%\.)";
     }
 
     public class StatsTable : Dictionary<string, QueryWord>
@@ -335,8 +335,8 @@ namespace QueryMining
 
     public class StatDataTable : DataTable
     {
-        public int Word_ColIndex { get; set; }
-        public int Query_ColIndex { get; set; }
+        public int WordCol { get; set; }
+        public int QueryCol { get; set; }
 
         public void Save(string _outFileName, ref bool _outFileSavedCorrectly)
         {
@@ -412,26 +412,9 @@ namespace QueryMining
                     this.Columns.Add(colHeader, columnType);
 
                 }
-                foreach (DataColumn column in this.Columns)
-                {
-                    try
-                    {
-                        if (Regex.IsMatch(column.Caption, Regexes.Average))
-                        {
-                            column.Expression = $"Avg({column.Caption})";
-                        }
-                        else if (column.DataType != typeof(string))
-                        {
-                            column.Expression = $"Sum({column.Caption})";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error setting aggregation: {ex.Message}");
-                    }
-                }
+
                 this.Columns.Add("Word", typeof(string));
-                this.Word_ColIndex = this.Columns.IndexOf("Word");
+                this.WordCol = this.Columns.IndexOf("Word");
                 this.Rows.Add(secondRow.ToArray());
                 return secondRow;
             }
