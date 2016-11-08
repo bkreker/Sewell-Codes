@@ -12,29 +12,6 @@ using System.Windows.Forms;
 
 namespace QueryMining
 {
-    public struct Regexes
-    {
-        public static string Word = @"Word";
-        public static string Query = @"Query|Search ?term";
-        public static string Cost = @"Cost";
-        public static string GP = @"GP|Gross ?Profit|Total ?(Conv\.?|Conversion) (value|val\.?)";
-        public static string NetProfit = @"Net\s?Profit";
-        public static string ROI = @"ROI|ROAS";
-        public static string NPPerConv = @"NP ?\/ ?Conv|NPPerConv";
-        public static string GPPerConv = @"GP ?\/ ?Conv\.?|GPPerConv";
-        public static string Conversions = @"Conversion(s)?";
-        public static string Clicks = @"Clicks";
-        public static string Impressions = @"Impressions|Imp\.?";
-        public static string ConvValPerCost = @"Conv\.? ?value ?\/ ?cost|ConvValPerCost";
-        public static string CTR = @"CTR|Clickthrough ?rate";
-        public static string AvgCPC = @"Avg\.? ?CPC";
-        public static string AvgPosition = @"Avg\.? ?Position";
-        public static string CostPerConv = @"Cost\.? ?\/ ?Conv\.?|CostPerConv(ersion)?";
-        public static string ConvRate = @"(Conv\.?|Conversion) ?Rate";
-        public static string ViewThroughConv = @"View\-?through ?Conv\.?";
-        public static string Number = @"-?\d+(\.{1}\d*)?";
-        public static string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
-    }
 
     public class StatsTable : Dictionary<string, QueryWord>
     {
@@ -404,25 +381,30 @@ namespace QueryMining
                 {
                     string colHeader = firstRow[i].Trim(), colVal = secondRow[i].Trim();
                     Type columnType = typeof(string);
-
                     decimal dec;
                     double dub;
                     int integ;
+                    object defaultVal = "";
 
                     if (decimal.TryParse(colVal, out dec))
                     {
                         columnType = typeof(decimal);
+                        defaultVal = 0m;
                     }
                     else if (double.TryParse(colVal, out dub))
                     {
                         columnType = typeof(double);
+                        defaultVal = 0;
                     }
                     else if (int.TryParse(colVal, out integ))
                     {
                         columnType = typeof(int);
+                        defaultVal = 0;
                     }
 
-                    this.Columns.Add(colHeader, columnType);
+                    DataColumn newColumn = new DataColumn(colHeader, columnType);
+                    newColumn.DefaultValue = defaultVal;
+                    this.Columns.Add(newColumn);
 
                 }
 
@@ -439,7 +421,7 @@ namespace QueryMining
             }
         }
 
-     
+
     }
 
 }
