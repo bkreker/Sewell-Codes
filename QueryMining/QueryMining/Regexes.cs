@@ -13,7 +13,7 @@ namespace QueryMining
         {
             get
             {
-                return new string[] { Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv }.ToList();
+                return new string[] { Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, QueryCount }.ToList();
             }
         }
         public static List<string> AllPatterns
@@ -21,21 +21,21 @@ namespace QueryMining
             get
             {
                 return new string[]
-                { Word, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average, Percent }
+                { Word, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average, Percent, QueryCount}
                 .ToList();
             }
         }
 
         private static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled;
         public const string Word = @"Word";
-        public const string Query = @"Query|Search ?term";
+        public const string Query = @"^Query$|(Search ?term)";
         public const string Cost = @"Cost";
-        public const string GP = @"GP|Gross ?Profit|Total ?(conv\.?|conversion) (value|val\.?)";
+        public const string GP = @"GP|Gross ?Profit|Total ?(^Conv\.?$|Conversion) (value|val\.?)";
         public const string NetProfit = @"Net\s?Profit";
         public const string ROI = @"ROI|ROAS";
         public const string NPPerConv = @"NP ?\/ ?Conv|NPPerConv";
         public const string GPPerConv = @"GP ?\/ ?Conv\.?|GPPerConv";
-        public const string Conversions = @"Conversion(s)?";
+        public const string Conversions = @"^Conv\.?$|Conversion(s)?";
         public const string Clicks = @"Clicks";
         public const string Impressions = @"Impressions|Imp\.?";
         public const string ConvValPerCost = @"Conv\.? ?value ?\/ ?cost|ConvValPerCost";
@@ -46,6 +46,7 @@ namespace QueryMining
         public const string ConvRate = @"(Conv\.?|Conversion) ?Rate";
         public const string ViewThroughConv = @"View\-?through ?Conv\.?";
         public const string Number = @"-?\d+(\.{1}\d*)?";
+        public const string QueryCount = @"^Query ?Count$";
         public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
         public const string Percent = @".*\%.*";
 
@@ -67,7 +68,7 @@ namespace QueryMining
         {
             get
             {
-                return new string[] { Conversions, Clicks,  }.ToList();
+                return new string[] { Conversions, Clicks, }.ToList();
             }
         }
         public static List<string> LongPatterns

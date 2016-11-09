@@ -23,8 +23,6 @@ namespace QueryMining
             {
                 return (from DataColumn col in this.Columns
                         select col.Caption).ToList();
-
-
             }
         }
         public void Save(string _outFileName, ref bool _outFileSavedCorrectly)
@@ -72,11 +70,18 @@ namespace QueryMining
 
                 for (int i = 0; i < firstRow.Count; i++)
                 {
-                    string colName = firstRow[i].Trim(),
-                        colVal = secondRow[i].Trim();
+                    string colName = firstRow[i].Trim();
+                    string colVal = secondRow[i].Trim();
+
                     object defaultVal = "";
-                    Type columnType = typeof(string);
-                    if (Regexes.IsMatch(colVal, Regexes.Number) && Regexes.MatchesAnyStat(colName))
+                    Type colType = typeof(string);
+                    bool isUnique = false;
+
+                    if (Regexes.IsMatch(colName, Regexes.Query))
+                    {
+                        isUnique = true;
+                    }
+                    else if (Regexes.IsMatch(colVal, Regexes.Number) && Regexes.MatchesAnyStat(colName))
                     {
                         if (colVal.Contains('%'))
                         {
@@ -86,56 +91,61 @@ namespace QueryMining
                         {
                             colVal = colVal.Remove(colVal.IndexOf(','), 1);
                         }
-                        decimal dec;
-                        double dub;
-                        float fl;
-                        long lon;
-                        int ig;
                         if (Regexes.IsDouble(colName))
                         {
+                            double dub;
                             if (double.TryParse(colVal, out dub))
                             {
-                                columnType = typeof(double);
+                                colType = typeof(double);
                                 defaultVal = 0.00;
 
                             }
                         }
                         else if (Regexes.IsDecimal(colName))
                         {
+                            decimal dec;
                             if (decimal.TryParse(colVal, out dec))
                             {
-                                columnType = typeof(decimal);
+                                colType = typeof(decimal);
                                 defaultVal = 0m;
 
                             }
                         }
-                        else if (Regexes.IsInt(colName))
-                        {
-                            if (int.TryParse(colVal, out ig))
-                            {
-                                columnType = typeof(int);
-                                defaultVal = 0;
-                            }
-
-                        }
                         else if (Regexes.IsLong(colName))
                         {
+                            long lon;
                             if (long.TryParse(colVal, out lon))
                             {
-                                columnType = typeof(long);
+                                colType = typeof(long);
                                 defaultVal = 0;
                             }
 
                         }
-                        else if (float.TryParse(colVal, out fl))
+                        else if (Regexes.IsInt(colName))
                         {
-                            columnType = typeof(float);
-                            defaultVal = 0.0;
+                            int ig;
+                            if (int.TryParse(colVal, out ig))
+                            {
+                                colType = typeof(int);
+                                defaultVal = 0;
+                            }
+
+                        }
+                        else
+                        {
+                            float fl;
+                            if (float.TryParse(colVal, out fl))
+                            {
+                                colType = typeof(float);
+                                defaultVal = 0.0;
+                            }
                         }
                     }
 
-                    DataColumn newColumn = new DataColumn(colName, columnType);
+                    DataColumn newColumn = new DataColumn(colName, colType);
                     newColumn.DefaultValue = defaultVal;
+                    newColumn.Unique = isUnique;
+
                     this.Columns.Add(newColumn);
 
                 }
@@ -151,6 +161,274 @@ namespace QueryMining
             }
         }
 
+        public static void FormatRow(ref List<string> row, ref DataColumnCollection columns)
+        {
+            if (row.All(r => r == ""))
+            {
+                throw new Exception($"The row was empty");
+            }
+            if (row.Any(val => val.IndexOf('%') > 0))
+            {
+                List<string> percentCells = row.Where(val => val.IndexOf('%') > 0).ToList();
+                foreach (string val in percentCells)
+                {
+                    int i = row.IndexOf(val);
+                    decimal num;
+                    row[i] = row[i].Remove(row[i].IndexOf('%'), 1);
+                    if (decimal.TryParse(row[i], out num))
+                    {
+                        row[i] = (num / 100).ToString();
+                    }
+                }
+            }
+            if (row.Any(val => val.IndexOf(',') > 0))
+            {
+                List<string> commaCells = row.Where(val => val.IndexOf(',') > 0).ToList();
+                foreach (string val in commaCells)
+                {
+                    int i = row.IndexOf(val);
+                    row[i] = row[i].Remove(row[i].IndexOf(','), 1);
+                    try
+                    {
+                        row[i] = Regexes.Match(row[i], Regexes.Number);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error formatting row cell: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        public void AddRowToTable(List<string> inputRow)
+        {
+            object[] outputRow;
+            List<DataRow> existingRows = (from DataRow r in this.Rows
+                                          where r.ItemArray[this.QueryCol].ToString() == inputRow[this.QueryCol]
+                                          select r).ToList();
+            if (existingRows.Count > 0)
+            {
+                outputRow = this.AggregateRows(existingRows, inputRow, inputRow.Count);
+                int rowIx = this.Rows.IndexOf(existingRows[0]);
+                this.Rows[rowIx].ItemArray = outputRow;
+            }
+            else
+            {
+                outputRow = inputRow.ToArray();
+                try
+                {
+                    this.Rows.Add(outputRow);
+
+                }
+                catch (ConstraintException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+                catch (DuplicateNameException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+            }
+        }
+
+        public void AddRowToTable(object[] aggregatedRow)
+        {
+            List<DataRow> existingRows = (from DataRow r in this.Rows
+                                          where r.ItemArray[this.QueryCol].ToString() == aggregatedRow[this.QueryCol].ToString()
+                                          select r).ToList();
+            if (existingRows.Count > 0)
+            {
+                object[] outputRow = AggregateRows(existingRows, aggregatedRow, aggregatedRow.Length);
+                int rowIx = this.Rows.IndexOf(existingRows[0]);
+                this.Rows[rowIx].ItemArray = outputRow;
+
+            }
+            else
+            {
+                try
+                { 
+                    this.Rows.Add(aggregatedRow);
+                }
+                catch (ConstraintException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+                catch (DuplicateNameException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+            }
+        }
+
+        public object[] AggregateRows(List<DataRow> existingRows, object[] inputRow, int arrSize)
+        {
+            object[] outputArr = new object[arrSize];
+            
+            for (int i = 0; i < arrSize; i++)
+            {
+             
+                List<object> columnValues = (from row in existingRows
+                                             select row.ItemArray[i]).ToList();
+
+                columnValues.Add(inputRow[i]);
+               
+                bool isAvg = Regexes.IsMatch(this.Columns[i].Caption, Regexes.Average);
+
+                outputArr[i] = AggregateColumnValues(columnValues, this.Columns[i], isAvg);
+            }
+
+            return outputArr;
+        }
+
+        public object[] AggregateRows(List<DataRow> existingRows, List<string> inputRow, int arrSize)
+        {
+            object[] outputArr = new object[arrSize];
+
+            for (int i = 0; i < arrSize; i++)
+            {
+                List<object> columnValues = (from row in existingRows
+                                             select row.ItemArray[i]).ToList();
+
+                columnValues.Add(inputRow[i]);
+
+                bool isAvg = Regexes.IsMatch(this.Columns[i].Caption, Regexes.Average);
+
+                outputArr[i] = AggregateColumnValues(columnValues, this.Columns[i], isAvg);
+            }
+
+            return outputArr;
+        }
+
+        /// <summary>
+        /// Aggregates all the values in a single column
+        /// </summary>
+        /// <param name="columnValues"></param>
+        /// <param name="isAvg"></param>
+        /// <returns></returns>
+        public object AggregateColumnValues(List<object> columnValues, DataColumn column, bool isAvg = false)
+        {
+            try
+            {
+                if (columnValues.All(item => item.ToString() == "0"))
+                {
+                    return 0;
+                }
+                bool colValsAreNumbers = columnValues.All(val => Regexes.IsMatch(val.ToString(), Regexes.Number));
+                if (Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0&& !colValsAreNumbers)
+                {
+                    return columnValues[0];
+                }
+                if (Regexes.MatchesAnyStat(column.Caption) && colValsAreNumbers)
+                {
+                    if (isAvg)
+                    {
+                        return columnValues.Aggregate((sum, next) =>
+                        {
+                            string sumString = sum.ToString();
+                            string nextString = next.ToString();
+                            string sumMatch = Regexes.Match(sumString, Regexes.Number);
+                            string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                            if (sum == next)
+                            {
+                                return sum;
+                            }
+                            if (column.DataType == typeof(decimal))
+                            {
+                                decimal sumNum, nextNum;
+                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            else if (column.DataType == typeof(double))
+                            {
+                                double sumNum, nextNum;
+                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            else if (column.DataType == typeof(long))
+                            {
+                                long sumNum, nextNum;
+                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            else
+                            {
+                                float sumNum, nextNum;
+                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            return sum;
+                        });
+                    }
+                    else
+                    {
+                        var nonZeroRows = columnValues.Where(val => val.ToString() != "0" && val.ToString() != "0.00");
+                        return nonZeroRows.Aggregate((sum, next) =>
+                        {
+                            string sumString = sum.ToString();
+                            string nextString = next.ToString();
+                            string sumMatch = Regexes.Match(sumString, Regexes.Number);
+                            string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                            if (sum == next)
+                            {
+                                return sum;
+                            }
+                            if (column.DataType == typeof(decimal))
+                            {
+                                decimal sumNum, nextNum;
+                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else if (column.DataType == typeof(double))
+                            {
+                                double sumNum, nextNum;
+                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else if (column.DataType == typeof(long))
+                            {
+                                long sumNum, nextNum;
+                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else
+                            {
+                                float sumNum, nextNum;
+                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+
+                            }
+                            return sum;
+                        });
+                    }
+                }
+                else
+                {
+                    return columnValues.FirstOrDefault();
+                } // end if/else for if all elements are numbers
+                //   return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error Aggregating values: {ex.Message}");
+                return "Error";
+            }
+        }
 
     }
 

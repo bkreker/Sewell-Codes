@@ -14,7 +14,6 @@ namespace QueryMining
 {
     public partial class AnalyzeForm : Form
     {
-        StringWriter _outPutStringStream;
         int _wordColumn = -1,
             _queryColumn = -1;
         bool _processing = false,
@@ -27,40 +26,31 @@ namespace QueryMining
         {
             InitializeComponent();
         }
-
-        /*public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
+        private void resetLblRowCount()
         {
-            _outPutStringStream = outPutStringStream;
-            _wordColumn = wordColumn;
-            _queryColumn = queryColumn;
-            try
-            {
-                progressBar1.Style = ProgressBarStyle.Marquee;
-                progressBar1.MarqueeAnimationSpeed = 50;
-
-                _processing = true;
-                backgroundWorker.RunWorkerAsync();
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something Went Wrong.");
-            }
+            this.lblRowCount = new Label();
+            this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblRowCount.AutoSize = true;
+            this.lblRowCount.Location = new System.Drawing.Point(76, 539);
+            this.lblRowCount.Name = "lblRowCount";
+            this.lblRowCount.Size = new System.Drawing.Size(13, 13);
+            this.lblRowCount.TabIndex = 3;
+            this.lblRowCount.Text = dgvResults.RowCount.ToString();
         }
-        */
-
         public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn, string outFileName) : this()
         {
             this._outFileName = outFileName;
             this._dataTable = dataTable;
-            //   this._wordColumn = dataTable.WordCol;
             this._queryColumn = dataTable.QueryCol;
             try
             {
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
                 dgvResults.DataSource = this._dataTable;
+                dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
                 _processing = true;
+                
                 backgroundWorker.RunWorkerAsync();
 
             }
@@ -98,7 +88,7 @@ namespace QueryMining
             if (!_operationCancelled)
             {
                 // AddToDataGridView(ref _dataDictionary);
-                AddToDataGridView(ref _dataTable);
+                //    AddToDataGridView(ref _dataTable);
                 if (dgvResults.Rows.Count > 0)
                 {
                     MessageBox.Show("Finished!");
@@ -120,7 +110,6 @@ namespace QueryMining
         {
             try
             {
-
                 StreamWriter outFile = new StreamWriter(_outFileName);
                 outFile.WriteLine(string.Join(",", _dataTable.Headers));
                 foreach (DataRow row in _dataTable.Rows)
@@ -146,12 +135,18 @@ namespace QueryMining
                                  select row.ItemArray).ToList();
 
                 var checkedPairs = new Dictionary<string, List<object>>();
+                var existingKeys = (from DataRow r in _dataTable.Rows
+                                    select r.ItemArray).ToList();
+                existingKeys.ForEach(row => checkedPairs.Add(row[_queryColumn].ToString(), row.ToList()));
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
 
                 // for each row
                 foreach (object[] fullRow in tableRows)
                 {
+                    if (_operationCancelled)
+                        throw new OperationCanceledException();
+
                     string query = fullRow[_queryColumn].ToString();
                     var queryWords = query.Split(' ').ToList();
                     // for each pairing in the query in row i
@@ -161,6 +156,9 @@ namespace QueryMining
 
                         for (int wordNum = 0; wordNum < queryWords.Count; wordNum++)
                         {
+                            if (_operationCancelled)
+                                throw new OperationCanceledException();
+
                             string word2 = queryWords[wordNum];
 
                             if (word1 != word2)
@@ -170,17 +168,20 @@ namespace QueryMining
                                 MineWords(ref checkedPairs, query, new string[] { word2, "" });
 
                             } // end if word1 != word2
-
                         } // end querywords loop 2
-
+                        resetLblRowCount();
 
                     } // end querywords loop 1 
                 } // end rows loop
-                foreach (List<object> item in checkedPairs.Values)
-                {
-                    _dataTable.Rows.Add(item.ToArray());
-                }
+                //foreach (List<object> item in checkedPairs.Values)
+                //{
+                //    _dataTable.Rows.Add(item.ToArray());
+                //}
                 Console.WriteLine("Sort Finished");
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"Operation Cancelled by user.");
             }
             catch (Exception ex)
             {
@@ -197,6 +198,9 @@ namespace QueryMining
         /// <param name="words"></param>
         private void MineWords(ref Dictionary<string, List<object>> checkedPairs, string query, string[] words)
         {
+            if (_operationCancelled)
+                throw new OperationCanceledException();
+
             if (words[1] == "")
             {
                 var pairingList = new object[_dataTable.Columns.Count];
@@ -218,24 +222,45 @@ namespace QueryMining
             }
             else
             {
-                var pairingList = new object[_dataTable.Columns.Count];
-                string wordString = words[0] + " " + words[1];
-                string reverseWords = words[1] + " " + words[0];
-
-                if (!checkedPairs.ContainsKey(wordString) && !checkedPairs.ContainsKey(reverseWords))
+                object[] pairingList = new object[_dataTable.Columns.Count];
+                string word1 = words[0],
+                    word2 = words[1];
+                string wordString = word1 + " " + word2;
+                string reverseWords = word2 + " " + word1;
+                if (wordString == "extender hdmi")
                 {
-                    try
-                    {
-                        pairingList[_queryColumn] = wordString;
-                        AggregateWordColumns(_dataTable.Columns, query, ref words, ref pairingList);
-                        checkedPairs[wordString] = pairingList.ToList();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error Querying for word pair: {ex.Message}");
-                    } // end try/catch
+
+                }
+                if (checkedPairs.ContainsKey(reverseWords) && !checkedPairs.ContainsKey(wordString))
+                {
+                    wordString = reverseWords;
+                    words = new string[] { word2, word1 };
                 }
 
+
+                pairingList[_queryColumn] = wordString;
+                AggregateWordColumns(_dataTable.Columns, query, ref words, ref pairingList);
+                checkedPairs[wordString] = pairingList.ToList();
+                try
+                {
+                    _dataTable.Rows.Add(pairingList);
+                }
+                catch (ConstraintException)
+                {
+                    _dataTable.AddRowToTable(pairingList);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error Querying for word pair: {ex.Message}");
+                }// end try/catch
+                try
+                {
+                    dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells | DataGridViewAutoSizeColumnsMode.ColumnHeader;
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($"Error Updating dgv");
+                }
             }
         }
 
@@ -248,6 +273,9 @@ namespace QueryMining
         /// <param name="pairingList"></param>
         private void AggregateWordColumns(DataColumnCollection columns, string query, ref string[] pair, ref object[] pairingList)
         {
+            if (_operationCancelled)
+                throw new OperationCanceledException();
+
             string word1 = pair[0], word2 = pair[1];
             List<List<object>> results = new List<List<object>>();
             if (word2 == "")
@@ -266,6 +294,9 @@ namespace QueryMining
 
             for (int col_index = 0; col_index < columns.Count; col_index++)
             {
+                if (_operationCancelled)
+                    throw new OperationCanceledException();
+
                 try
                 {
                     object total = "N/A";
@@ -273,10 +304,6 @@ namespace QueryMining
                     {
                         total = string.Join(" ", pair);
                     }
-                    //else if (col_index == _wordColumn)
-                    //{
-                    //    total = word1 + " " + word2;
-                    //}
 
                     else
                     {
@@ -451,53 +478,6 @@ namespace QueryMining
             }
         }
 
-        /*private void Calculate()
-        {
-            Console.WriteLine("Sort Started.");
-            _dataDictionary = new StatsTable(ref _outPutStringStream);
-            //  AddToDataGridView(ref data);
-            try
-            {
-                foreach (QueryWord word1 in _dataDictionary.Values)
-                {
-                    var word1Row = word1.Rows;
-
-                    foreach (QueryWord word2 in _dataDictionary.Values)
-                    {
-                        if (word2 != word1)
-                        {
-                            foreach (QueryWord word3 in _dataDictionary.Values)
-                            {
-                                if (word3 != word1)
-                                {
-                                    if (word3.Query.Contains(word1.Word) && word3.Query.Contains(word2.Word) && word3 != word2)
-                                    {
-                                        QueryWord newWord = word2 + word1;
-                                        Console.WriteLine(newWord.Word);
-                                        if (!_minedQueries.ContainsKey(word1.Word + " " + word2.Word) && !_minedQueries.ContainsKey(newWord.Word))
-                                        {
-                                            _minedQueries[newWord.Word] = newWord;
-                                            //   AddToDataGridView(newWord);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                foreach (var item in _minedQueries)
-                {
-                    _dataDictionary.Add(item.Key, item.Value);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something went wrong.");
-            }
-
-            //   Analyze();
-        }
-        */
 
         private void AddToDataGridView(ref StatDataTable data)
         {
@@ -513,21 +493,54 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            this.Close();
+            if (_processing)
+            {
+                DialogResult result = MessageBox.Show("Cancel Analysis?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    _operationCancelled = true;
+                    this.Close();
+                }
+            }
+            else
+            {
+                this.Close();
+            }
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
             try
             {
-                SaveData();
-                if (_outFileSavedCorrectly == true)
+                if (_processing)
                 {
-                    MessageBox.Show($"File saved at {_outFileName}", "Success!");
+                    DialogResult result = MessageBox.Show("End Analysis and Export Existing Data?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes)
+                    {
+                        _operationCancelled = true;
+
+                        SaveData();
+                        if (_outFileSavedCorrectly == true)
+                        {
+                            MessageBox.Show($"File saved at {_outFileName}", "Success!");
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Couldn't save the file.", "Something happened");
+                        }
+                    }
                 }
                 else
                 {
-                    MessageBox.Show($"Couldn't save the file.", "Something happened");
+                    SaveData();
+                    if (_outFileSavedCorrectly == true)
+                    {
+                        MessageBox.Show($"File saved at {_outFileName}", "Success!");
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Couldn't save the file.", "Something happened");
+                    }
                 }
             }
             catch (Exception ex)

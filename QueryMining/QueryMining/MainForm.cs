@@ -141,7 +141,7 @@ namespace QueryMining
 
             if (_inFileReadCorrectly)
             {
-                DialogResult result = MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo);
+                DialogResult result = MessageBox.Show($"Finished Importing the File. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (result == DialogResult.Yes)
                 {
                     var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _outFileName);
@@ -152,7 +152,7 @@ namespace QueryMining
             }
             else if (!_operationCancelled)
             {
-                MessageBox.Show("The new file was not saved");
+                MessageBox.Show("Something went wrong, the file was not imported correctly.");
             }
         }
 
@@ -160,9 +160,18 @@ namespace QueryMining
         {
             if (_processing)
             {
-                MessageBox.Show("The operation was cancelled.");
+                DialogResult result = MessageBox.Show("Cancel File Import and Close the Program?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    _operationCancelled = true;
+                    this.Close();
+                }
             }
-            this.Close();
+            else
+            {
+                this.Close();
+
+            }
         }
 
         private void FormatRow(ref List<string> row, ref DataColumnCollection columns)
@@ -241,8 +250,7 @@ namespace QueryMining
                             inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
                             FormatRow(ref inputRow, ref Columns);
                             //  query = inputRow[_dataTable.QueryCol];
-
-                            _dataTable.Rows.Add(inputRow.ToArray<object>());
+                            AddRowToTable(inputRow);
                             //  Console.WriteLine($"Query: {query} read from file.");
                         }
                         catch (Exception ex)
@@ -267,6 +275,38 @@ namespace QueryMining
             {
                 _processing = false;
                 throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
+            }
+
+        }
+
+        private void AddRowToTable(List<string> inputRow)
+        {
+            object[] outputRow;
+            List<DataRow> existingRows = (from DataRow r in _dataTable.Rows
+                                          where r.ItemArray[_queryColumn].ToString() == inputRow[_queryColumn]
+                                          select r).ToList();
+            if (existingRows.Count > 0)
+            {
+                outputRow = _dataTable.AggregateRows(existingRows, inputRow, inputRow.Count);
+                int rowIx = _dataTable.Rows.IndexOf(existingRows[0]);
+                _dataTable.Rows[rowIx].ItemArray = outputRow;
+            }
+            else
+            {
+                outputRow = inputRow.ToArray();
+                try
+                {
+                    _dataTable.Rows.Add(outputRow);
+
+                }
+                catch (ConstraintException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+                catch (DuplicateNameException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
             }
 
         }

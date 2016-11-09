@@ -43,8 +43,23 @@ namespace QueryMining
                     MessageBox.Show(ex.Message, "Error");
                 }
             }
+            try
+            {
+                var s = (from DataColumn c in columns
+                         where Regexes.IsMatch(c.Caption, Regexes.Query)
+                         select c.Caption).ToList();
+                if (s.Count > 0)
+                {
+                    lstBxColumnNames.SelectedIndex = columns.IndexOf(s[0]);
+                }
 
-            lstBxColumnNames.SelectedIndex = 0;
+            }
+            catch (Exception)
+            {
+                lstBxColumnNames.SelectedIndex = 0;
+
+            }
+
         }
 
         private void lvHeaderSelect_SelectedIndexChanged(object sender, EventArgs e)
