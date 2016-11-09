@@ -41,7 +41,7 @@ namespace QueryMining
         public MainForm()
         {
             InitializeComponent();
-            txtBoxInFile.Text = @"C:\Users\10642520\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
+            txtBoxInFile.Text = @"C:\Users\jdegr_000\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
             txtBoxOutFile.Text = "test save.csv";
         }
 
@@ -108,7 +108,7 @@ namespace QueryMining
                     if (_inFileReadCorrectly)
                     {
                         //SaveData();
-                        _dataTable.Save(_outFileName, ref _outFileSavedCorrectly);
+                        // _dataTable.Save(_outFileName, ref _outFileSavedCorrectly);
                     }
                     else if (!_operationCancelled)
                     {
@@ -139,12 +139,11 @@ namespace QueryMining
             btnSelectFolder.Enabled = true;
             btnClose.Text = "Close";
 
-            if (_outFileSavedCorrectly)
+            if (_inFileReadCorrectly)
             {
                 DialogResult result = MessageBox.Show($"File saved at:\n{_outFileName}. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo);
                 if (result == DialogResult.Yes)
                 {
-                    //var analysis = new AnalyzeForm(_outPutStringStream, _wordColumn, _queryColumn);
                     var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _outFileName);
                     analysis.ShowDialog();
                     //this.Hide();
@@ -166,62 +165,38 @@ namespace QueryMining
             this.Close();
         }
 
-        private void ReadData()
+        private void FormatRow(ref List<string> row, DataColumnCollection columns)
         {
-            Console.WriteLine("Processing Data...");
-            _processing = true;
-            try
+            if (row.All(r => r == ""))
             {
-                StreamReader inFile = File.OpenText(_inFileName);
-                string firstRowString = inFile.ReadLine();
-                char delimChar = ',';
-                string writeDelim = ",";
-
-                // if it detects it's actually .tsv, switch delimiters
-                if (firstRowString.IndexOf('\t') >= 0)
+                throw new Exception($"The row was empty");
+            }
+            
+            for (int i = 0; i < columns.Count & i < row.Count; i++)
+            {
+                if (row[i] != "" && Regexes.IsMatch(row[i], Regexes.Number) && Regexes.MatchesAnyStat(columns[i].Caption))
                 {
-                    delimChar = '\t';
-                }
-                List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
-
-                ColumnHeaderSelect c = new ColumnHeaderSelect(firstRow);
-                c.ShowDialog();
-
-                if (c.DialogResult == DialogResult.OK)
-                {
-                    int queryColumn = c.SelectedIndex;
-
-                    string newFirstRow = firstRowString;// $"Word,{string.Join(writeDelim, firstRow)}";
-                    Console.WriteLine(newFirstRow);
-                    _outPutStringStream.WriteLine(newFirstRow);
-
-                    // Write the new lines to the output stream
-                    while (!inFile.EndOfStream)
+                    string s = row[i];
+                    if (row[i].Contains('%'))
                     {
-                        _outPutStringStream.WriteLine(inFile.ReadLine());
+                        row[i] = row[i].Remove(row[i].IndexOf('%'), 1);
+                        decimal num;
+                        if (decimal.TryParse(row[i], out num))
+                        {
+                            row[i] = (num / 100).ToString();
+                        }
                     }
-                    _wordColumn = 0;
-                    _queryColumn = 1;
-                    _inFileReadCorrectly = true;
-                }
-                else
-                {
-                    _inFileReadCorrectly = false;
-                }
+                    if (row[i].Contains(','))
+                    {
+                        row[i] = row[i].Remove(row[i].IndexOf(','), 1);
+                    }
 
-                inFile.Close();
+                    row[i] = Regexes.Match(row[i], Regexes.Number);
+
+                }
             }
-            catch (OperationCanceledException)
-            {
-                _operationCancelled = true;
-                MessageBox.Show("The operation was cancelled.");
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Something went wrong reading the file: {ex.Message}");
-            }
+
         }
-
         private void ReadDataToDataTable()
         {
             Console.WriteLine("Processing Data...");
@@ -254,14 +229,24 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
-                        query = inputRow[_dataTable.QueryCol].ToString();
-                   
-                        outputRow = new List<object>();
-                        inputRow.ForEach(param => outputRow.Add(param));
+                        try
+                        {
 
-                        _dataTable.Rows.Add(outputRow.ToArray());
-                        Console.WriteLine($"Query: {query} read from file.");
+                            inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
+                            FormatRow(ref inputRow, _dataTable.Columns);
+                            query = inputRow[_dataTable.QueryCol].ToString();
+
+                            outputRow = new List<object>();
+                            inputRow.ForEach(param => outputRow.Add(param));
+
+                            _dataTable.Rows.Add(outputRow.ToArray());
+                            Console.WriteLine($"Query: {query} read from file.");
+                        }
+                        catch (Exception ex)
+                        {
+                            //  Console.Error.WriteLine($"Error importing row: {ex.Message}");
+                            Console.WriteLine($"Error importing row: {ex.Message}");
+                        }
 
                     }
                     _inFileReadCorrectly = true;
@@ -280,35 +265,6 @@ namespace QueryMining
                 _processing = false;
                 throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
             }
-
-        }
-
-
-        private void SaveData()
-        {
-            try
-            {
-                StreamWriter outFile = new StreamWriter(_outFileName);
-                outFile.Write(_outPutStringStream);
-                outFile.Close();
-                _outFileSavedCorrectly = true;
-            }
-            catch (Exception ex)
-            {
-                _outFileSavedCorrectly = false;
-                MessageBox.Show(ex.Message, "Error saving file");
-            }
-        }
-
-        private static List<string> SplitQuery(string query)
-        {
-            List<string> result = new List<string>();
-
-            foreach (string word in query.Split(' '))
-            {
-                result.Add(word);
-            }
-            return result;
 
         }
 

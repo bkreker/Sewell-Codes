@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace QueryMining
 {
-    public struct Regexes
+    public class Regexes
     {
         public static List<string> StatsPatterns
         {
@@ -21,12 +21,12 @@ namespace QueryMining
             get
             {
                 return new string[]
-                { Word, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average }
+                { Word, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average, Percent }
                 .ToList();
             }
         }
 
-        static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled;
         public const string Word = @"Word";
         public const string Query = @"Query|Search ?term";
         public const string Cost = @"Cost";
@@ -47,9 +47,11 @@ namespace QueryMining
         public const string ViewThroughConv = @"View\-?through ?Conv\.?";
         public const string Number = @"-?\d+(\.{1}\d*)?";
         public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
-        public static Match Match(string target, string pattern)
+        public const string Percent = @".*\%.*";
+
+        public static string Match(string target, string pattern)
         {
-            return Regex.Match(target, pattern, options);
+            return Regex.Match(target, pattern, options).ToString();
         }
         public static bool IsMatch(string target, string pattern)
         {
@@ -58,18 +60,9 @@ namespace QueryMining
         public static bool MatchesAnyStat(string target)
         {
             List<bool> matches = (from expr in StatsPatterns
-                                  select Regex.IsMatch(target, expr)).ToList();
-
-            bool result = matches.Any(match => match == true);
-            if (result)
-            {
-
-            }
-            else
-            {
-
-            }
-            return result;
+                                  select Regexes.IsMatch(target, expr)).ToList();
+            
+            return matches.Any(match => match == true);
         }
 
     }

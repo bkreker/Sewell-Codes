@@ -66,10 +66,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryWord.cs" />
     <Compile Include="Regexes.cs" />
-    <Compile Include="Stat.cs" />
-    <Compile Include="StatsTable.cs" />
+    <Compile Include="StatsTable.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <EmbeddedResource Include="AnalyzeForm.resx">
       <DependentUpon>AnalyzeForm.cs</DependentUpon>
     </EmbeddedResource>

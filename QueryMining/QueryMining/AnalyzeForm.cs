@@ -21,10 +21,6 @@ namespace QueryMining
             _operationCancelled = false,
             _outFileSavedCorrectly = false;
         string _outFileName = "default.csv";
-        //  Dictionary<string, List<List<double>>> _dataDictionary = new Dictionary<string, List<List<double>>>();
-
-        StatsTable _dataDictionary = new StatsTable();
-        StatsTable _minedQueries = new StatsTable();
         private StatDataTable _dataTable;
 
         public AnalyzeForm()
@@ -32,7 +28,7 @@ namespace QueryMining
             InitializeComponent();
         }
 
-        public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
+        /*public AnalyzeForm(StringWriter outPutStringStream, int wordColumn, int queryColumn) : this()
         {
             _outPutStringStream = outPutStringStream;
             _wordColumn = wordColumn;
@@ -51,6 +47,7 @@ namespace QueryMining
                 MessageBox.Show(ex.Message, "Something Went Wrong.");
             }
         }
+        */
 
         public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn, string outFileName) : this()
         {
@@ -73,21 +70,13 @@ namespace QueryMining
             }
         }
 
-        private void Analyze()
-        {
-            //Console.WriteLine("Analyze Started.");
-            //dgvResults.DataSource = (from a in _dataDictionary
-            //                         select a).ToList();
-            //Console.WriteLine("Analyze Started.");
-        }
-
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
             Console.WriteLine("Processing Data...");
             _processing = true;
             try
             {
-                CalculateFromDataTable();
+                Analyze();
             }
             catch (Exception ex)
             {
@@ -127,7 +116,7 @@ namespace QueryMining
             }
         }
 
-        private void SaveDataFromDataTable()
+        private void SaveData()
         {
             try
             {
@@ -146,7 +135,8 @@ namespace QueryMining
                 MessageBox.Show(ex.Message, "Error Saving results.");
             }
         }
-        private void CalculateFromDataTable()
+
+        private void Analyze()
         {
             Console.WriteLine("Sort Started.");
 
@@ -175,9 +165,9 @@ namespace QueryMining
 
                             if (word1 != word2)
                             {
-                                CalculateWords(ref checkedPairs, query, new string[] { word1, word2 });
-                                CalculateWords(ref checkedPairs, query, new string[] { word1, "" });
-                                CalculateWords(ref checkedPairs, query, new string[] { word2, "" });
+                                MineWords(ref checkedPairs, query, new string[] { word1, word2 });
+                                MineWords(ref checkedPairs, query, new string[] { word1, "" });
+                                MineWords(ref checkedPairs, query, new string[] { word2, "" });
 
                             } // end if word1 != word2
 
@@ -205,7 +195,7 @@ namespace QueryMining
         /// <param name="pairingList"></param>
         /// <param name="query"></param>
         /// <param name="words"></param>
-        private void CalculateWords(ref Dictionary<string, List<object>> checkedPairs, string query, string[] words)
+        private void MineWords(ref Dictionary<string, List<object>> checkedPairs, string query, string[] words)
         {
             if (words[1] == "")
             {
@@ -216,7 +206,7 @@ namespace QueryMining
                     try
                     {
                         pairingList[_queryColumn] = word1;
-                        AggregateRowColumns(_dataTable.Columns, query, ref words, ref pairingList);
+                        AggregateWordColumns(_dataTable.Columns, query, ref words, ref pairingList);
                         checkedPairs[word1] = pairingList.ToList();
                     }
                     catch (Exception ex)
@@ -236,7 +226,7 @@ namespace QueryMining
                     try
                     {
                         pairingList[_queryColumn] = wordString;
-                        AggregateRowColumns(_dataTable.Columns, query, ref words, ref pairingList);
+                        AggregateWordColumns(_dataTable.Columns, query, ref words, ref pairingList);
                         checkedPairs[wordString] = pairingList.ToList();
                     }
                     catch (Exception ex)
@@ -255,7 +245,7 @@ namespace QueryMining
         /// <param name="query"></param>
         /// <param name="pair"></param>
         /// <param name="pairingList"></param>
-        private void AggregateRowColumns(DataColumnCollection columns, string query, ref string[] pair, ref object[] pairingList)
+        private void AggregateWordColumns(DataColumnCollection columns, string query, ref string[] pair, ref object[] pairingList)
         {
             string word1 = pair[0], word2 = pair[1];
             List<List<object>> results = new List<List<object>>();
@@ -308,7 +298,7 @@ namespace QueryMining
                             {
                                 if (columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
                                 {
-                                    columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number).ToString()));
+                                    columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number)));
                                     bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), @".*\%.*") || Regexes.IsMatch(colName, Regexes.Average));
                                     total = AggregateColumnValues(columnValues, isAvg, columns[col_index]).ToString();
                                 }
@@ -331,7 +321,7 @@ namespace QueryMining
                 }
             } // end for
 
-        } // end SumColumns
+        }
 
         /// <summary>
         /// Aggregates all the values in a single column
@@ -343,44 +333,68 @@ namespace QueryMining
         {
             try
             {
-                var result = columnValues.Aggregate((sum, next) =>
+                if (columnValues.All(item => item.ToString() == "0"))
+                {
+                    return 0;
+                }
+                return columnValues.Aggregate((sum, next) =>
                     {
                         string sumstring = sum.ToString();
                         string nextString = next.ToString();
-                        decimal sumNum, nextNum;
-
-                        if (Regexes.MatchesAnyStat(column.Caption) && Regexes.IsMatch(sum.ToString(), Regexes.Number) && Regexes.IsMatch(next.ToString(), Regexes.Number))
+                        if (sum == next)
                         {
-                            if (sumstring.Contains("%"))
+                            return sum;
+                        }
+                        if (Regexes.MatchesAnyStat(column.Caption) && Regexes.IsMatch(sum.ToString(), Regexes.Number)
+                        && Regexes.IsMatch(next.ToString(), Regexes.Number))
+                        {
+                            if (sumstring.Contains('%'))
                             {
-                                sum = sumstring.Remove(sumstring.IndexOf("%"));
+                                sum = sumstring.Remove(sumstring.IndexOf('%'), 1);
                                 sumstring = sum.ToString();
                             }
-                            if (nextString.Contains("%"))
+                            if (nextString.Contains('%'))
                             {
-                                next = nextString.Remove(nextString.IndexOf("%"));
+                                next = nextString.Remove(nextString.IndexOf('%'), 1);
                                 next = next.ToString();
                             }
-                            if (decimal.TryParse(Regexes.Match(next.ToString(), Regexes.Number).ToString(), out nextNum)
-                                && decimal.TryParse(Regexes.Match(sum.ToString(), Regexes.Number).ToString(), out sumNum))
+                            if (column.DataType == typeof(decimal))
                             {
-                                if (isAvg)
+                                decimal sumNum, nextNum;
+                                if (decimal.TryParse(Regexes.Match(next.ToString(), Regexes.Number), out nextNum)
+                                    && decimal.TryParse(Regexes.Match(sum.ToString(), Regexes.Number), out sumNum))
                                 {
-                                    sum = (sumNum + nextNum) / 2;
-                                }
-                                else
-                                {
-                                    sum = sumNum + nextNum;
+                                    if (isAvg)
+                                    {
+                                        sum = (sumNum + nextNum) / 2;
+                                    }
+                                    else
+                                    {
+                                        sum = sumNum + nextNum;
+                                    }
                                 }
                             }
-                            else
+                            else if (column.DataType == typeof(double))
                             {
-                                sum = sumstring + " " + nextString;
+                                double sumNum, nextNum;
+                                if (double.TryParse(Regexes.Match(next.ToString(), Regexes.Number), out nextNum)
+                                    && double.TryParse(Regexes.Match(sum.ToString(), Regexes.Number), out sumNum))
+                                {
+                                    if (isAvg)
+                                    {
+                                        sum = (sumNum + nextNum) / 2;
+                                    }
+                                    else
+                                    {
+                                        sum = sumNum + nextNum;
+                                    }
+                                }
+
                             }
                         }
                         return sum;
                     });
-                return result;
+                //   return result;
             }
             catch (Exception ex)
             {
@@ -389,7 +403,7 @@ namespace QueryMining
             }
         }
 
-        private void Calculate()
+        /*private void Calculate()
         {
             Console.WriteLine("Sort Started.");
             _dataDictionary = new StatsTable(ref _outPutStringStream);
@@ -435,7 +449,24 @@ namespace QueryMining
 
             //   Analyze();
         }
+        */
 
+        private void AddToDataGridView(ref StatDataTable data)
+        {
+            try
+            {
+                dgvResults.DataSource = data;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Filling table: {ex.Message}");
+            }
+        }
+
+        //private void AddToDataGridView(QueryWord newWord)
+        //{
+        //    throw new NotImplementedException();
+        //}
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
@@ -445,7 +476,7 @@ namespace QueryMining
         {
             try
             {
-                SaveDataFromDataTable();
+                SaveData();
                 if (_outFileSavedCorrectly == true)
                 {
                     MessageBox.Show($"File saved at {_outFileName}", "Success!");
@@ -460,22 +491,6 @@ namespace QueryMining
                 MessageBox.Show(ex.Message, "Error Saving Results.");
             }
 
-        }
-
-        private void AddToDataGridView(ref StatDataTable data)
-        {
-            try
-            {
-                dgvResults.DataSource = data;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error Filling table: {ex.Message}");
-            }
-        }
-        private void AddToDataGridView(QueryWord newWord)
-        {
-            throw new NotImplementedException();
         }
     }
 
