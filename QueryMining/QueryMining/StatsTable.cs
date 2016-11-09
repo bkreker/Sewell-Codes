@@ -77,33 +77,60 @@ namespace QueryMining
                     object defaultVal = "";
                     Type columnType = typeof(string);
                     if (Regexes.IsMatch(colVal, Regexes.Number) && Regexes.MatchesAnyStat(colName))
-                    { 
+                    {
                         if (colVal.Contains('%'))
                         {
-                            colVal = colVal.Remove(colVal.IndexOf('%'),1);
+                            colVal = colVal.Remove(colVal.IndexOf('%'), 1);
                         }
                         if (colVal.Contains(','))
                         {
-                            colVal = colVal.Remove(colVal.IndexOf(','),1);
+                            colVal = colVal.Remove(colVal.IndexOf(','), 1);
                         }
                         decimal dec;
                         double dub;
-                        int integ;
+                        float fl;
+                        long lon;
+                        int ig;
+                        if (Regexes.IsDouble(colName))
+                        {
+                            if (double.TryParse(colVal, out dub))
+                            {
+                                columnType = typeof(double);
+                                defaultVal = 0.00;
 
-                        if (decimal.TryParse(colVal, out dec))
-                        {
-                            columnType = typeof(decimal);
-                            defaultVal = 0m;
+                            }
                         }
-                        else if (double.TryParse(colVal, out dub))
+                        else if (Regexes.IsDecimal(colName))
                         {
-                            columnType = typeof(double);
-                            defaultVal = 0;
+                            if (decimal.TryParse(colVal, out dec))
+                            {
+                                columnType = typeof(decimal);
+                                defaultVal = 0m;
+
+                            }
                         }
-                        else if (int.TryParse(colVal, out integ))
+                        else if (Regexes.IsInt(colName))
                         {
-                            columnType = typeof(int);
-                            defaultVal = 0;
+                            if (int.TryParse(colVal, out ig))
+                            {
+                                columnType = typeof(int);
+                                defaultVal = 0;
+                            }
+
+                        }
+                        else if (Regexes.IsLong(colName))
+                        {
+                            if (long.TryParse(colVal, out lon))
+                            {
+                                columnType = typeof(long);
+                                defaultVal = 0;
+                            }
+
+                        }
+                        else if (float.TryParse(colVal, out fl))
+                        {
+                            columnType = typeof(float);
+                            defaultVal = 0.0;
                         }
                     }
 

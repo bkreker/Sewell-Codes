@@ -59,7 +59,7 @@ namespace QueryMining
             {
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
-
+                dgvResults.DataSource = this._dataTable;
                 _processing = true;
                 backgroundWorker.RunWorkerAsync();
 
@@ -142,10 +142,10 @@ namespace QueryMining
 
             try
             {
-                var checkedPairs = new Dictionary<string, List<object>>();
                 var tableRows = (from DataRow row in _dataTable.Rows
                                  select row.ItemArray).ToList();
 
+                var checkedPairs = new Dictionary<string, List<object>>();
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
 
@@ -208,6 +208,7 @@ namespace QueryMining
                         pairingList[_queryColumn] = word1;
                         AggregateWordColumns(_dataTable.Columns, query, ref words, ref pairingList);
                         checkedPairs[word1] = pairingList.ToList();
+                        _dataTable.Rows.Add(pairingList.ToArray());
                     }
                     catch (Exception ex)
                     {
@@ -289,10 +290,10 @@ namespace QueryMining
                         {
                             Type colDataType = columns[col_index].DataType;
                             string colName = columns[col_index].Caption;
-                            if (colDataType == typeof(decimal) || colDataType == typeof(double))
+                            if (Regexes.MatchesAnyStat(colName))
                             {
                                 bool isAvg = (Regexes.IsMatch(colName, Regexes.Average));
-                                total = (decimal)AggregateColumnValues(columnValues, isAvg, columns[col_index]);
+                                total = AggregateColumnValues(columnValues, isAvg, columns[col_index]);
                             }
                             else
                             {
@@ -337,63 +338,110 @@ namespace QueryMining
                 {
                     return 0;
                 }
-                return columnValues.Aggregate((sum, next) =>
+                bool colValsAreNumbers = columnValues.All(val => Regexes.IsMatch(val.ToString(), Regexes.Number));
+                if (Regexes.MatchesAnyStat(column.Caption) && colValsAreNumbers)
+                {
+                    if (isAvg)
                     {
-                        string sumstring = sum.ToString();
-                        string nextString = next.ToString();
-                        if (sum == next)
+                        return columnValues.Aggregate((sum, next) =>
                         {
-                            return sum;
-                        }
-                        if (Regexes.MatchesAnyStat(column.Caption) && Regexes.IsMatch(sum.ToString(), Regexes.Number)
-                        && Regexes.IsMatch(next.ToString(), Regexes.Number))
-                        {
-                            if (sumstring.Contains('%'))
+                            string sumString = sum.ToString();
+                            string nextString = next.ToString();
+                            string sumMatch = Regexes.Match(sumString, Regexes.Number);
+                            string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                            if (sum == next)
                             {
-                                sum = sumstring.Remove(sumstring.IndexOf('%'), 1);
-                                sumstring = sum.ToString();
-                            }
-                            if (nextString.Contains('%'))
-                            {
-                                next = nextString.Remove(nextString.IndexOf('%'), 1);
-                                next = next.ToString();
+                                return sum;
                             }
                             if (column.DataType == typeof(decimal))
                             {
                                 decimal sumNum, nextNum;
-                                if (decimal.TryParse(Regexes.Match(next.ToString(), Regexes.Number), out nextNum)
-                                    && decimal.TryParse(Regexes.Match(sum.ToString(), Regexes.Number), out sumNum))
+                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
                                 {
-                                    if (isAvg)
-                                    {
-                                        sum = (sumNum + nextNum) / 2;
-                                    }
-                                    else
-                                    {
-                                        sum = sumNum + nextNum;
-                                    }
+                                    sum = (sumNum + nextNum) / 2;
                                 }
                             }
                             else if (column.DataType == typeof(double))
                             {
                                 double sumNum, nextNum;
-                                if (double.TryParse(Regexes.Match(next.ToString(), Regexes.Number), out nextNum)
-                                    && double.TryParse(Regexes.Match(sum.ToString(), Regexes.Number), out sumNum))
+                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
                                 {
-                                    if (isAvg)
-                                    {
-                                        sum = (sumNum + nextNum) / 2;
-                                    }
-                                    else
-                                    {
-                                        sum = sumNum + nextNum;
-                                    }
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            else if (column.DataType == typeof(long))
+                            {
+                                long sumNum, nextNum;
+                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            else
+                            {
+                                float sumNum, nextNum;
+                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = (sumNum + nextNum) / 2;
+                                }
+                            }
+                            return sum;
+                        });
+                    }
+                    else
+                    {
+                        var nonZeroRows = columnValues.Where(val => val.ToString() != "0" && val.ToString() != "0.00");
+                        return nonZeroRows.Aggregate((sum, next) =>
+                        {
+                            string sumString = sum.ToString();
+                            string nextString = next.ToString();
+                            string sumMatch = Regexes.Match(sumString, Regexes.Number);
+                            string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                            if (sum == next)
+                            {
+                                return sum;
+                            }
+                            if (column.DataType == typeof(decimal))
+                            {
+                                decimal sumNum, nextNum;
+                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else if (column.DataType == typeof(double))
+                            {
+                                double sumNum, nextNum;
+                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else if (column.DataType == typeof(long))
+                            {
+                                long sumNum, nextNum;
+                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
+                                }
+                            }
+                            else
+                            {
+                                float sumNum, nextNum;
+                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                {
+                                    sum = sumNum + nextNum;
                                 }
 
                             }
-                        }
-                        return sum;
-                    });
+                            return sum;
+                        });
+                    }
+                }
+                else
+                {
+                    return columnValues.FirstOrDefault();
+                } // end if/else for if all elements are numbers
                 //   return result;
             }
             catch (Exception ex)
@@ -463,10 +511,6 @@ namespace QueryMining
             }
         }
 
-        //private void AddToDataGridView(QueryWord newWord)
-        //{
-        //    throw new NotImplementedException();
-        //}
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();

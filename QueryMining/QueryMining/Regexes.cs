@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace QueryMining
 {
-    public class Regexes
+    public struct Regexes
     {
         public static List<string> StatsPatterns
         {
@@ -49,6 +49,34 @@ namespace QueryMining
         public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
         public const string Percent = @".*\%.*";
 
+        public static List<string> DecimalPatterns
+        {
+            get
+            {
+                return new string[] { Cost, GP, NetProfit, NPPerConv, GPPerConv, ConvValPerCost, AvgCPC, CostPerConv }.ToList();
+            }
+        }
+        public static List<string> DoublePatterns
+        {
+            get
+            {
+                return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv }.ToList();
+            }
+        }
+        public static List<string> IntPatterns
+        {
+            get
+            {
+                return new string[] { Conversions, Clicks,  }.ToList();
+            }
+        }
+        public static List<string> LongPatterns
+        {
+            get
+            {
+                return new string[] { Impressions, }.ToList();
+            }
+        }
         public static string Match(string target, string pattern)
         {
             return Regex.Match(target, pattern, options).ToString();
@@ -57,12 +85,38 @@ namespace QueryMining
         {
             return Regex.IsMatch(target, pattern, options);
         }
+
         public static bool MatchesAnyStat(string target)
         {
             List<bool> matches = (from expr in StatsPatterns
                                   select Regexes.IsMatch(target, expr)).ToList();
-            
+
             return matches.Any(match => match == true);
+        }
+        public static bool IsDecimal(string target)
+        {
+            List<bool> matches = (from expr in DecimalPatterns
+                                  select Regexes.IsMatch(target, expr)).ToList();
+            return matches.Any(match => match);
+        }
+        public static bool IsDouble(string target)
+        {
+            List<bool> matches = (from expr in DoublePatterns
+                                  select Regexes.IsMatch(target, expr)).ToList();
+            return matches.Any(match => match);
+        }
+        public static bool IsInt(string target)
+        {
+            List<bool> matches = (from expr in IntPatterns
+                                  select Regexes.IsMatch(target, expr)).ToList();
+            return matches.Any(match => match);
+        }
+
+        public static bool IsLong(string target)
+        {
+            List<bool> matches = (from expr in LongPatterns
+                                  select Regexes.IsMatch(target, expr)).ToList();
+            return matches.Any(match => match);
         }
 
     }

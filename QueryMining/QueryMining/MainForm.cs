@@ -165,38 +165,45 @@ namespace QueryMining
             this.Close();
         }
 
-        private void FormatRow(ref List<string> row, DataColumnCollection columns)
+        private void FormatRow(ref List<string> row, ref DataColumnCollection columns)
         {
             if (row.All(r => r == ""))
             {
                 throw new Exception($"The row was empty");
             }
-            
-            for (int i = 0; i < columns.Count & i < row.Count; i++)
+            if (row.Any(val => val.IndexOf('%') > 0))
             {
-                if (row[i] != "" && Regexes.IsMatch(row[i], Regexes.Number) && Regexes.MatchesAnyStat(columns[i].Caption))
+                List<string> percentCells = row.Where(val => val.IndexOf('%') > 0).ToList();
+                foreach (string val in percentCells)
                 {
-                    string s = row[i];
-                    if (row[i].Contains('%'))
+                    int i = row.IndexOf(val);
+                    decimal num;
+                    row[i] = row[i].Remove(row[i].IndexOf('%'), 1);
+                    if (decimal.TryParse(row[i], out num))
                     {
-                        row[i] = row[i].Remove(row[i].IndexOf('%'), 1);
-                        decimal num;
-                        if (decimal.TryParse(row[i], out num))
-                        {
-                            row[i] = (num / 100).ToString();
-                        }
+                        row[i] = (num / 100).ToString();
                     }
-                    if (row[i].Contains(','))
-                    {
-                        row[i] = row[i].Remove(row[i].IndexOf(','), 1);
-                    }
-
-                    row[i] = Regexes.Match(row[i], Regexes.Number);
-
                 }
             }
-
+            if (row.Any(val => val.IndexOf(',') > 0))
+            {
+                List<string> commaCells = row.Where(val => val.IndexOf(',') > 0).ToList();
+                foreach (string val in commaCells)
+                {
+                    int i = row.IndexOf(val);
+                    row[i] = row[i].Remove(row[i].IndexOf(','), 1);
+                    try
+                    {
+                        row[i] = Regexes.Match(row[i], Regexes.Number);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error formatting row cell: {ex.Message}");
+                    }
+                }
+            }
         }
+
         private void ReadDataToDataTable()
         {
             Console.WriteLine("Processing Data...");
@@ -211,9 +218,9 @@ namespace QueryMining
                 string writeDelim = ",";
 
                 List<string> SecondRow = _dataTable.SetTableSchema(ref inFile, ref delimChar);
-
                 ColumnHeaderSelect c = new ColumnHeaderSelect(_dataTable.Columns);
                 c.ShowDialog();
+                DataColumnCollection Columns = _dataTable.Columns;
 
                 if (c.DialogResult == DialogResult.OK)
                 {
@@ -225,22 +232,18 @@ namespace QueryMining
                                               select h.Caption).ToList();
 
                     List<object> outputRow = new List<object>();
-                    headerRow.ForEach(a => outputRow.Add(a));
+                    headerRow.ForEach(header => outputRow.Add(header));
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
                         try
                         {
-
                             inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
-                            FormatRow(ref inputRow, _dataTable.Columns);
-                            query = inputRow[_dataTable.QueryCol].ToString();
+                            FormatRow(ref inputRow, ref Columns);
+                            //  query = inputRow[_dataTable.QueryCol];
 
-                            outputRow = new List<object>();
-                            inputRow.ForEach(param => outputRow.Add(param));
-
-                            _dataTable.Rows.Add(outputRow.ToArray());
-                            Console.WriteLine($"Query: {query} read from file.");
+                            _dataTable.Rows.Add(inputRow.ToArray<object>());
+                            //  Console.WriteLine($"Query: {query} read from file.");
                         }
                         catch (Exception ex)
                         {
