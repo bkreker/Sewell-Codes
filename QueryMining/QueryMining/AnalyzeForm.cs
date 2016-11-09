@@ -28,14 +28,11 @@ namespace QueryMining
         }
         private void resetLblRowCount()
         {
-            this.lblRowCount = new Label();
-            this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblRowCount.AutoSize = true;
-            this.lblRowCount.Location = new System.Drawing.Point(76, 539);
-            this.lblRowCount.Name = "lblRowCount";
-            this.lblRowCount.Size = new System.Drawing.Size(13, 13);
-            this.lblRowCount.TabIndex = 3;
-            this.lblRowCount.Text = dgvResults.RowCount.ToString();
+            if (lblRowCount.InvokeRequired)
+            {
+                lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = dgvResults.RowCount.ToString(); }));
+            }
+         //   this.lblRowCount.Text = dgvResults.RowCount.ToString();
         }
         public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn, string outFileName) : this()
         {
@@ -50,7 +47,7 @@ namespace QueryMining
                 dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 
                 _processing = true;
-                
+                lblRowCount.Text = dgvResults.RowCount.ToString();
                 backgroundWorker.RunWorkerAsync();
 
             }
@@ -168,8 +165,8 @@ namespace QueryMining
                                 MineWords(ref checkedPairs, query, new string[] { word2, "" });
 
                             } // end if word1 != word2
+                            resetLblRowCount();
                         } // end querywords loop 2
-                        resetLblRowCount();
 
                     } // end querywords loop 1 
                 } // end rows loop
