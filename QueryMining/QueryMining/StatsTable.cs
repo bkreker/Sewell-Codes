@@ -253,9 +253,9 @@ namespace QueryMining
                 {
                     Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
                 }
-                catch (DuplicateNameException ex)
+                catch  (Exception ex)
                 {
-                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                    Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
                 }
             }
         }

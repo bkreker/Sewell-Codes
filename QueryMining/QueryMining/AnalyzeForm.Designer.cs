@@ -39,6 +39,7 @@
             this.rbtn1Word = new System.Windows.Forms.RadioButton();
             this.rbtn2Words = new System.Windows.Forms.RadioButton();
             this.rbtn3Words = new System.Windows.Forms.RadioButton();
+            this.btnBegin = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).BeginInit();
             this.SuspendLayout();
             // 
@@ -50,7 +51,7 @@
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(697, 562);
+            this.progressBar1.Location = new System.Drawing.Point(605, 562);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(354, 23);
             this.progressBar1.TabIndex = 0;
@@ -118,6 +119,7 @@
             // 
             // rbtn1Word
             // 
+            this.rbtn1Word.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.rbtn1Word.AutoSize = true;
             this.rbtn1Word.Location = new System.Drawing.Point(188, 565);
             this.rbtn1Word.Name = "rbtn1Word";
@@ -129,6 +131,7 @@
             // 
             // rbtn2Words
             // 
+            this.rbtn2Words.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.rbtn2Words.AutoSize = true;
             this.rbtn2Words.Checked = true;
             this.rbtn2Words.Location = new System.Drawing.Point(336, 565);
@@ -142,6 +145,7 @@
             // 
             // rbtn3Words
             // 
+            this.rbtn3Words.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.rbtn3Words.AutoSize = true;
             this.rbtn3Words.Enabled = false;
             this.rbtn3Words.Location = new System.Drawing.Point(484, 565);
@@ -151,6 +155,17 @@
             this.rbtn3Words.Text = "Mine for 3 Words";
             this.rbtn3Words.UseVisualStyleBackColor = true;
             this.rbtn3Words.CheckedChanged += new System.EventHandler(this.rbtnWordCount_CheckedChanged);
+            // 
+            // btnBegin
+            // 
+            this.btnBegin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBegin.Location = new System.Drawing.Point(978, 562);
+            this.btnBegin.Name = "btnBegin";
+            this.btnBegin.Size = new System.Drawing.Size(75, 23);
+            this.btnBegin.TabIndex = 2;
+            this.btnBegin.Text = "Mine Queries";
+            this.btnBegin.UseVisualStyleBackColor = true;
+            this.btnBegin.Click += new System.EventHandler(this.btnBegin_Click);
             // 
             // AnalyzeForm
             // 
@@ -163,6 +178,7 @@
             this.Controls.Add(this.rbtn1Word);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lblRowCount);
+            this.Controls.Add(this.btnBegin);
             this.Controls.Add(this.btnExport);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.dgvResults);
@@ -188,5 +204,6 @@
         private System.Windows.Forms.RadioButton rbtn1Word;
         private System.Windows.Forms.RadioButton rbtn2Words;
         private System.Windows.Forms.RadioButton rbtn3Words;
+        private System.Windows.Forms.Button btnBegin;
     }
 }
