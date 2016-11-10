@@ -26,11 +26,12 @@ namespace QueryMining
     {
         //   public Dictionary<string[], List<>> dataTable = new Dictionary<string[], bool>();
         string _inFileName { get { return txtBoxInFile.Text; } }
-        string _outFileName { get { return txtBoxOutFile.Text; } }
+      
 
         StringWriter _outPutStringStream = new StringWriter();
         StatDataTable _dataTable = new StatDataTable();
-        bool _outFileSavedCorrectly = false,
+        bool _avgAllValues = true, 
+            _outFileSavedCorrectly = false,
             _inFileReadCorrectly = false,
             _operationCancelled = false,
             _processing = false;
@@ -42,7 +43,7 @@ namespace QueryMining
         {
             InitializeComponent();
             txtBoxInFile.Text = @"C:\Users\jdegr_000\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
-            txtBoxOutFile.Text = "test save.csv";
+            
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -57,32 +58,18 @@ namespace QueryMining
             }
         }
 
-        private void btnSelectOutFile_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (outFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txtBoxOutFile.Text = outFileDialog.FileName;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something went wrong");
-            }
-
-        }
+    
 
         private void btnGo_Click(object sender, EventArgs e)
         {
-            if (_inFileName != "" && _outFileName != "")
+            if (_inFileName != "" )
             {
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
 
                 btnGo.Enabled = false;
                 btnImport.Enabled = false;
-                btnSelectFolder.Enabled = false;
+               
                 btnClose.Text = "Cancel and Close";
                 BackgroundWorker bw = new BackgroundWorker();
                 bw.DoWork += bw_DoWork;
@@ -97,7 +84,7 @@ namespace QueryMining
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (txtBoxOutFile.Text != "" && txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
+            if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
                 _processing = true;
@@ -136,7 +123,6 @@ namespace QueryMining
 
             btnGo.Enabled = true;
             btnImport.Enabled = true;
-            btnSelectFolder.Enabled = true;
             btnClose.Text = "Close";
 
             if (_inFileReadCorrectly)
@@ -144,7 +130,7 @@ namespace QueryMining
                 DialogResult result = MessageBox.Show($"Finished Importing the File. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (result == DialogResult.Yes)
                 {
-                    var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _outFileName);
+                    var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _avgAllValues);
                     analysis.ShowDialog();
                     //this.Hide();
                 }
@@ -210,6 +196,18 @@ namespace QueryMining
                         Console.WriteLine($"Error formatting row cell: {ex.Message}");
                     }
                 }
+            }
+        }
+
+        private void rBtnAvgAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rBtnAvgSome.Checked)
+            {
+                _avgAllValues = false;
+            }
+            else
+            {
+                _avgAllValues = true;
             }
         }
 
@@ -315,11 +313,7 @@ namespace QueryMining
         {
             txtBoxInFile.Text = inFileDialog.FileName; ;
         }
-
-        private void outFileFolderDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            txtBoxOutFile.Text = outFileDialog.FileName;
-        }
+        
     }
 
 
