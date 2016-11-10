@@ -32,29 +32,19 @@ namespace QueryMining
             {
                 lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = dgvResults.RowCount.ToString(); }));
             }
-         //   this.lblRowCount.Text = dgvResults.RowCount.ToString();
+            //   this.lblRowCount.Text = dgvResults.RowCount.ToString();
         }
         public AnalyzeForm(StatDataTable dataTable, int wordColumn, int queryColumn, string outFileName) : this()
         {
             this._outFileName = outFileName;
             this._dataTable = dataTable;
             this._queryColumn = dataTable.QueryCol;
-            try
-            {
-                progressBar1.Style = ProgressBarStyle.Marquee;
-                progressBar1.MarqueeAnimationSpeed = 50;
-                dgvResults.DataSource = this._dataTable;
-                dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dgvResults.DataSource = this._dataTable;
+            dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            dgvResults.AllowUserToOrderColumns = true;
+            dgvResults.AllowUserToResizeColumns = true;
+            lblRowCount.Text = dgvResults.RowCount.ToString();
 
-                _processing = true;
-                lblRowCount.Text = dgvResults.RowCount.ToString();
-                backgroundWorker.RunWorkerAsync();
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something Went Wrong.");
-            }
         }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -170,10 +160,11 @@ namespace QueryMining
 
                     } // end querywords loop 1 
                 } // end rows loop
-                //foreach (List<object> item in checkedPairs.Values)
-                //{
-                //    _dataTable.Rows.Add(item.ToArray());
-                //}
+                  //foreach (List<object> item in checkedPairs.Values)
+                  //{
+                  //    _dataTable.Rows.Add(item.ToArray());
+                  //}
+                dgvResults.DataSource = _dataTable;
                 Console.WriteLine("Sort Finished");
             }
             catch (OperationCanceledException)
@@ -475,6 +466,22 @@ namespace QueryMining
             }
         }
 
+        private void btnMineQueries_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                progressBar1.Style = ProgressBarStyle.Marquee;
+                progressBar1.MarqueeAnimationSpeed = 50;
+
+                _processing = true;
+                backgroundWorker.RunWorkerAsync();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Something Went Wrong.");
+            }
+        }
 
         private void AddToDataGridView(ref StatDataTable data)
         {
