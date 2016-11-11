@@ -5,8 +5,7 @@
  ************************************/
 var REPORT_NAME = ['Account', 'Audit'];
 var EMAILS = [
-	'joshd@sewelldirect.com', 
-	'cameronp@sewelldirect.com'
+	'joshd@sewelldirect.com', 	
 ];
 var MAX_KEYWORD_NUM = 15; // <-- this is the max number of keywords you want in an AdGroup
 var NUMBER_OF_ADS = 1; // <-- this is the minimum number of ads you want in an AdGroup

@@ -7,7 +7,7 @@
 var REPORT_NAME = ['Quality', 'Score', 'Monitor'];
 var EMAILS = [
     "joshd@sewelldirect.com",
-    "cameronp@sewelldirect.com"
+    
 ];
 
 var TITLES = ['\nCampaign', 'AdGroup', 'Keyword', 'MatchType', 'QS', 'Cost', 'ConvValue', 'NetProfit', 'Conversions', 'Impressions', 'Clicks', 'MaxCPC', 'AvgCPC', 'KeywordID'];

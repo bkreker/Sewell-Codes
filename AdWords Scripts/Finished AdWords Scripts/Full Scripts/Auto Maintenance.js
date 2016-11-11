@@ -5,7 +5,7 @@
  ***********************************/
 var REPORT_NAME = ['Auto', 'Maintenance'];
 
-var EMAILS = ['joshd@sewelldirect.com', 'cameronp@sewelldirect.com'];
+var EMAILS = ['joshd@sewelldirect.com'];
 
 //info for the sheet that will hold the Conversion Values
 var CONV_SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1-dyzDaFZ8mQvHGidP6MP1P-EXNVFRzJyTxbyi4sHnFg/edit?usp=sharing';

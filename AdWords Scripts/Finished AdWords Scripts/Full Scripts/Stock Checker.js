@@ -12,8 +12,7 @@ var WRAPPED_URLS = false; // set this to true if you use a 3rd party like Marin 
 
 // Email addresses to send the report to. The first email is for who debugs the code
 var EMAILS = [
-    "joshd@sewelldirect.com",
-    "cameronp@sewelldirect.com",
+    "joshd@sewelldirect.com",  
     "jarom@sewelldirect.com",
     "sean@sewelldirect.com"
 ];
@@ -351,36 +350,6 @@ function cleanUrl(url) {
     return url;
 }
 
-function EmailResults() {
-    if (pausedNum != 0 || enabledNum != 0) {
-        var Subject = 'AdWords Alert: ' + REPORT_NAME.join(' ');
-        var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-        var Message = emailMessage() + signature;
-        var Attachment = emailAttachment();
-        var file_name = _getDateString() + '_' + REPORT_NAME.join('_');
-        var To;
-        var isPreview = '';
-
-        if (AdWordsApp.getExecutionInfo().isPreview()) {
-            To = EMAILS[0]
-            isPreview = 'Preview; No changes actually made.\n';
-        } else {
-            To = EMAILS.join();
-        }
-        // Do not email the report to cameron when in preview mode           
-        MailApp.sendEmail({
-            to: To,
-            subject: Subject,
-            body: Message,
-            attachments: [{
-                fileName: file_name + '.csv',
-                mimeType: 'text/csv',
-                content: Attachment
-            }]
-        });
-    }
-}
-
 function emailMessage() {
     var message = "";
     if (pausedNum != 0) {
@@ -424,11 +393,6 @@ function emailAttachment() {
     return attachment;
 }
 
-//Helper function to format todays date
-function _getDateString() {
-    var date = Utilities.formatDate((new Date()), AdWordsApp.currentAccount().getTimeZone(), "yyyy-MM-dd");
-    return date;
-}
 // Conditions for pausing ads
 function buildSelectorPause() {
     var selector = (URL_LEVEL === 'Ad') ? AdWordsApp.ads() : AdWordsApp.keywords();
@@ -471,9 +435,5 @@ function buildSelectorEnable() {
     return selector;
 }
 
-//This is a helper function to create the label if it does not already exist
-function createLabelIfNeeded(name) {
-    if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
-        AdWordsApp.createLabel(name);
-    }
-}
+//Minified Helper Functions:
+function _getDateTime(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}function AM_PM(a){var b=a.getHours(),c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}function CustomDateRange(a,b){null!==a&&void 0!==a||(a=91),void 0!==b&&""!==b&&null!==b||(b="YYYYMMdd");var c=_daysAgo(a,b).toString(),d=_today(b).toString(),e=_today(),f=_daysAgo(a),g={fromStr:c,toStr:d,fromObj:f,toObj:e,string:function(){return c+","+d}};return g}function _daysAgo(a,b){var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={day:c.getDate(),month:c.getMonth(),year:c.getYear()};return d}function _today(a){var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear()}}function _getDateString(){var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}function todayIsMonday(){var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}function Rolling13Week(){var a="MM/dd/YYYY",b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function Rolling13Week(a){var b=_daysAgo(98,a)+" - "+_daysAgo(7,a),c=_daysAgo(91,a)+" - "+_today(a),d={from:b,to:c,string:function(){return this.p+" - "+this.n}};return d}function formatKeyword(a){return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}function round(a){var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}function getStandardDev(a,b,c){var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}function getMean(a,b){var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}function createLabelIfNeeded(a){AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}function sendResultsViaEmail(a,b){var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_initCap(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}function EmailResults(){var f,a="AdWords Alert: "+REPORT_NAME.join(" "),b="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",c=emailMessage()+b,d=emailAttachment(),e=_getDateString()+"_"+REPORT_NAME.join("_"),g="";AdWordsApp.getExecutionInfo().isPreview()?(f=EMAILS[0],g="Preview; No changes actually made.\n"):f=EMAILS.join(),""!=c&&MailApp.sendEmail({to:f,subject:a,body:c,attachments:[{fileName:e+".csv",mimeType:"text/csv",content:d}]}),Logger.log("Email sent to: "+f)}function EmailResults(a){var g,b="AdWords Alert: "+a.join(" "),c="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",d=emailMessage()+c,e=emailAttachment(),f=_getDateString()+"_"+a.join("_"),h="";AdWordsApp.getExecutionInfo().isPreview()?(g=EMAILS[0],h="Preview; No changes actually made.\n"):g=EMAILS.join(),""!=d&&MailApp.sendEmail({to:g,subject:b,body:d,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:e}]}),Logger.log("Email sent to: "+g)}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}function hasLabelAlready(a,b){return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}
