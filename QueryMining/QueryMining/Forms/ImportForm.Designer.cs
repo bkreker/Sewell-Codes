@@ -1,6 +1,6 @@
 ﻿namespace QueryMining
 {
-    partial class MainForm
+    partial class ImportForm
     {
         /// <summary>
         /// Required designer variable.
@@ -52,7 +52,7 @@
             this.btnImport.Location = new System.Drawing.Point(395, 10);
             this.btnImport.Margin = new System.Windows.Forms.Padding(2);
             this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(92, 24);
+            this.btnImport.Size = new System.Drawing.Size(92, 40);
             this.btnImport.TabIndex = 0;
             this.btnImport.Text = "&Import CSV File";
             this.btnImport.UseVisualStyleBackColor = true;
@@ -133,7 +133,7 @@
             this.rBtnAvgSome.UseVisualStyleBackColor = true;
             this.rBtnAvgSome.CheckedChanged += new System.EventHandler(this.rBtnAvgAll_CheckedChanged);
             // 
-            // MainForm
+            // ImportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -149,7 +149,8 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(306, 45);
-            this.Name = "MainForm";
+            this.Name = "ImportForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "QueryWizard";
             this.ResumeLayout(false);
             this.PerformLayout();

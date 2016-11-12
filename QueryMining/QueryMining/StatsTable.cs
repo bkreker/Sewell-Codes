@@ -246,14 +246,45 @@ namespace QueryMining
             else
             {
                 try
-                { 
+                {
                     this.Rows.Add(aggregatedRow);
                 }
                 catch (ConstraintException ex)
                 {
                     Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
                 }
-                catch  (Exception ex)
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
+                }
+            }
+        }
+
+        public void AddRowToTable(object[] aggregatedRow, List<string> existingKeys)
+        {
+
+            var existingRows = (from DataRow row in this.Rows
+                                where existingKeys.Any(key => row.ItemArray[QueryCol].ToString() == key)
+                                select row).ToList();
+           
+            if (existingRows.Count > 0)
+            {
+                object[] outputRow = AggregateRows(existingRows, aggregatedRow, aggregatedRow.Length);
+                int rowIx = this.Rows.IndexOf(existingRows[0]);
+                this.Rows[rowIx].ItemArray = outputRow;
+
+            }
+            else
+            {
+                try
+                {
+                    this.Rows.Add(aggregatedRow);
+                }
+                catch (ConstraintException ex)
+                {
+                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                }
+                catch (Exception ex)
                 {
                     Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
                 }
@@ -263,15 +294,15 @@ namespace QueryMining
         public object[] AggregateRows(List<DataRow> existingRows, object[] inputRow, int arrSize)
         {
             object[] outputArr = new object[arrSize];
-            
+
             for (int i = 0; i < arrSize; i++)
             {
-             
+
                 List<object> columnValues = (from row in existingRows
                                              select row.ItemArray[i]).ToList();
 
                 columnValues.Add(inputRow[i]);
-               
+
                 bool isAvg = Regexes.IsMatch(this.Columns[i].Caption, Regexes.Average);
 
                 outputArr[i] = AggregateColumnValues(columnValues, this.Columns[i], isAvg);
@@ -314,7 +345,7 @@ namespace QueryMining
                     return 0;
                 }
                 bool colValsAreNumbers = columnValues.All(val => Regexes.IsMatch(val.ToString(), Regexes.Number));
-                if (Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0&& !colValsAreNumbers)
+                if (Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0 && !colValsAreNumbers)
                 {
                     return columnValues[0];
                 }
