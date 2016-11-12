@@ -42,6 +42,7 @@ namespace QueryMining
             InitializeComponent();
             tsmiMine1Word.Tag = MineType.One;
             tsmiMine2Words.Tag = MineType.Two;
+            tsmiMine2Words.Checked = true;
             tsmiMine3Words.Tag = MineType.Three;
         }
 
@@ -49,23 +50,28 @@ namespace QueryMining
         {
             try
             {
-                if (lblRowCount.InvokeRequired)
-                {
-                    lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = dgvResults.RowCount.ToString(); }));
-                }
-                else
-                {
-                    lblRowCount.Text = dgvResults.RowCount.ToString();
-                }
-
                 if (dgvResults.InvokeRequired)
                 {
-                    dgvResults.Invoke(new MethodInvoker(delegate { dgvResults.Refresh(); }));
+                    dgvResults.Invoke(new MethodInvoker(delegate
+                    {
+                        dgvResults.DataSource = _dataTable;
+                         dgvResults.Sort(dgvResults.Columns[_dataTable.QueryCountCol], ListSortDirection.Descending);
+                        dgvResults.Refresh();
+                    }));
                 }
                 else
                 {
                     dgvResults.Refresh();
                 }
+                if (lblRowCount.InvokeRequired)
+                {
+                    lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = _dataTable.Rows.Count.ToString(); }));
+                }
+                else
+                {
+                    lblRowCount.Text = _dataTable.Rows.Count.ToString();
+                }
+
             }
             catch (Exception ex)
             {
@@ -146,10 +152,10 @@ namespace QueryMining
                 var tableRows = (from DataRow row in _dataTable.Rows
                                  select row.ItemArray).ToList();
 
-                var checkedPairs = new Dictionary<string, List<object>>();
+                var checkedPairs = new Dictionary<string, bool>();
                 var existingKeys = (from DataRow r in _dataTable.Rows
                                     select r.ItemArray).ToList();
-                existingKeys.ForEach(row => checkedPairs.Add(row[_queryColIndex].ToString(), row.ToList()));
+                existingKeys.ForEach(row => checkedPairs.Add(row[_queryColIndex].ToString(), true));
 
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
@@ -194,7 +200,6 @@ namespace QueryMining
 
                                             } // end if word1 != word2
                                         }
-
                                     }
                                 }
                                 resetLblRowCount();
@@ -246,38 +251,34 @@ namespace QueryMining
         /// <param name="query"></param>
         /// <param name="word1"></param>
         /// <param name="word2"></param>
-        private void MineWords(ref Dictionary<string, List<object>> checkedPairs, string query, string word1, string word2 = "", string word3 = "")
+        private void MineWords(ref Dictionary<string, bool> checkedPairs, string query, string word1, string word2 = "", string word3 = "")
         {
             if (_operationCancelled)
                 throw new OperationCanceledException();
 
             string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
             string reverseWords = string.Join(" ", new string[] { word3, word2, word1 }).Trim();
-            object[] newRow = new object[_dataTable.Columns.Count];
 
-            if (word1 != "")
+            if (wordString != "")
             {
                 try
                 {
                     var existingKeys = (from pair in checkedPairs
                                         where pair.Key == wordString
                                         select pair.Key).ToList();
-                    var existingRows = (from DataRow row in _dataTable.Rows
-                                        where row.ItemArray[_queryColIndex].ToString().Contains(word1)
-                                            && row.ItemArray[_queryColIndex].ToString().Contains(word2)
-                                            && row.ItemArray[_queryColIndex].ToString().Contains(word3)
-                                        select row.ItemArray).ToList();
 
-                    AggregateRows(query, wordString, ref newRow, ref existingRows);
-                    checkedPairs[wordString] = newRow.ToList();
+                    if (existingKeys.Count == 0)
+                    {
+                        var existingRows = (from DataRow row in _dataTable.Rows
+                                            where row.ItemArray[_queryColIndex].ToString().Contains(word1)
+                                                && row.ItemArray[_queryColIndex].ToString().Contains(word2)
+                                                && row.ItemArray[_queryColIndex].ToString().Contains(word3)
+                                            select row).ToList();
 
-                    if (existingKeys.Count > 0)
-                    {
-                        _dataTable.AddRowToTable(newRow, existingKeys);
-                    }
-                    else
-                    {
-                        _dataTable.AddRowToTable(newRow);
+                        object[] newRow = AggregateRows(query, wordString, ref existingRows);
+                        _dataTable.AddRowToTable(newRow, ref existingRows, ref existingKeys);
+                        checkedPairs[wordString] = true;
+
                     }
                 }
                 catch (Exception ex)
@@ -294,13 +295,12 @@ namespace QueryMining
         /// <param name="query"></param>
         /// <param name="wordPair"></param>
         /// <param name="newRow"></param>
-        private void AggregateRows(string query, string wordString, ref object[] newRow, ref List<object[]> existingRows/*, string word1, string word2 = "", string word3 = ""*/)
+        private object[] AggregateRows(string query, string wordString, ref List<DataRow> existingRows)
         {
             if (_operationCancelled)
                 throw new OperationCanceledException();
 
-            //   List<List<object>> results = new List<List<object>>();
-
+            object[] aggregatedRow = new object[_dataTable.Columns.Count];
             for (int columnIndex = 0; columnIndex < dgvResults.ColumnCount; columnIndex++)
             {
                 if (_operationCancelled)
@@ -308,24 +308,29 @@ namespace QueryMining
 
                 try
                 {
-                    object total = "N/A";
+                    object columnTotal = "N/A";
                     if (columnIndex == _queryColIndex)
                     {
-                        total = query == wordString ? query : wordString;
+                        columnTotal = query == wordString ? query : wordString;
+                    }
+                    else if (columnIndex == _queryCountColIndex)
+                    {
+                        columnTotal = existingRows.Count;
                     }
                     else
                     {
                         List<object> columnValues = (from resRow in existingRows
-                                                     select resRow[columnIndex]).ToList();
-                        total = AggregateRowColumnValues(columnValues, columnIndex);
+                                                     select resRow.ItemArray[columnIndex]).ToList();
+                        columnTotal = AggregateRowColumnValues(columnValues, columnIndex);
                     }
-                    newRow[columnIndex] = total;
+                    aggregatedRow[columnIndex] = columnTotal;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error Aggregating Column Values: {ex.Message}");
                 }
             } // end for
+            return aggregatedRow;
 
         }
 
@@ -341,7 +346,8 @@ namespace QueryMining
                 string colName = _dataTable.Columns[col_index].Caption;
                 if (Regexes.MatchesAnyStat(colName))
                 {
-                    bool isAvg = Regexes.IsMatch(colName, Regexes.Average) || _avgAllValues;
+                    bool isAvg = Regexes.IsMatch(colName, Regexes.Average);
+                    isAvg = isAvg || _avgAllValues;
                     return AggregateSingleColumnValues(columnValues, isAvg, _dataTable.Columns[col_index]);
                 }
                 else
@@ -349,9 +355,9 @@ namespace QueryMining
                     if (columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
                     {
                         columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number)));
-                        bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Percent) || Regexes.IsMatch(colName, Regexes.Average)) || _avgAllValues;
-
-                        return AggregateSingleColumnValues(columnValues, (isAvg || _avgAllValues), _dataTable.Columns[col_index]).ToString();
+                        bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Percent) || Regexes.IsMatch(colName, Regexes.Average));
+                        isAvg = isAvg || _avgAllValues;
+                        return AggregateSingleColumnValues(columnValues, isAvg, _dataTable.Columns[col_index]).ToString();
                     }
                     else
                     {
@@ -534,6 +540,11 @@ namespace QueryMining
             //MineType type = btn.Tag as MineType;
         }
 
+        private void dgvResults_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+
+        }
+
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AboutBox s = new AboutBox();
@@ -572,7 +583,7 @@ namespace QueryMining
                 try
                 {
                     dgvResults.DataSource = this._dataTable;
-                    dgvResults.Sort(dgvResults.Columns[_dataTable.QueryCountCol], ListSortDirection.Descending);
+                //    dgvResults.Sort(dgvResults.Columns[_dataTable.QueryCountCol], ListSortDirection.Descending);
                     // dgvResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
                     // dgvResults.AllowUserToResizeColumns = true;
 

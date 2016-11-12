@@ -81,7 +81,7 @@ namespace QueryMining
                     {
                         isUnique = true;
                     }
-                    else if (Regexes.IsMatch(colVal, Regexes.Number) && Regexes.MatchesAnyStat(colName))
+                    else if (Regexes.IsMatch(colVal, Regexes.Number)/* && Regexes.MatchesAnyStat(colName)*/)
                     {
                         if (colVal.Contains('%'))
                         {
@@ -231,17 +231,36 @@ namespace QueryMining
             }
         }
 
-        public void AddRowToTable(object[] aggregatedRow)
+        public void AddRowToTable(object[] newRow)
         {
-            List<DataRow> existingRows = (from DataRow r in this.Rows
-                                          where r.ItemArray[this.QueryCol].ToString() == aggregatedRow[this.QueryCol].ToString()
-                                          select r).ToList();
-            if (existingRows.Count > 0)
+
+            try
+            {
+                this.Rows.Add(newRow);
+            }
+            catch (ConstraintException ex)
+            {
+                Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
+                var existingRows = (from DataRow row in this.Rows
+                                    where row.ItemArray[this.QueryCol].ToString() == newRow[this.QueryCol].ToString()
+                                    select row.ItemArray[this.QueryCol].ToString()).ToList();
+                AddRowToTable(newRow, existingRows);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
+            }
+
+        }
+
+        public void AddRowToTable(object[] aggregatedRow, ref List<DataRow> existingRows,ref  List<string> existingKeys)
+        {            
+
+            if (existingKeys.Count > 0)
             {
                 object[] outputRow = AggregateRows(existingRows, aggregatedRow, aggregatedRow.Length);
                 int rowIx = this.Rows.IndexOf(existingRows[0]);
                 this.Rows[rowIx].ItemArray = outputRow;
-
             }
             else
             {
@@ -266,7 +285,7 @@ namespace QueryMining
             var existingRows = (from DataRow row in this.Rows
                                 where existingKeys.Any(key => row.ItemArray[QueryCol].ToString() == key)
                                 select row).ToList();
-           
+
             if (existingRows.Count > 0)
             {
                 object[] outputRow = AggregateRows(existingRows, aggregatedRow, aggregatedRow.Length);

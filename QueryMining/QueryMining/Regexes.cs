@@ -30,7 +30,7 @@ namespace QueryMining
         public const string Word = @"Word";
         public const string Query = @"^Query$|(Search ?term)";
         public const string Cost = @"Cost";
-        public const string GP = @"GP|Gross ?Profit|Total ?(^Conv\.?$|Conversion) (value|val\.?)";
+        public const string GP = @"(GP)|(Gross ?Profit)|(Total ?(Conv\.?|Conversion) (value|val\.?))";
         public const string NetProfit = @"Net\s?Profit";
         public const string ROI = @"ROI|ROAS";
         public const string NPPerConv = @"NP ?\/ ?Conv|NPPerConv";
@@ -84,7 +84,16 @@ namespace QueryMining
         }
         public static bool IsMatch(string target, string pattern)
         {
-            return Regex.IsMatch(target, pattern, options);
+            try
+            {
+
+                return Regex.IsMatch(target, pattern, options);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return false;
+            }
         }
 
         public static bool MatchesAnyStat(string target)
