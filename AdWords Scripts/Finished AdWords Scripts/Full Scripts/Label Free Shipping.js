@@ -18,7 +18,7 @@ var REGEX_URL = /(http)s?:\/\//g;
 
 
 function main() {   
-  var date = _getDate();
+  var date = _getDateTime();
   var day = date.day;
   var time = date.time;
   createLabelIfNeeded(FREE_SHIPPING_LABEL);

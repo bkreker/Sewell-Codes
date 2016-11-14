@@ -233,12 +233,17 @@ function getPriceAndSku(adGroup, url) {
 
 
 function emailMessage() {
-    var date = _getDate();
+    var date = _getDateTime();
     var day = date.day;
     var time = date.time;
     var message = 'Ad Customizer Updated ' + day + ' ' + time + '\n' + PriceNum + ' prices counted.';
     return message;
 
+}
+
+function emailAttachment(){
+	
+	return EMAIL_LIST.join();
 }
 
 //Minified Helper Functions:

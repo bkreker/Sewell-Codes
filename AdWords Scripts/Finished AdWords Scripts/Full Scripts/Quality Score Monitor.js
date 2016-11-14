@@ -235,9 +235,11 @@ function updateConvValReport(sheetUrl, sheetName, dateRange, isString) {
 	
     // Only update it a max of once per day
     if (dayCellVal != today || periodRangeVal != timePeriod) 
-	//if(true)
 	{  
+		var reportName = 'KEYWORDS_PERFORMANCE_REPORT';
+		var statusConditions = 'CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED';
 		Logger.log('Updating ConvVal Report for: ' + timePeriod);
+		
 		info('Date: ' + updateTime);   
         periodRange.setValue(timePeriod.toString());
 		dayCell.setValue(today);
@@ -245,9 +247,10 @@ function updateConvValReport(sheetUrl, sheetName, dateRange, isString) {
 		var fields = 'CampaignName, AdGroupName, Id, ConversionValue, AverageCpc, Cost, Conversions ';
 		var startRange = 'A';
 		var endRange = 'H';
+		/*
 		var report = AdWordsApp.report(
 			'SELECT  ' + fields +
-			'FROM  KEYWORDS_PERFORMANCE_REPORT ' +
+			'FROM KEYWORDS_PERFORMANCE_REPORT ' +
 			'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = MANUAL_CPC ' +
 			'DURING ' + timePeriod
 		);
@@ -259,11 +262,17 @@ function updateConvValReport(sheetUrl, sheetName, dateRange, isString) {
 			'WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND BiddingStrategyType = ENHANCED_CPC ' +
 			'DURING ' + timePeriod
 		);
-
+		*/
+		
+		var report = getReport(fields, reportName, statusConditions + ' AND BiddingStrategyType = MANUAL_CPC', timePeriod);		
+		var report2 = getReport(fields, reportName, statusConditions + ' AND BiddingStrategyType = ENHANCED_CPC', timePeriod);
+		
 		var array = report.rows();
 		var array2 = report2.rows();
 		clearConvSheet(ss);
-		var i = 2;
+		var i = addRowsToSheet(array, sheet, startRange, endRange, 2);
+		var endi = addRowsToSheet(array2, sheet, startRange, endRange, i);
+		 /*
 		while (array.hasNext()) {
 			var range = sheet.getRange(startRange + i + ":" + endRange + i);
 			var rowTotal = array.next();
@@ -312,7 +321,7 @@ function updateConvValReport(sheetUrl, sheetName, dateRange, isString) {
 			range.setValue(row);
 			i++;
 		}
-
+*/
 		var lastRow = sheet.getLastRow();
 		var range = sheet.getRange(startRange + '2:' + endRange + lastRow);
 
@@ -320,6 +329,47 @@ function updateConvValReport(sheetUrl, sheetName, dateRange, isString) {
 		print('Finished Updating ConvVal Report');
 	}
 }
+
+function getReport(fields, reportName, conditions , timePeriod){
+	var query = 'SELECT '+ fields.trim()
+			' FROM ' + reportName.trim();
+	if(conditions != '' && conditions != null && conditions != undefined){
+		query += ' WHERE '+ conditions.trim();
+	}
+	if(timePeriod != '' && conditions != null && conditions != undefined){
+		query += ' DURING '+timePeriod.trim();
+	}
+	
+	return AdWordsApp.report(query);
+}
+
+function addRowsToSheet(array, sheet, startRange, endRange, i){
+	while (array.hasNext()) {
+		var range = sheet.getRange(startRange + i + ":" + endRange + i);
+		var rowTotal = array.next();
+		var cpa;
+		rowTotal.Conversions === 0 ? cpa = '-' : cpa = (rowTotal.Cost / rowTotal.Conversions);
+					
+		var row = [
+			[
+				rowTotal.CampaignName,
+				rowTotal.AdGroupName,
+				rowTotal.Id,
+				rowTotal.ConversionValue,
+				rowTotal.AverageCpc,
+				rowTotal.Cost,
+				rowTotal.Conversions,
+				cpa
+			]
+		];
+
+		range.setValues(row);
+
+		i++;
+	}
+	return i;
+}
+
 
 function clearConvSheet(ss) {
     var campRange = ss.getRangeByName('CampaignName');
