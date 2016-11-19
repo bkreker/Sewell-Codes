@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("QueryWizard")]
-[assembly: AssemblyDescription("Upload a .csv file to analyze the results for individual words, word pairs, and groups of three words.")]
+[assembly: AssemblyTitle("Rolling13Week")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("QueryWizard")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyProduct("Rolling13Week")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("13aee73a-d352-4b7d-b187-a66ca43ae6e6")]
+[assembly: Guid("4a7275a5-bb42-4eb7-8c73-153e0e10f981")]
 
 // Version information for an assembly consists of the following four values:
 //

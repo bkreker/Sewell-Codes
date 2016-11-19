@@ -22,27 +22,38 @@ using System.Data;
 
 namespace QueryMining
 {
-    public partial class MainForm : Form
+    public partial class ImportForm : Form
     {
         //   public Dictionary<string[], List<>> dataTable = new Dictionary<string[], bool>();
         string _inFileName { get { return txtBoxInFile.Text; } }
-        string _outFileName { get { return txtBoxOutFile.Text; } }
 
-        StringWriter _outPutStringStream = new StringWriter();
-        StatDataTable _dataTable = new StatDataTable();
-        bool _outFileSavedCorrectly = false,
+
+        //   StringWriter _outPutStringStream = new StringWriter();
+        private StatDataTable _dataTable { get; set; }
+        public StatDataTable DataTable { get { return this._dataTable; } }
+        bool
+            _avgAllValues = true,
+            // _outFileSavedCorrectly = false,
             _inFileReadCorrectly = false,
             _operationCancelled = false,
             _processing = false;
 
-        int _queryColumn = -1,
-             _wordColumn = -1;
+        public bool AvgAllValues { get { return _avgAllValues; } }
 
-        public MainForm()
+        //int _queryColumn = -1,
+        //     _wordColumn = -1;
+
+        //public int QueryColumnIndex { get { return _queryColumn; } }
+        //public int WordColumnIndex { get { return _wordColumn; } }
+
+        public ImportForm()
         {
             InitializeComponent();
-            txtBoxInFile.Text = @"C:\Users\jdegr_000\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
-            txtBoxOutFile.Text = "test save.csv";
+
+            this.DialogResult = DialogResult.None;
+            _dataTable = new StatDataTable();
+            txtBoxInFile.Text = @"C:\Users\joshd\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
+
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -57,32 +68,18 @@ namespace QueryMining
             }
         }
 
-        private void btnSelectOutFile_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (outFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txtBoxOutFile.Text = outFileDialog.FileName;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something went wrong");
-            }
 
-        }
 
         private void btnGo_Click(object sender, EventArgs e)
         {
-            if (_inFileName != "" && _outFileName != "")
+            if (_inFileName != "")
             {
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
 
                 btnGo.Enabled = false;
                 btnImport.Enabled = false;
-                btnSelectFolder.Enabled = false;
+
                 btnClose.Text = "Cancel and Close";
                 BackgroundWorker bw = new BackgroundWorker();
                 bw.DoWork += bw_DoWork;
@@ -97,24 +94,13 @@ namespace QueryMining
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (txtBoxOutFile.Text != "" && txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
+            if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
                 _processing = true;
                 try
                 {
-                    //ReadData();
                     ReadDataToDataTable();
-                    if (_inFileReadCorrectly)
-                    {
-                        //SaveData();
-                        // _dataTable.Save(_outFileName, ref _outFileSavedCorrectly);
-                    }
-                    else if (!_operationCancelled)
-                    {
-                        MessageBox.Show("The file was not read in correctly. Nothing was saved.");
-                    }
-
                 }
                 catch (Exception ex)
                 {
@@ -136,19 +122,12 @@ namespace QueryMining
 
             btnGo.Enabled = true;
             btnImport.Enabled = true;
-            btnSelectFolder.Enabled = true;
             btnClose.Text = "Close";
 
             if (_inFileReadCorrectly)
-            {
-                DialogResult result = MessageBox.Show($"Finished Importing the File. Analyze Now?", "Done Processing", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-                if (result == DialogResult.Yes)
-                {
-                    var analysis = new AnalyzeForm(_dataTable, _wordColumn, _queryColumn, _outFileName);
-                    analysis.ShowDialog();
-                    //this.Hide();
-                }
-
+            {               
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
             else if (!_operationCancelled)
             {
@@ -213,6 +192,18 @@ namespace QueryMining
             }
         }
 
+        private void rBtnAvgAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rBtnAvgSome.Checked)
+            {
+                _avgAllValues = false;
+            }
+            else
+            {
+                _avgAllValues = true;
+            }
+        }
+
         private void ReadDataToDataTable()
         {
             Console.WriteLine("Processing Data...");
@@ -233,7 +224,7 @@ namespace QueryMining
 
                 if (c.DialogResult == DialogResult.OK)
                 {
-                    _queryColumn = c.SelectedIndex;
+                    //_queryColumn = c.SelectedIndex;
                     _dataTable.QueryCol = c.SelectedIndex;
 
                     //string newFirstRow = $"Word,{string.Join(writeDelim, firstRow)}";
@@ -283,7 +274,7 @@ namespace QueryMining
         {
             object[] outputRow;
             List<DataRow> existingRows = (from DataRow r in _dataTable.Rows
-                                          where r.ItemArray[_queryColumn].ToString() == inputRow[_queryColumn]
+                                          where r.ItemArray[_dataTable.QueryCol].ToString() == inputRow[_dataTable.QueryCol]
                                           select r).ToList();
             if (existingRows.Count > 0)
             {
@@ -316,10 +307,6 @@ namespace QueryMining
             txtBoxInFile.Text = inFileDialog.FileName; ;
         }
 
-        private void outFileFolderDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            txtBoxOutFile.Text = outFileDialog.FileName;
-        }
     }
 
 
