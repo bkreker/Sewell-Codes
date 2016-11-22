@@ -16,6 +16,8 @@ namespace QueryMining
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            StatDataTable.Processing = false;
+            StatDataTable.OperationCancelled = false;
             Application.Run(new AnalyzeForm());
         }
     }

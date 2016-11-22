@@ -33,10 +33,7 @@ namespace QueryMining
 
         public StatDataTable DataTable { get { return this._dataTable; } }
 
-        bool
-            _inFileReadCorrectly = false,
-            _operationCancelled = false,
-            _processing = false;
+        public static bool _inFileReadCorrectly = false;
 
         public bool AvgAllValues
         {
@@ -79,7 +76,6 @@ namespace QueryMining
                 btnGo.Enabled = false;
                 btnImport.Enabled = false;
 
-                btnClose.Text = "Cancel and Close";
                 BackgroundWorker bw = new BackgroundWorker();
                 bw.DoWork += bw_DoWork;
                 bw.RunWorkerCompleted += bw_RunWorkerCompleted;
@@ -96,7 +92,7 @@ namespace QueryMining
             if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
-                _processing = true;
+                StatDataTable.Processing = true;
                 try
                 {
                     ReadDataToDataTable();
@@ -119,21 +115,20 @@ namespace QueryMining
 
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            _processing = false;
+            StatDataTable.Processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
 
             btnGo.Enabled = true;
             btnImport.Enabled = true;
-            btnClose.Text = "Close";
 
             if (_inFileReadCorrectly)
             {
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            else if (!_operationCancelled)
+            else if (!StatDataTable.Processing)
             {
                 MessageBox.Show("Something went wrong, the file was not imported correctly.");
             }
@@ -141,12 +136,12 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            if (_processing)
+            if (StatDataTable.Processing)
             {
                 DialogResult result = MessageBox.Show("Cancel File Import and Close the Program?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
                 {
-                    _operationCancelled = true;
+                    StatDataTable.OperationCancelled = true;
                     this.Close();
                 }
             }
@@ -160,13 +155,13 @@ namespace QueryMining
 
         private void rBtnAvgAll_CheckedChanged(object sender, EventArgs e)
         {
-            if (rBtnAvgSome.Checked)
+            if (cboxAvgAll.Checked)
             {
-                AvgAllValues = false;
+                AvgAllValues = true;
             }
             else
             {
-                AvgAllValues = true;
+                AvgAllValues = false;
             }
         }
 
@@ -178,7 +173,7 @@ namespace QueryMining
         private void ReadDataToDataTable()
         {
             Console.WriteLine("Processing Data...");
-            _processing = true;
+            StatDataTable.Processing = true;
             List<string> inputRow = new List<string>();
             string query = "";
             try
@@ -211,7 +206,7 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        if (_operationCancelled)
+                        if (StatDataTable.OperationCancelled)
                             throw new OperationCanceledException();
 
                         try
@@ -233,13 +228,13 @@ namespace QueryMining
             }
             catch (OperationCanceledException)
             {
-                _operationCancelled = true;
-                _processing = false;
+                StatDataTable.OperationCancelled = true;
+                StatDataTable.Processing = false;
                 MessageBox.Show("The operation was cancelled.");
             }
             catch (Exception ex)
             {
-                _processing = false;
+                StatDataTable.Processing = false;
                 throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
             }
 

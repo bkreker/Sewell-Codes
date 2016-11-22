@@ -19,6 +19,8 @@ namespace QueryMining
         public static int QueryCol { get; set; }
         public static int QueryCountCol { get; set; }
         public static bool AvgAll { get; set; }
+        public static bool Processing { get; set; }
+        public static bool OperationCancelled { get; set; }
 
         public static DataColumnCollection ColumnCollection { get; set; }
         public static List<string> Headers
@@ -725,12 +727,12 @@ namespace QueryMining
         /// <param name="query"></param>
         /// <param name="wordPair"></param>
         /// <param name="newRow"></param>
-        public static object[] AggregateRows(string query, string wordString, List<DataRow> existingRows, ref bool _operationCancelled)
+        public static object[] Mine(string query, string wordString, List<DataRow> existingRows)
         {
             object[] aggregatedRow = new object[StatDataTable.ColumnCollection.Count];
             for (int columnIndex = 0; columnIndex < StatDataTable.ColumnCollection.Count; columnIndex++)
             {
-                if (_operationCancelled)
+                if (StatDataTable.OperationCancelled)
                     throw new OperationCanceledException();
 
                 try
@@ -914,7 +916,7 @@ namespace QueryMining
                     columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number)));
                     bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Percent) || Regexes.IsMatch(colName, Regexes.Average));
 
-                    isAvg = isAvg || AvgAll;
+                    isAvg = isAvg || StatDataTable.AvgAll;
 
                     return StatDataTable.AggregateColumnValues(columnValues, StatDataTable.ColumnCollection[col_index], isAvg).ToString();
                 }

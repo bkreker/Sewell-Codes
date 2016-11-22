@@ -43,13 +43,13 @@
             this.lstBxColumnNames.ItemHeight = 18;
             this.lstBxColumnNames.Location = new System.Drawing.Point(0, 0);
             this.lstBxColumnNames.Name = "lstBxColumnNames";
-            this.lstBxColumnNames.Size = new System.Drawing.Size(278, 274);
+            this.lstBxColumnNames.Size = new System.Drawing.Size(278, 256);
             this.lstBxColumnNames.TabIndex = 0;
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(194, 292);
+            this.btnOK.Location = new System.Drawing.Point(179, 262);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 1;
@@ -61,7 +61,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(10, 292);
+            this.btnCancel.Location = new System.Drawing.Point(28, 262);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -76,7 +76,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(279, 325);
+            this.ClientSize = new System.Drawing.Size(279, 295);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.lstBxColumnNames);

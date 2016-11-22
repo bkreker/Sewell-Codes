@@ -33,7 +33,7 @@
             this.dgvInFile = new System.Windows.Forms.DataGridView();
             this.outFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.lblRowCount = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblTitleOutput = new System.Windows.Forms.Label();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,6 +50,7 @@
             this.tabPageInFile = new System.Windows.Forms.TabPage();
             this.tabPageOutFile = new System.Windows.Forms.TabPage();
             this.dgvOutFile = new System.Windows.Forms.DataGridView();
+            this.btnCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvInFile)).BeginInit();
             this.menuStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -61,8 +62,8 @@
             // 
             // backgroundWorker
             // 
-            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
-            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.PerformBackgroundWork);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.BackgroundWorkCompleted);
             // 
             // progressBar1
             // 
@@ -96,21 +97,21 @@
             // 
             this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblRowCount.AutoSize = true;
-            this.lblRowCount.Location = new System.Drawing.Point(76, 747);
+            this.lblRowCount.Location = new System.Drawing.Point(81, 747);
             this.lblRowCount.Name = "lblRowCount";
             this.lblRowCount.Size = new System.Drawing.Size(13, 13);
             this.lblRowCount.TabIndex = 3;
             this.lblRowCount.Text = "0";
             // 
-            // label1
+            // lblTitleOutput
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 747);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(72, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Output Rows:";
+            this.lblTitleOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblTitleOutput.AutoSize = true;
+            this.lblTitleOutput.Location = new System.Drawing.Point(12, 747);
+            this.lblTitleOutput.Name = "lblTitleOutput";
+            this.lblTitleOutput.Size = new System.Drawing.Size(72, 13);
+            this.lblTitleOutput.TabIndex = 4;
+            this.lblTitleOutput.Text = "Output Rows:";
             // 
             // menuStrip
             // 
@@ -138,28 +139,28 @@
             // importToolStripMenuItem
             // 
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // mineToolStripMenuItem
             // 
             this.mineToolStripMenuItem.Name = "mineToolStripMenuItem";
-            this.mineToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.mineToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.mineToolStripMenuItem.Text = "Mine";
             this.mineToolStripMenuItem.Click += new System.EventHandler(this.btnBegin_Click);
             // 
             // exportToolStripMenuItem
             // 
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exportToolStripMenuItem.Text = "Export";
             this.exportToolStripMenuItem.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.btnClose_Click);
             // 
@@ -261,13 +262,25 @@
             this.dgvOutFile.Size = new System.Drawing.Size(1148, 678);
             this.dgvOutFile.TabIndex = 2;
             // 
+            // btnCancel
+            // 
+            this.btnCancel.Enabled = false;
+            this.btnCancel.Location = new System.Drawing.Point(693, 740);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 10;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
             // AnalyzeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1162, 769);
+            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.lblTitleOutput);
             this.Controls.Add(this.lblRowCount);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.menuStrip);
@@ -294,7 +307,7 @@
         private System.Windows.Forms.DataGridView dgvInFile;
         private System.Windows.Forms.SaveFileDialog outFileDialog;
         private System.Windows.Forms.Label lblRowCount;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblTitleOutput;
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
@@ -311,5 +324,6 @@
         private System.Windows.Forms.TabPage tabPageInFile;
         private System.Windows.Forms.TabPage tabPageOutFile;
         private System.Windows.Forms.DataGridView dgvOutFile;
+        private System.Windows.Forms.Button btnCancel;
     }
 }
