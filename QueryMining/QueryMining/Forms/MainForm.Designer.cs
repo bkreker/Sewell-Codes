@@ -30,7 +30,7 @@
         {
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.dgvResults = new System.Windows.Forms.DataGridView();
+            this.dgvInFile = new System.Windows.Forms.DataGridView();
             this.outFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.lblRowCount = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -46,9 +46,17 @@
             this.tsmiMine3Words = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).BeginInit();
+            this.tabOutFile = new System.Windows.Forms.TabControl();
+            this.tabPageInFile = new System.Windows.Forms.TabPage();
+            this.tabPageOutFile = new System.Windows.Forms.TabPage();
+            this.dgvOutFile = new System.Windows.Forms.DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvInFile)).BeginInit();
             this.menuStrip.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.tabOutFile.SuspendLayout();
+            this.tabPageInFile.SuspendLayout();
+            this.tabPageOutFile.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvOutFile)).BeginInit();
             this.SuspendLayout();
             // 
             // backgroundWorker
@@ -59,23 +67,23 @@
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(788, 625);
+            this.progressBar1.Location = new System.Drawing.Point(796, 740);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(354, 23);
             this.progressBar1.TabIndex = 0;
             // 
-            // dgvResults
+            // dgvInFile
             // 
-            this.dgvResults.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dgvResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvResults.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvResults.Location = new System.Drawing.Point(0, 0);
-            this.dgvResults.Name = "dgvResults";
-            this.dgvResults.RowTemplate.DefaultCellStyle.Format = "0.##";
-            this.dgvResults.RowTemplate.DefaultCellStyle.NullValue = null;
-            this.dgvResults.Size = new System.Drawing.Size(1154, 595);
-            this.dgvResults.TabIndex = 1;
-            this.dgvResults.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgvResults_RowsAdded);
+            this.dgvInFile.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dgvInFile.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvInFile.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvInFile.Location = new System.Drawing.Point(3, 3);
+            this.dgvInFile.Name = "dgvInFile";
+            this.dgvInFile.RowTemplate.DefaultCellStyle.Format = "0.##";
+            this.dgvInFile.RowTemplate.DefaultCellStyle.NullValue = null;
+            this.dgvInFile.Size = new System.Drawing.Size(1148, 678);
+            this.dgvInFile.TabIndex = 1;
+            this.dgvInFile.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgvResults_RowsAdded);
             // 
             // outFileDialog
             // 
@@ -88,7 +96,7 @@
             // 
             this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblRowCount.AutoSize = true;
-            this.lblRowCount.Location = new System.Drawing.Point(76, 632);
+            this.lblRowCount.Location = new System.Drawing.Point(76, 747);
             this.lblRowCount.Name = "lblRowCount";
             this.lblRowCount.Size = new System.Drawing.Size(13, 13);
             this.lblRowCount.TabIndex = 3;
@@ -98,11 +106,11 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 632);
+            this.label1.Location = new System.Drawing.Point(12, 747);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(37, 13);
+            this.label1.Size = new System.Drawing.Size(72, 13);
             this.label1.TabIndex = 4;
-            this.label1.Text = "Rows:";
+            this.label1.Text = "Output Rows:";
             // 
             // menuStrip
             // 
@@ -112,7 +120,7 @@
             this.aboutToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(1154, 27);
+            this.menuStrip.Size = new System.Drawing.Size(1162, 27);
             this.menuStrip.TabIndex = 8;
             this.menuStrip.Text = "menuStrip2";
             // 
@@ -202,17 +210,62 @@
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.dgvResults);
+            this.panel1.Controls.Add(this.tabOutFile);
             this.panel1.Location = new System.Drawing.Point(0, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1154, 595);
+            this.panel1.Size = new System.Drawing.Size(1162, 710);
             this.panel1.TabIndex = 9;
+            // 
+            // tabOutFile
+            // 
+            this.tabOutFile.Controls.Add(this.tabPageInFile);
+            this.tabOutFile.Controls.Add(this.tabPageOutFile);
+            this.tabOutFile.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabOutFile.Location = new System.Drawing.Point(0, 0);
+            this.tabOutFile.Name = "tabOutFile";
+            this.tabOutFile.SelectedIndex = 0;
+            this.tabOutFile.Size = new System.Drawing.Size(1162, 710);
+            this.tabOutFile.TabIndex = 2;
+            // 
+            // tabPageInFile
+            // 
+            this.tabPageInFile.Controls.Add(this.dgvInFile);
+            this.tabPageInFile.Location = new System.Drawing.Point(4, 22);
+            this.tabPageInFile.Name = "tabPageInFile";
+            this.tabPageInFile.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageInFile.Size = new System.Drawing.Size(1154, 684);
+            this.tabPageInFile.TabIndex = 0;
+            this.tabPageInFile.Text = "Original Queries";
+            this.tabPageInFile.UseVisualStyleBackColor = true;
+            // 
+            // tabPageOutFile
+            // 
+            this.tabPageOutFile.Controls.Add(this.dgvOutFile);
+            this.tabPageOutFile.Location = new System.Drawing.Point(4, 22);
+            this.tabPageOutFile.Name = "tabPageOutFile";
+            this.tabPageOutFile.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageOutFile.Size = new System.Drawing.Size(1154, 684);
+            this.tabPageOutFile.TabIndex = 1;
+            this.tabPageOutFile.Text = "Mine Results";
+            this.tabPageOutFile.UseVisualStyleBackColor = true;
+            // 
+            // dgvOutFile
+            // 
+            this.dgvOutFile.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dgvOutFile.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvOutFile.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvOutFile.Location = new System.Drawing.Point(3, 3);
+            this.dgvOutFile.Name = "dgvOutFile";
+            this.dgvOutFile.RowTemplate.DefaultCellStyle.Format = "0.##";
+            this.dgvOutFile.RowTemplate.DefaultCellStyle.NullValue = null;
+            this.dgvOutFile.Size = new System.Drawing.Size(1148, 678);
+            this.dgvOutFile.TabIndex = 2;
             // 
             // AnalyzeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1154, 654);
+            this.ClientSize = new System.Drawing.Size(1162, 769);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lblRowCount);
@@ -221,11 +274,14 @@
             this.Name = "AnalyzeForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "QueryWizard";
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvInFile)).EndInit();
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.tabOutFile.ResumeLayout(false);
+            this.tabPageInFile.ResumeLayout(false);
+            this.tabPageOutFile.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvOutFile)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -235,7 +291,7 @@
 
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.DataGridView dgvResults;
+        private System.Windows.Forms.DataGridView dgvInFile;
         private System.Windows.Forms.SaveFileDialog outFileDialog;
         private System.Windows.Forms.Label lblRowCount;
         private System.Windows.Forms.Label label1;
@@ -251,5 +307,9 @@
         private System.Windows.Forms.ToolStripMenuItem tsmiMine2Words;
         private System.Windows.Forms.ToolStripMenuItem tsmiMine3Words;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.TabControl tabOutFile;
+        private System.Windows.Forms.TabPage tabPageInFile;
+        private System.Windows.Forms.TabPage tabPageOutFile;
+        private System.Windows.Forms.DataGridView dgvOutFile;
     }
 }

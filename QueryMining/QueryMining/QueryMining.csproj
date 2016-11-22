@@ -46,11 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Forms\AnalyzeForm.cs">
+    <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\AnalyzeForm.Designer.cs">
-      <DependentUpon>AnalyzeForm.cs</DependentUpon>
+    <Compile Include="Forms\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ColumnHeaderSelect.cs">
       <SubType>Form</SubType>
@@ -76,8 +76,8 @@
     <Compile Include="StatsTable.cs">
       <SubType>Component</SubType>
     </Compile>
-    <EmbeddedResource Include="Forms\AnalyzeForm.resx">
-      <DependentUpon>AnalyzeForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ColumnHeaderSelect.resx">
       <DependentUpon>ColumnHeaderSelect.cs</DependentUpon>

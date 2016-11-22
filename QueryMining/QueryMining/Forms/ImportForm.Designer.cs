@@ -88,6 +88,7 @@
             this.txtBoxInFile.Size = new System.Drawing.Size(383, 20);
             this.txtBoxInFile.TabIndex = 1;
             this.txtBoxInFile.Text = "Select a .csv file to import...";
+            this.txtBoxInFile.DoubleClick += new System.EventHandler(this.txtBoxInFile_DoubleClick);
             // 
             // outFileDialog
             // 
