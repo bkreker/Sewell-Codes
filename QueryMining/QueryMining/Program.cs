@@ -8,6 +8,7 @@ namespace QueryMining
 {
     static class Program
     {
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -18,7 +19,7 @@ namespace QueryMining
             Application.SetCompatibleTextRenderingDefault(false);
             StatDataTable.Processing = false;
             StatDataTable.OperationCancelled = false;
-            Application.Run(new AnalyzeForm());
+            Application.Run(new MainForm());
         }
     }
 }

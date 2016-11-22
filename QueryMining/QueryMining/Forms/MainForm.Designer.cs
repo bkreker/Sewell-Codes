@@ -1,6 +1,6 @@
 ﻿namespace QueryMining
 {
-    partial class AnalyzeForm
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.

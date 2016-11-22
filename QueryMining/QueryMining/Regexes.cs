@@ -122,6 +122,11 @@ namespace QueryMining
             return matches.Any(match => match);
         }
 
+        public static bool IsNumber(String target)
+        {
+            return IsMatch(target, Number);
+        }
+
         public static bool IsLong(string target)
         {
             List<bool> matches = (from expr in LongPatterns

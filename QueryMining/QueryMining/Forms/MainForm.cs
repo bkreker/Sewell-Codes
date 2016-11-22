@@ -13,7 +13,7 @@ using QueryMining.Properties;
 
 namespace QueryMining
 {
-    public partial class AnalyzeForm : Form
+    public partial class MainForm : Form
     {
         enum MineType { One, Two, Three }
         private MineType _mineType = MineType.Two;
@@ -21,7 +21,7 @@ namespace QueryMining
         private static bool
               _outFileSavedCorrectly = false;
 
-        Dictionary<string, bool> _checkedKeys = new Dictionary<string, bool>();
+        public static Dictionary<string, bool> CheckedKeys { get; set; }
 
         private static bool AvgAllValues
         {
@@ -40,9 +40,10 @@ namespace QueryMining
         private int QueryCountIndex { get { return StatDataTable.QueryCountCol; } }
         private List<string> Headers { get { return StatDataTable.Headers; } }
 
-        public AnalyzeForm()
+        public MainForm()
         {
             InitializeComponent();
+            CheckedKeys = new Dictionary<string, bool>();
             tsmiMine1Word.Tag = MineType.One;
             tsmiMine2Words.Tag = MineType.Two;
             tsmiMine3Words.Tag = MineType.Three;
@@ -163,11 +164,11 @@ namespace QueryMining
 
             try
             {
-                _checkedKeys = new Dictionary<string, bool>();
+                MainForm.CheckedKeys = new Dictionary<string, bool>();
                 var existingKeys = (from DataRow r in _inFileTable.Rows
                                     select r.ItemArray).ToList();
 
-                existingKeys.ForEach(row => _checkedKeys.Add(row[QueryColIndex].ToString(), true));
+                existingKeys.ForEach(row => MainForm.CheckedKeys.Add(row[QueryColIndex].ToString(), true));
 
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
@@ -259,7 +260,7 @@ namespace QueryMining
             {
                 try
                 {
-                    var existingKeys = (from pair in _checkedKeys
+                    var existingKeys = (from pair in MainForm.CheckedKeys
                                         where pair.Key == wordString || pair.Key == reverseWords
                                         select pair.Key).ToList();
 
@@ -281,8 +282,8 @@ namespace QueryMining
                             newRow = existingRows[0].ItemArray;
                         }
                         _outFileTable.AddRowToTable(newRow, existingKeys, existingRows);
-                        _checkedKeys[wordString] = true;
-                        _checkedKeys[reverseWords] = true;
+                        MainForm.CheckedKeys[wordString] = true;
+                        MainForm.CheckedKeys[reverseWords] = true;
 
                     }
                 }

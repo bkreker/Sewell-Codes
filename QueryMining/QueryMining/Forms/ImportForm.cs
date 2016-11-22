@@ -206,7 +206,7 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        if (StatDataTable.OperationCancelled)
+                        if (_operationCancelled)
                             throw new OperationCanceledException();
 
                         try
@@ -228,7 +228,7 @@ namespace QueryMining
             }
             catch (OperationCanceledException)
             {
-                StatDataTable.OperationCancelled = true;
+                _operationCancelled = true;
                 StatDataTable.Processing = false;
                 MessageBox.Show("The operation was cancelled.");
             }
