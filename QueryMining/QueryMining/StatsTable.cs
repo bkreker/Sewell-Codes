@@ -21,7 +21,7 @@ namespace QueryMining
         public static bool AvgAll { get; set; }
         public static bool Processing { get; set; }
         public static bool OperationCancelled { get; set; }
-
+        public static int RowCount { get; set; }
         public static DataColumnCollection ColumnCollection { get; set; }
         public static List<string> Headers
         {
@@ -33,7 +33,7 @@ namespace QueryMining
         }
         public StatDataTable()
         {
-
+            StatDataTable.RowCount = 0;
         }
 
         public StatDataTable(string firstRowString, string secondRowString, char delimChar = ',')
@@ -47,92 +47,7 @@ namespace QueryMining
                 List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
                 List<string> secondRow = secondRowString.Split(delimChar).ToList<string>();
 
-                for (int i = 0; i < firstRow.Count; i++)
-                {
-                    string colName = firstRow[i].Trim();
-                    string colVal = secondRow[i].Trim();
-
-                    object defaultVal = "";
-                    Type colType = typeof(string);
-                    bool isUnique = false;
-
-                    if (Regexes.IsMatch(colName, Regexes.Query))
-                    {
-                        isUnique = true;
-                    }
-                    else if (Regexes.IsMatch(colVal, Regexes.Number)/* && Regexes.MatchesAnyStat(colName)*/)
-                    {
-                        if (colVal.Contains('%'))
-                        {
-                            colVal = colVal.Remove(colVal.IndexOf('%'), 1);
-                        }
-                        if (colVal.Contains(','))
-                        {
-                            colVal = colVal.Remove(colVal.IndexOf(','), 1);
-                        }
-                        if (Regexes.IsDouble(colName))
-                        {
-                            double dub;
-                            if (double.TryParse(colVal, out dub))
-                            {
-                                colType = typeof(double);
-                                defaultVal = 0.00;
-
-                            }
-                        }
-                        else if (Regexes.IsDecimal(colName))
-                        {
-                            decimal dec;
-                            if (decimal.TryParse(colVal, out dec))
-                            {
-                                colType = typeof(decimal);
-                                defaultVal = 0m;
-
-                            }
-                        }
-                        else if (Regexes.IsLong(colName))
-                        {
-                            long lon;
-                            if (long.TryParse(colVal, out lon))
-                            {
-                                colType = typeof(long);
-                                defaultVal = 0;
-                            }
-
-                        }
-                        else if (Regexes.IsInt(colName))
-                        {
-                            int ig;
-                            if (int.TryParse(colVal, out ig))
-                            {
-                                colType = typeof(int);
-                                defaultVal = 0;
-                            }
-
-                        }
-                        else
-                        {
-                            float fl;
-                            if (float.TryParse(colVal, out fl))
-                            {
-                                colType = typeof(float);
-                                defaultVal = 0.0;
-                            }
-                        }
-                    }
-
-                    DataColumn newColumn = new DataColumn(colName, colType);
-                    newColumn.DefaultValue = defaultVal;
-                    newColumn.Unique = isUnique;
-
-                    this.Columns.Add(newColumn);
-
-                }
-
-                this.Columns.Add("QueryCount", typeof(int));
-                this.Columns["QueryCount"].DefaultValue = 1;
-                StatDataTable.QueryCountCol = this.Columns.IndexOf("QueryCount");
-                ColumnCollection = this.Columns;
+                SetTableSchema(firstRow, secondRow);
             }
             catch (Exception ex)
             {
@@ -192,6 +107,18 @@ namespace QueryMining
         /// <param name="firstRow"></param>
         /// <param name="secondRow"></param>
         public StatDataTable(List<string> firstRow, List<string> secondRow)
+        {
+            try
+            {
+                SetTableSchema(firstRow, secondRow);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error Setting Table Schema: {ex.Message}");
+            }
+        }
+
+        public void SetTableSchema(List<string> firstRow, List<string> secondRow)
         {
             try
             {
@@ -284,9 +211,12 @@ namespace QueryMining
 
                 }
 
-                this.Columns.Add("QueryCount", typeof(int));
-                this.Columns["QueryCount"].DefaultValue = 1;
+                DataColumn queryCountColumn = new DataColumn("QueryCount", typeof(int));
+                queryCountColumn.DefaultValue = 1;
+                this.Columns.Add(queryCountColumn);
                 StatDataTable.QueryCountCol = this.Columns.IndexOf("QueryCount");
+
+                ColumnCollection = this.Columns;
                 if (StatDataTable.ColumnCollection == null)
                 {
                     SetStaticColumns();
@@ -311,115 +241,19 @@ namespace QueryMining
 
         public List<string> SetTableSchema(ref StreamReader inFile, char delimChar)
         {
-            try
+            string firstRowString = inFile.ReadLine();
+            string secondRowString = inFile.ReadLine();
+            // if it detects it's actually .tsv, switch delimiters
+            if (firstRowString.IndexOf('\t') >= 0)
             {
-                string firstRowString = inFile.ReadLine();
-                string secondRowString = inFile.ReadLine();
-                // if it detects it's actually .tsv, switch delimiters
-                if (firstRowString.IndexOf('\t') >= 0)
-                {
-                    delimChar = '\t';
-                }
-                List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
-                List<string> secondRow = secondRowString.Split(delimChar).ToList<string>();
-
-                for (int i = 0; i < firstRow.Count; i++)
-                {
-                    string colName = firstRow[i].Trim();
-                    string colVal = secondRow[i].Trim();
-
-                    object defaultVal = "";
-                    Type colType = typeof(string);
-                    bool isUnique = false;
-
-                    if (Regexes.IsMatch(colName, Regexes.Query))
-                    {
-                        isUnique = true;
-                    }
-                    else if (Regexes.IsMatch(colVal, Regexes.Number)/* && Regexes.MatchesAnyStat(colName)*/)
-                    {
-                        if (colVal.Contains('%'))
-                        {
-                            colVal = colVal.Remove(colVal.IndexOf('%'), 1);
-                        }
-                        if (colVal.Contains(','))
-                        {
-                            colVal = colVal.Remove(colVal.IndexOf(','), 1);
-                        }
-                        if (Regexes.IsDouble(colName))
-                        {
-                            double dub;
-                            if (double.TryParse(colVal, out dub))
-                            {
-                                colType = typeof(double);
-                                defaultVal = 0.00;
-
-                            }
-                        }
-                        else if (Regexes.IsDecimal(colName))
-                        {
-                            decimal dec;
-                            if (decimal.TryParse(colVal, out dec))
-                            {
-                                colType = typeof(decimal);
-                                defaultVal = 0m;
-
-                            }
-                        }
-                        else if (Regexes.IsLong(colName))
-                        {
-                            long lon;
-                            if (long.TryParse(colVal, out lon))
-                            {
-                                colType = typeof(long);
-                                defaultVal = 0;
-                            }
-
-                        }
-                        else if (Regexes.IsInt(colName))
-                        {
-                            int ig;
-                            if (int.TryParse(colVal, out ig))
-                            {
-                                colType = typeof(int);
-                                defaultVal = 0;
-                            }
-
-                        }
-                        else
-                        {
-                            float fl;
-                            if (float.TryParse(colVal, out fl))
-                            {
-                                colType = typeof(float);
-                                defaultVal = 0.0;
-                            }
-                        }
-                    }
-
-                    DataColumn newColumn = new DataColumn(colName, colType);
-                    newColumn.DefaultValue = defaultVal;
-                    newColumn.Unique = isUnique;
-
-                    this.Columns.Add(newColumn);
-
-                    if (StatDataTable.ColumnCollection == null)
-                    {
-                        SetStaticColumns();
-                    }
-
-                }
-
-                this.Columns.Add("QueryCount", typeof(int));
-                this.Columns["QueryCount"].DefaultValue = 1;
-                StatDataTable.QueryCountCol = this.Columns.IndexOf("QueryCount");
-                ColumnCollection = this.Columns;
-                return secondRow;
+                delimChar = '\t';
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error Setting Table Schema: {ex.Message}");
-            }
+            List<string> firstRow = firstRowString.Split(delimChar).ToList<string>();
+            List<string> secondRow = secondRowString.Split(delimChar).ToList<string>();
+
+            SetTableSchema(firstRow, secondRow);
+            return secondRow;
+
         }
 
         public void Save(string _outFileName, ref bool _outFileSavedCorrectly)
@@ -571,62 +405,69 @@ namespace QueryMining
             AddRowToTable(newRow.ToArray<object>());
         }
 
-        //public void AddRowToTable(object[] newRow)
-        //{
-        //    try
-        //    {
-        //        for (int i = 0; i < newRow.Count(); i++)
-        //        {
-        //            newRow[i] = FormatCell(newRow[i], i);
-        //        }
-        //        this.Rows.Add(newRow);
-        //    }
-        //    catch (ConstraintException ex)
-        //    {
-        //        Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
-        //        var existingQueries = (from DataRow row in this.Rows
-        //                            where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
-        //                            select row.ItemArray[StatDataTable.QueryCol].ToString()).ToList();
-
-        //        AddRowToTable(newRow, existingQueries);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
-        //    }
-        //}
-
         public void AddRowToTable(object[] newRow, List<string> existingQueries = null, List<DataRow> existingRows = null)
         {
             try
             {
-                for (int i = 0; i < newRow.Count(); i++)
+                if (existingRows == null)
+                    existingRows = (from DataRow row in this.Rows
+                                    where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
+                                    select row).ToList();
+
+                if (existingQueries == null && existingRows != null)
                 {
-                    newRow[i] = FormatCell(newRow[i], i);
+                    existingQueries = new List<string>();
+                    existingRows.ForEach(row => existingQueries.Add(row.ItemArray[StatDataTable.QueryCol].ToString()));
                 }
-                this.Rows.Add(newRow);
+
+                if (existingQueries.Count == 0)
+                {
+                    for (int i = 0; i < newRow.Count(); i++)
+                    {
+                        newRow[i] = FormatCell(newRow[i], i);
+                    }
+                    RowCount++;
+                    this.Rows.Add(newRow);
+                }
+                else if (existingQueries.Count > 0)
+                {
+                    object[] outputRow = AggregateRows(existingRows, newRow);
+                    int rowIx = this.Rows.IndexOf(existingRows[0]);
+                    this.Rows[rowIx].ItemArray = outputRow;
+                }
+            }
+            catch(NullReferenceException ex)
+            {
+                Console.WriteLine(ex.Message);
             }
             catch (ConstraintException ex)
             {
-                Console.WriteLine($"Attempted to add duplicate key. Attempting Aggregation.");
                 try
                 {
                     if (existingRows == null)
                         existingRows = (from DataRow row in this.Rows
-                                        where row.ItemArray[StatDataTable.QueryCol] == newRow[StatDataTable.QueryCol]
+                                        where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
                                         select row).ToList();
 
                     if (existingQueries == null)
-                        existingQueries = (from DataRow row in this.Rows
-                                           where row.ItemArray[StatDataTable.QueryCol] == newRow[StatDataTable.QueryCol]
-                                           select row.ItemArray[QueryCol].ToString()).ToList();
+                        existingRows.ForEach(row => existingQueries.Add(row.ItemArray[QueryCol].ToString()));
 
                     if (existingQueries.Count > 0)
                     {
-                        object[] outputRow = AggregateRows(existingRows, newRow, newRow.Length);
+                        object[] outputRow = AggregateRows(existingRows, newRow);
                         int rowIx = this.Rows.IndexOf(existingRows[0]);
                         this.Rows[rowIx].ItemArray = outputRow;
                     }
+                    else
+                    {
+                        throw new ImportError($"Row Not Added: {ex.Message} at {ex.Source}.\nData:{ex.Data.Keys} values {ex.Data.Values}\nFull Stack: {ex.StackTrace}\nNow Aggregating.");
+                    }
+                }
+                catch (ImportError e)
+                {
+                    RowCount--;
+                    Console.WriteLine(e.Message);
+
                 }
                 catch (Exception e)
                 {
@@ -640,81 +481,29 @@ namespace QueryMining
 
         }
 
-        /*public void AddRowToTable(object[] newRow, List<string> existingQueries)
+        public static object[] AggregateRows(List<DataRow> existingRows, object[] inputRow)
         {
-            try
-            {
-                var existingRows = (from DataRow row in this.Rows
-                                    where existingQueries.Any(key => row.ItemArray[QueryCol].ToString() == key)
-                                    select row).ToList();
 
-                if (existingRows.Count > 0)
-                {
-                    object[] outputRow = AggregateRows(existingRows, newRow, newRow.Length);
-                    int rowIx = this.Rows.IndexOf(existingRows[0]);
-                    this.Rows[rowIx].ItemArray = outputRow;
-
-                }
-                else
-                {
-                    try
-                    {
-                        this.Rows.Add(newRow);
-                    }
-                    catch (ConstraintException ex)
-                    {
-                        Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new ImportError(ex.Message);
-            }
+            return AggregateRows((from DataRow row in existingRows
+                                  select row.ItemArray).ToList(), inputRow);
         }
-        */
 
-        public static object[] AggregateRows(List<DataRow> existingRows, object[] inputRow, int arrSize)
+        public static object[] AggregateRows(List<object[]> existingRows, object[] inputRow)
         {
-            object[] outputArr = inputRow;
+            object[] outputArr = new object[ColumnCollection.Count];
 
             for (int i = 0; i < inputRow.Count(); i++)
             {
                 inputRow[i] = FormatCell(inputRow[i], i);
 
-                List<object> columnValues = (from row in existingRows
-                                             select row.ItemArray[i]).ToList();
+                List<object> allColumnValues = (from row in existingRows
+                                                select row[i]).ToList();
 
-                columnValues.Add(inputRow[i]);
-
-                bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[i].Caption, Regexes.Average) || AvgAll;
-
-                outputArr[i] = AggregateColumnValues(columnValues, StatDataTable.ColumnCollection[i], isAvg);
-            }
-
-            return outputArr;
-        }
-
-        public static object[] AggregateRows(List<object[]> existingRows, object[] inputRow, int arrSize)
-        {
-            object[] outputArr = inputRow;
-
-            for (int i = 0; i < inputRow.Count(); i++)
-            {
-                inputRow[i] = FormatCell(inputRow[i], i);
-
-                List<object> columnValues = (from row in existingRows
-                                             select row[i]).ToList();
-
-                columnValues.Add(inputRow[i]);
+                allColumnValues.Add(inputRow[i]);
 
                 bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[i].Caption, Regexes.Average) || AvgAll;
 
-                outputArr[i] = AggregateColumnValues(columnValues, StatDataTable.ColumnCollection[i], isAvg);
+                outputArr[i] = AggregateColumnValues(allColumnValues, StatDataTable.ColumnCollection[i], isAvg);
             }
 
             return outputArr;
@@ -751,7 +540,7 @@ namespace QueryMining
                         List<object> columnValues = (from resRow in existingRows
                                                      select resRow.ItemArray[columnIndex]).ToList();
 
-                        columnTotal = StatDataTable.AggregateRowColumnValues(columnValues, columnIndex);
+                        columnTotal = StatDataTable.AggregateColumnValues(columnValues, columnIndex);
                     }
                     aggregatedRow[columnIndex] = columnTotal;
                 }
@@ -781,6 +570,9 @@ namespace QueryMining
 
                 if (Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0 && !colValsAreNumbers)
                     return columnValues[0];
+
+                if (column == ColumnCollection[QueryCountCol])
+                    return columnValues.Count();
 
                 if (Regexes.MatchesAnyStat(column.Caption) && colValsAreNumbers)
                 {
@@ -895,40 +687,14 @@ namespace QueryMining
         }
 
 
-        public static object AggregateRowColumnValues(List<object> columnValues, int col_index)
+        public static object AggregateColumnValues(List<object> columnValues, int col_index)
         {
-            if (col_index == StatDataTable.QueryCol)
-                return columnValues.Count();
+            var column = StatDataTable.ColumnCollection[col_index];
+            string colName = column.Caption;
+            bool isAvg = Regexes.IsMatch(colName, Regexes.Average);
 
+            return AggregateColumnValues(columnValues, column, isAvg || AvgAll);
 
-            Type colDataType = StatDataTable.ColumnCollection[col_index].DataType;
-            string colName = StatDataTable.ColumnCollection[col_index].Caption;
-            if (Regexes.MatchesAnyStat(colName))
-            {
-                bool isAvg = Regexes.IsMatch(colName, Regexes.Average);
-                isAvg = isAvg || AvgAll;
-                return StatDataTable.AggregateColumnValues(columnValues, StatDataTable.ColumnCollection[col_index], isAvg);
-            }
-            else
-            {
-                if (columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Number)) && colDataType == typeof(string))
-                {
-                    columnValues.ForEach(val => val = decimal.Parse(Regexes.Match(val.ToString(), Regexes.Number)));
-                    bool isAvg = columnValues.Any(a => Regexes.IsMatch(a.ToString(), Regexes.Percent) || Regexes.IsMatch(colName, Regexes.Average));
-
-                    isAvg = isAvg || StatDataTable.AvgAll;
-
-                    return StatDataTable.AggregateColumnValues(columnValues, StatDataTable.ColumnCollection[col_index], isAvg).ToString();
-                }
-                else
-                {
-                    return columnValues.Aggregate((sum, next) =>
-                    {
-                        string s = sum.ToString() + " " + next.ToString();
-                        return s;
-                    });
-                }
-            }
         }
 
         [Serializable]

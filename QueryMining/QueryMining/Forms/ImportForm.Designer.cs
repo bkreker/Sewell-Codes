@@ -105,6 +105,8 @@
             // cboxAvgAll
             // 
             this.cboxAvgAll.AutoSize = true;
+            this.cboxAvgAll.Checked = true;
+            this.cboxAvgAll.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cboxAvgAll.Location = new System.Drawing.Point(12, 45);
             this.cboxAvgAll.Name = "cboxAvgAll";
             this.cboxAvgAll.Size = new System.Drawing.Size(123, 17);

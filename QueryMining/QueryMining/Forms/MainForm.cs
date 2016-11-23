@@ -31,9 +31,7 @@ namespace QueryMining
 
         string _outFileName = "default.csv";
 
-        private StatDataTable
-            _inFileTable,
-            _outFileTable;
+        private StatDataTable _dataTable;
 
         private DataColumnCollection Columns { get { return StatDataTable.ColumnCollection; } }
         private int QueryColIndex { get { return StatDataTable.QueryCol; } }
@@ -57,12 +55,11 @@ namespace QueryMining
             form.ShowDialog();
             if (form.DialogResult == DialogResult.OK)
             {
-                this._inFileTable = form.DataTable;
-                this._outFileTable = this._inFileTable;
+                this._dataTable = form.DataTable;
                 try
                 {
-                    dgvInFile.DataSource = this._inFileTable;
-                    lblRowCount.Text = dgvInFile.RowCount.ToString();
+                    dgvMineResults.DataSource = this._dataTable;
+                    lblRowCount.Text = dgvMineResults.RowCount.ToString();
 
                 }
                 catch (Exception ex)
@@ -124,7 +121,7 @@ namespace QueryMining
             btnCancel.Enabled = false;
             if (!StatDataTable.OperationCancelled)
             {
-                if (dgvInFile.Rows.Count > 0)
+                if (dgvMineResults.Rows.Count > 0)
                 {
                     MessageBox.Show("Finished!");
 
@@ -165,14 +162,14 @@ namespace QueryMining
             try
             {
                 MainForm.CheckedKeys = new Dictionary<string, bool>();
-                var existingKeys = (from DataRow r in _inFileTable.Rows
+                var existingKeys = (from DataRow r in _dataTable.Rows
                                     select r.ItemArray).ToList();
 
                 existingKeys.ForEach(row => MainForm.CheckedKeys.Add(row[QueryColIndex].ToString(), true));
 
                 // instead, do a search where you take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
-                List<object[]> tableRows = (from DataRow row in _inFileTable.Rows
+                List<object[]> tableRows = (from DataRow row in _dataTable.Rows
                                             select row.ItemArray).ToList();
                 foreach (object[] fullRow in tableRows)
                 {
@@ -266,7 +263,7 @@ namespace QueryMining
 
                     if (existingKeys.Count == 0)
                     {
-                        var existingRows = (from DataRow row in _inFileTable.Rows
+                        var existingRows = (from DataRow row in _dataTable.Rows
                                             where row.ItemArray[QueryColIndex].ToString().Contains(word1)
                                                 && row.ItemArray[QueryColIndex].ToString().Contains(word2)
                                                 && row.ItemArray[QueryColIndex].ToString().Contains(word3)
@@ -281,7 +278,7 @@ namespace QueryMining
                         {
                             newRow = existingRows[0].ItemArray;
                         }
-                        _outFileTable.AddRowToTable(newRow, existingKeys, existingRows);
+                        _dataTable.AddRowToTable(newRow, existingKeys, existingRows);
                         MainForm.CheckedKeys[wordString] = true;
                         MainForm.CheckedKeys[reverseWords] = true;
 
@@ -298,26 +295,26 @@ namespace QueryMining
         {
             try
             {
-                if (dgvOutFile.InvokeRequired)
+                if (dgvMineResults.InvokeRequired)
                 {
-                    dgvOutFile.Invoke(new MethodInvoker(delegate
+                    dgvMineResults.Invoke(new MethodInvoker(delegate
                     {
-                        dgvOutFile.DataSource = _outFileTable;
-                        dgvOutFile.Sort(dgvOutFile.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                        dgvOutFile.Refresh();
+                        dgvMineResults.DataSource = _dataTable;
+                        dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                        dgvMineResults.Refresh();
                     }));
                 }
                 else
                 {
-                    dgvOutFile.Refresh();
+                    dgvMineResults.Refresh();
                 }
                 if (lblRowCount.InvokeRequired)
                 {
-                    lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = _outFileTable.Rows.Count.ToString(); }));
+                    lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = _dataTable.Rows.Count.ToString(); }));
                 }
                 else
                 {
-                    lblRowCount.Text = _outFileTable.Rows.Count.ToString();
+                    lblRowCount.Text = _dataTable.Rows.Count.ToString();
                 }
 
             }
@@ -408,7 +405,7 @@ namespace QueryMining
             {
                 StreamWriter outFile = new StreamWriter(_outFileName);
                 outFile.WriteLine(string.Join(",", this.Headers));
-                foreach (DataRow row in _outFileTable.Rows)
+                foreach (DataRow row in _dataTable.Rows)
                 {
                     outFile.WriteLine(string.Join(",", row.ItemArray));
                 }
