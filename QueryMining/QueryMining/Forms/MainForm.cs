@@ -182,7 +182,7 @@ namespace QueryMining
                     for (int word1Num = 0; word1Num < queryWords.Count; word1Num++)
                     {
                         string word1 = queryWords[word1Num];
-                        MineWords(query, word1);
+                        MineWords(word1);
 
                         if (_mineType == MineType.One)
                             continue;
@@ -197,11 +197,11 @@ namespace QueryMining
                                 string word2 = queryWords[word2Num];
                                 if (word1 != word2)
                                 {
-                                    MineWords(query, word2);
+                                    MineWords(word2);
 
                                     if (_mineType == MineType.Two)
                                     {
-                                        MineWords(query, word1, word2);
+                                        MineWords(word1, word2);
                                     }
                                     else if (_mineType == MineType.Three)
                                     {
@@ -210,9 +210,9 @@ namespace QueryMining
                                             string word3 = queryWords[word3Num];
                                             if (word1 != word3 && word2 != word3)
                                             {
-                                                MineWords(query, word1, word3);
-                                                MineWords(query, word2, word3);
-                                                MineWords(query, word1, word2, word3);
+                                                MineWords(word1, word3);
+                                                MineWords(word2, word3);
+                                                MineWords(word1, word2, word3);
 
                                             } // end if word1 != word2
                                         }
@@ -242,10 +242,9 @@ namespace QueryMining
         /// <summary>
         /// Calculate the Results for 1, 2, or 3 words
         /// </summary>
-        /// <param name="query"></param>
         /// <param name="word1"></param>
         /// <param name="word2"></param>
-        private void MineWords(string query, string word1, string word2 = "", string word3 = "")
+        private void MineWords(string word1, string word2 = "", string word3 = "")
         {
             if (StatDataTable.OperationCancelled)
                 throw new OperationCanceledException();
@@ -253,15 +252,15 @@ namespace QueryMining
             string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
             string reverseWords = string.Join(" ", new string[] { word3, word2, word1 }).Trim();
 
-            if (wordString != "")
+            if (wordString != "" && !Regexes.IsExcluded(wordString) )
             {
                 try
                 {
                     var existingKeys = (from pair in MainForm.CheckedKeys
                                         where pair.Key == wordString || pair.Key == reverseWords
-                                        select pair.Key).ToList();
+                                        select pair.Key).Count();
 
-                    if (existingKeys.Count == 0)
+                    if (existingKeys == 0)
                     {
                         var existingRows = (from DataRow row in _dataTable.Rows
                                             where row.ItemArray[QueryColIndex].ToString().Contains(word1)
@@ -270,15 +269,16 @@ namespace QueryMining
                                             select row).ToList();
 
                         object[] newRow;
-                        if (existingKeys.Count > 1)
+                        if (existingRows.Count > 1)
                         {
-                            newRow = StatDataTable.Mine(query, wordString, existingRows);
+                            newRow = StatDataTable.Mine(wordString, existingRows);
+                            newRow[QueryColIndex] = wordString;
                         }
                         else
                         {
                             newRow = existingRows[0].ItemArray;
                         }
-                        _dataTable.AddRowToTable(newRow, existingKeys, existingRows);
+                        _dataTable.AddRowToTable(newRow, existingRows);
                         MainForm.CheckedKeys[wordString] = true;
                         MainForm.CheckedKeys[reverseWords] = true;
 

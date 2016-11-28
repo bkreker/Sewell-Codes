@@ -405,7 +405,7 @@ namespace QueryMining
             AddRowToTable(newRow.ToArray<object>());
         }
 
-        public void AddRowToTable(object[] newRow, List<string> existingQueries = null, List<DataRow> existingRows = null)
+        public void AddRowToTable(object[] newRow, List<DataRow> existingRows = null)
         {
             try
             {
@@ -414,13 +414,7 @@ namespace QueryMining
                                     where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
                                     select row).ToList();
 
-                if (existingQueries == null && existingRows != null)
-                {
-                    existingQueries = new List<string>();
-                    existingRows.ForEach(row => existingQueries.Add(row.ItemArray[StatDataTable.QueryCol].ToString()));
-                }
-
-                if (existingQueries.Count == 0)
+                if (existingRows.Count == 0)
                 {
                     for (int i = 0; i < newRow.Count(); i++)
                     {
@@ -429,14 +423,14 @@ namespace QueryMining
                     RowCount++;
                     this.Rows.Add(newRow);
                 }
-                else if (existingQueries.Count > 0)
+                else if (existingRows.Count > 0)
                 {
                     object[] outputRow = AggregateRows(existingRows, newRow);
                     int rowIx = this.Rows.IndexOf(existingRows[0]);
                     this.Rows[rowIx].ItemArray = outputRow;
                 }
             }
-            catch(NullReferenceException ex)
+            catch (NullReferenceException ex)
             {
                 Console.WriteLine(ex.Message);
             }
@@ -449,10 +443,7 @@ namespace QueryMining
                                         where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
                                         select row).ToList();
 
-                    if (existingQueries == null)
-                        existingRows.ForEach(row => existingQueries.Add(row.ItemArray[QueryCol].ToString()));
-
-                    if (existingQueries.Count > 0)
+                    if (existingRows.Count > 0)
                     {
                         object[] outputRow = AggregateRows(existingRows, newRow);
                         int rowIx = this.Rows.IndexOf(existingRows[0]);
@@ -460,7 +451,7 @@ namespace QueryMining
                     }
                     else
                     {
-                        throw new ImportError($"Row Not Added: {ex.Message} at {ex.Source}.\nData:{ex.Data.Keys} values {ex.Data.Values}\nFull Stack: {ex.StackTrace}\nNow Aggregating.");
+                        throw new ImportError($"Row Not Added: {ex.Message}");
                     }
                 }
                 catch (ImportError e)
@@ -483,7 +474,6 @@ namespace QueryMining
 
         public static object[] AggregateRows(List<DataRow> existingRows, object[] inputRow)
         {
-
             return AggregateRows((from DataRow row in existingRows
                                   select row.ItemArray).ToList(), inputRow);
         }
@@ -492,18 +482,24 @@ namespace QueryMining
         {
             object[] outputArr = new object[ColumnCollection.Count];
 
-            for (int i = 0; i < inputRow.Count(); i++)
+            for (int col_ix = 0; col_ix < inputRow.Count(); col_ix++)
             {
-                inputRow[i] = FormatCell(inputRow[i], i);
 
+                inputRow[col_ix] = FormatCell(inputRow[col_ix], col_ix);
+
+                if (col_ix == StatDataTable.QueryCountCol)
+                {
+                    outputArr[col_ix] = existingRows.Count;
+                    continue;
+                }
                 List<object> allColumnValues = (from row in existingRows
-                                                select row[i]).ToList();
+                                                select row[col_ix]).ToList();
 
-                allColumnValues.Add(inputRow[i]);
+                allColumnValues.Add(inputRow[col_ix]);
 
-                bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[i].Caption, Regexes.Average) || AvgAll;
+                bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[col_ix].Caption, Regexes.Average) || AvgAll;
 
-                outputArr[i] = AggregateColumnValues(allColumnValues, StatDataTable.ColumnCollection[i], isAvg);
+                outputArr[col_ix] = AggregateColumnValues(allColumnValues, StatDataTable.ColumnCollection[col_ix], isAvg);
             }
 
             return outputArr;
@@ -516,7 +512,7 @@ namespace QueryMining
         /// <param name="query"></param>
         /// <param name="wordPair"></param>
         /// <param name="newRow"></param>
-        public static object[] Mine(string query, string wordString, List<DataRow> existingRows)
+        public static object[] Mine(string wordString, List<DataRow> existingRows)
         {
             object[] aggregatedRow = new object[StatDataTable.ColumnCollection.Count];
             for (int columnIndex = 0; columnIndex < StatDataTable.ColumnCollection.Count; columnIndex++)
@@ -529,9 +525,9 @@ namespace QueryMining
                     object columnTotal = "N/A";
                     if (columnIndex == StatDataTable.QueryCol)
                     {
-                        columnTotal = query == wordString ? query : wordString;
+                        columnTotal = wordString;
                     }
-                    else if (columnIndex == StatDataTable.QueryCol)
+                    else if (columnIndex == StatDataTable.QueryCountCol)
                     {
                         columnTotal = existingRows.Count;
                     }
@@ -549,7 +545,7 @@ namespace QueryMining
                     Console.WriteLine($"Error Aggregating Column Values: {ex.Message}");
                 }
             } // end for
-
+            aggregatedRow[QueryCol] = wordString;
             return aggregatedRow;
         }
 
@@ -572,7 +568,7 @@ namespace QueryMining
                     return columnValues[0];
 
                 if (column == ColumnCollection[QueryCountCol])
-                    return columnValues.Count();
+                    return columnValues.Aggregate((a, b) => (int)a + (int)b);
 
                 if (Regexes.MatchesAnyStat(column.Caption) && colValsAreNumbers)
                 {
@@ -584,10 +580,10 @@ namespace QueryMining
                             string nextString = next.ToString();
                             string sumMatch = Regexes.Match(sumString, Regexes.Number);
                             string nextMatch = Regexes.Match(nextString, Regexes.Number);
-                            if (sum == next)
-                            {
-                                return sum;
-                            }
+                            //if (sum == next)
+                            //{
+                            //    return sum;
+                            //}
                             if (column.DataType == typeof(decimal))
                             {
                                 decimal sumNum, nextNum;
