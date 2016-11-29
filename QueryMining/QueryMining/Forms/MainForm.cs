@@ -47,6 +47,7 @@ namespace QueryMining
             tsmiMine3Words.Tag = MineType.Three;
             AvgAllValues = true;
             tsmiMine2Words.Checked = true;
+        
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -77,13 +78,11 @@ namespace QueryMining
                 foreach (ToolStripMenuItem item in mineQueriesToolStripMenuItem.DropDownItems)
                 {
                     if (item != btn)
-                    {
                         item.Checked = false;
-                    }
+
                     else
-                    {
                         item.Checked = true;
-                    }
+
                 }
                 _mineType = (MineType)btn.Tag;
             }
@@ -158,7 +157,6 @@ namespace QueryMining
         private void Analyze()
         {
             Console.WriteLine("Sort Started.");
-
             try
             {
                 MainForm.CheckedKeys = new Dictionary<string, bool>();
@@ -194,7 +192,7 @@ namespace QueryMining
                                 if (StatDataTable.OperationCancelled)
                                     throw new OperationCanceledException();
 
-                                string word2 = queryWords[word2Num];
+                                string word2 = queryWords[word2Num];                               
                                 if (word1 != word2)
                                 {
                                     MineWords(word2);
@@ -207,6 +205,9 @@ namespace QueryMining
                                     {
                                         for (int word3Num = word2Num + 1; word2Num < queryWords.Count; word2Num++)
                                         {
+                                            if (StatDataTable.OperationCancelled)
+                                                throw new OperationCanceledException();
+
                                             string word3 = queryWords[word3Num];
                                             if (word1 != word3 && word2 != word3)
                                             {
@@ -218,7 +219,7 @@ namespace QueryMining
                                         }
                                     }
                                 }
-                                //resetLblRowCount();
+                                resetLblRowCount();
                             } // end querywords loop 2     
                             resetLblRowCount();
 
@@ -239,6 +240,12 @@ namespace QueryMining
             }
         }
 
+        private void ThrowIfCancelled()
+        {
+            if (StatDataTable.OperationCancelled)
+                throw new OperationCanceledException();
+        }
+
         /// <summary>
         /// Calculate the Results for 1, 2, or 3 words
         /// </summary>
@@ -252,7 +259,7 @@ namespace QueryMining
             string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
             string reverseWords = string.Join(" ", new string[] { word3, word2, word1 }).Trim();
 
-            if (wordString != "" && !Regexes.IsExcluded(wordString) )
+            if (wordString != "" && !Regexes.IsExcluded(wordString))
             {
                 try
                 {

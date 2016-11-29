@@ -27,7 +27,7 @@ function pauseDisapproved(){
   .withCondition("ApprovalStatus = DISAPPROVED")
   .withCondition("AdGroupStatus = ENABLED")
   .withCondition("CampaignStatus = ENABLED")
-  .get();
+  .get(); 
   
   // Then we will go through each one
   while (ad_iter.hasNext()) {

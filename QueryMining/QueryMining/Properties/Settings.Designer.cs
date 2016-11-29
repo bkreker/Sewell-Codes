@@ -25,12 +25,12 @@ namespace QueryMining.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Data.DataTable Setting {
+        public global::System.Data.DataTable SavedDataTable {
             get {
-                return ((global::System.Data.DataTable)(this["Setting"]));
+                return ((global::System.Data.DataTable)(this["SavedDataTable"]));
             }
             set {
-                this["Setting"] = value;
+                this["SavedDataTable"] = value;
             }
         }
     }

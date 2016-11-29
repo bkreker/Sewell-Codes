@@ -95,7 +95,7 @@ namespace QueryMining
                 StatDataTable.Processing = true;
                 try
                 {
-                    ReadDataToDataTable();
+                    ImportData();
                 }
                 catch (OperationCanceledException)
                 {
@@ -170,7 +170,7 @@ namespace QueryMining
             txtBoxInFile.SelectAll();
         }
 
-        private void ReadDataToDataTable()
+        private void ImportData()
         {
             Console.WriteLine("Processing Data...");
             StatDataTable.Processing = true;
