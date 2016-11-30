@@ -23,12 +23,22 @@ namespace QueryMining
 
         public static Dictionary<string, bool> CheckedKeys { get; set; }
 
-        private static bool AvgAllValues
+        private static bool _avgAll
         {
-            get { return StatDataTable.AvgAll; }
-            set { StatDataTable.AvgAll = value; }
+            get { return Program.AvgAll; }
+            set { Program.AvgAll = value; }
         }
-
+        private static bool _processing
+        {
+            get { return Program.Processing; }
+            set { Program.Processing = value; }
+        }
+        private static bool _operationCancelled
+        {
+            get { return Program.OperationCancelled; }
+            set { Program.OperationCancelled = value; }
+        }
+        Queue<String> FullQueries = new Queue<string>();
         string _outFileName = "default.csv";
 
         private StatDataTable _dataTable;
@@ -45,9 +55,8 @@ namespace QueryMining
             tsmiMine1Word.Tag = MineType.One;
             tsmiMine2Words.Tag = MineType.Two;
             tsmiMine3Words.Tag = MineType.Three;
-            AvgAllValues = true;
             tsmiMine2Words.Checked = true;
-        
+
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -99,12 +108,12 @@ namespace QueryMining
             Console.WriteLine("Processing Data...");
             try
             {
-                StatDataTable.Processing = true;
+                Program.Processing = true;
                 Analyze();
             }
             catch (Exception ex)
             {
-                StatDataTable.Processing = false;
+                Program.Processing = false;
                 MessageBox.Show(ex.Message, "Something went wrong while running the application");
             }
 
@@ -113,12 +122,12 @@ namespace QueryMining
         private void BackgroundWorkCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Console.WriteLine("Worker completed");
-            StatDataTable.Processing = false;
+            Program.Processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
             btnCancel.Enabled = false;
-            if (!StatDataTable.OperationCancelled)
+            if (!Program.OperationCancelled)
             {
                 if (dgvMineResults.Rows.Count > 0)
                 {
@@ -131,7 +140,7 @@ namespace QueryMining
                 }
 
             }
-            else if (StatDataTable.OperationCancelled)
+            else if (Program.OperationCancelled)
             {
                 MessageBox.Show("The new file was not saved");
             }
@@ -159,22 +168,25 @@ namespace QueryMining
             Console.WriteLine("Sort Started.");
             try
             {
-                MainForm.CheckedKeys = new Dictionary<string, bool>();
-                var existingKeys = (from DataRow r in _dataTable.Rows
-                                    select r.ItemArray).ToList();
+                CheckedKeys = new Dictionary<string, bool>();
 
-                existingKeys.ForEach(row => MainForm.CheckedKeys.Add(row[QueryColIndex].ToString(), true));
-
-                // instead, do a search where you take each query, check each combination of words in that query
-                // against every other query in the list, then add those results.
-                List<object[]> tableRows = (from DataRow row in _dataTable.Rows
-                                            select row.ItemArray).ToList();
-                foreach (object[] fullRow in tableRows)
+                foreach (var query in (from DataRow r in _dataTable.Rows select r.ItemArray[QueryColIndex].ToString()))
                 {
-                    if (StatDataTable.OperationCancelled)
+                    FullQueries.Enqueue(query);
+                    CheckedKeys.Add(query, true);
+
+                }
+
+                // Take each query, check each combination of words in that query
+                // against every other query in the list, then add those results.
+
+
+                foreach (var fullRow in FullQueries)
+                {
+                    if (Program.OperationCancelled)
                         throw new OperationCanceledException();
 
-                    string query = fullRow[QueryColIndex].ToString();
+                    string query = FullQueries.Dequeue();
                     var queryWords = query.Split(' ').ToList();
                     // for each pairing in the query in row i
                     for (int word1Num = 0; word1Num < queryWords.Count; word1Num++)
@@ -189,23 +201,20 @@ namespace QueryMining
                         {
                             for (int word2Num = word1Num + 1; word2Num < queryWords.Count; word2Num++)
                             {
-                                if (StatDataTable.OperationCancelled)
+                                if (Program.OperationCancelled)
                                     throw new OperationCanceledException();
 
-                                string word2 = queryWords[word2Num];                               
+                                string word2 = queryWords[word2Num];
                                 if (word1 != word2)
                                 {
                                     MineWords(word2);
+                                    MineWords(word1, word2);
 
-                                    if (_mineType == MineType.Two)
-                                    {
-                                        MineWords(word1, word2);
-                                    }
-                                    else if (_mineType == MineType.Three)
+                                    if (_mineType == MineType.Three)
                                     {
                                         for (int word3Num = word2Num + 1; word2Num < queryWords.Count; word2Num++)
                                         {
-                                            if (StatDataTable.OperationCancelled)
+                                            if (Program.OperationCancelled)
                                                 throw new OperationCanceledException();
 
                                             string word3 = queryWords[word3Num];
@@ -242,7 +251,7 @@ namespace QueryMining
 
         private void ThrowIfCancelled()
         {
-            if (StatDataTable.OperationCancelled)
+            if (Program.OperationCancelled)
                 throw new OperationCanceledException();
         }
 
@@ -253,7 +262,7 @@ namespace QueryMining
         /// <param name="word2"></param>
         private void MineWords(string word1, string word2 = "", string word3 = "")
         {
-            if (StatDataTable.OperationCancelled)
+            if (Program.OperationCancelled)
                 throw new OperationCanceledException();
 
             string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
@@ -349,8 +358,8 @@ namespace QueryMining
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            StatDataTable.OperationCancelled = true;
-            StatDataTable.Processing = false;
+            Program.OperationCancelled = true;
+            Program.Processing = false;
         }
 
         private void dgvResults_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
@@ -367,12 +376,12 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            if (StatDataTable.Processing)
+            if (Program.Processing)
             {
                 DialogResult result = MessageBox.Show("Cancel Analysis?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
                 {
-                    StatDataTable.OperationCancelled = true;
+                    Program.OperationCancelled = true;
                     this.Close();
                 }
             }
@@ -386,12 +395,12 @@ namespace QueryMining
         {
             try
             {
-                if (StatDataTable.Processing)
+                if (Program.Processing)
                 {
                     DialogResult result = MessageBox.Show("End Analysis and Export Existing Data?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (result == DialogResult.Yes)
                     {
-                        StatDataTable.OperationCancelled = true;
+                        Program.OperationCancelled = true;
                         outFileDialog.ShowDialog();
                     }
                 }
@@ -425,5 +434,9 @@ namespace QueryMining
             }
         }
 
+        private void averageAllValuesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

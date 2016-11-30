@@ -18,9 +18,23 @@ namespace QueryMining
         // public int WordCol { get; set; }
         public static int QueryCol { get; set; }
         public static int QueryCountCol { get; set; }
-        public static bool AvgAll { get; set; }
-        public static bool Processing { get; set; }
-        public static bool OperationCancelled { get; set; }
+
+        public static bool AvgAll
+        {
+            get { return Program.AvgAll; }
+            set { Program.AvgAll = value; }
+        }
+        public static bool Processing
+        {
+            get { return Program.Processing; }
+            set { Program.Processing = value; }
+        }
+        public static bool OperationCancelled
+        {
+            get { return Program.OperationCancelled; }
+            set { Program.OperationCancelled = value; }
+        }
+
         public static int RowCount { get; set; }
         public static DataColumnCollection ColumnCollection { get; set; }
         public static List<string> Headers
@@ -517,7 +531,7 @@ namespace QueryMining
             object[] aggregatedRow = new object[StatDataTable.ColumnCollection.Count];
             for (int columnIndex = 0; columnIndex < StatDataTable.ColumnCollection.Count; columnIndex++)
             {
-                if (StatDataTable.OperationCancelled)
+                if (OperationCancelled)
                     throw new OperationCanceledException();
 
                 try

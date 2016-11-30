@@ -8,7 +8,9 @@ namespace QueryMining
 {
     static class Program
     {
-
+        public static bool AvgAll { get; set; }
+        public static bool Processing { get; set; }
+        public static bool OperationCancelled { get; set; }
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -17,8 +19,10 @@ namespace QueryMining
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            StatDataTable.Processing = false;
-            StatDataTable.OperationCancelled = false;
+
+            Processing = false;
+            OperationCancelled = false;
+            AvgAll = true;
             Application.Run(new MainForm());
         }
     }
