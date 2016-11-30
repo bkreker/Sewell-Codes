@@ -30,21 +30,16 @@ namespace QueryMining
 
         //   StringWriter _outPutStringStream = new StringWriter();
         private StatDataTable _dataTable { get; set; }
+
         public StatDataTable DataTable { get { return this._dataTable; } }
-        bool
-            _avgAllValues = true,
-            // _outFileSavedCorrectly = false,
-            _inFileReadCorrectly = false,
-            _operationCancelled = false,
-            _processing = false;
 
-        public bool AvgAllValues { get { return _avgAllValues; } }
+        public static bool _inFileReadCorrectly = false;
 
-        //int _queryColumn = -1,
-        //     _wordColumn = -1;
-
-        //public int QueryColumnIndex { get { return _queryColumn; } }
-        //public int WordColumnIndex { get { return _wordColumn; } }
+        public bool AvgAllValues
+        {
+            get { return StatDataTable.AvgAll; }
+            set { StatDataTable.AvgAll = value; }
+        }
 
         public ImportForm()
         {
@@ -52,7 +47,8 @@ namespace QueryMining
 
             this.DialogResult = DialogResult.None;
             _dataTable = new StatDataTable();
-            txtBoxInFile.Text = @"C:\Users\joshd\OneDrive\Work Files\Analysis\Google AdWords\Shopping\Siamese Cable Search Terms.csv";
+            AvgAllValues = true;
+            txtBoxInFile.Text = @"C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms.csv";
 
         }
 
@@ -80,7 +76,6 @@ namespace QueryMining
                 btnGo.Enabled = false;
                 btnImport.Enabled = false;
 
-                btnClose.Text = "Cancel and Close";
                 BackgroundWorker bw = new BackgroundWorker();
                 bw.DoWork += bw_DoWork;
                 bw.RunWorkerCompleted += bw_RunWorkerCompleted;
@@ -97,10 +92,15 @@ namespace QueryMining
             if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
-                _processing = true;
+                StatDataTable.Processing = true;
                 try
                 {
-                    ReadDataToDataTable();
+                    ImportData();
+                }
+                catch (OperationCanceledException)
+                {
+
+                    Console.WriteLine("The operation was cancelled by the user");
                 }
                 catch (Exception ex)
                 {
@@ -115,21 +115,20 @@ namespace QueryMining
 
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            _processing = false;
+            StatDataTable.Processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
 
             btnGo.Enabled = true;
             btnImport.Enabled = true;
-            btnClose.Text = "Close";
 
             if (_inFileReadCorrectly)
-            {               
+            {
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            else if (!_operationCancelled)
+            else if (!StatDataTable.Processing)
             {
                 MessageBox.Show("Something went wrong, the file was not imported correctly.");
             }
@@ -137,12 +136,12 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            if (_processing)
+            if (StatDataTable.Processing)
             {
                 DialogResult result = MessageBox.Show("Cancel File Import and Close the Program?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
                 {
-                    _operationCancelled = true;
+                    StatDataTable.OperationCancelled = true;
                     this.Close();
                 }
             }
@@ -153,82 +152,53 @@ namespace QueryMining
             }
         }
 
-        private void FormatRow(ref List<string> row, ref DataColumnCollection columns)
-        {
-            if (row.All(r => r == ""))
-            {
-                throw new Exception($"The row was empty");
-            }
-            if (row.Any(val => val.IndexOf('%') > 0))
-            {
-                List<string> percentCells = row.Where(val => val.IndexOf('%') > 0).ToList();
-                foreach (string val in percentCells)
-                {
-                    int i = row.IndexOf(val);
-                    decimal num;
-                    row[i] = row[i].Remove(row[i].IndexOf('%'), 1);
-                    if (decimal.TryParse(row[i], out num))
-                    {
-                        row[i] = (num / 100).ToString();
-                    }
-                }
-            }
-            if (row.Any(val => val.IndexOf(',') > 0))
-            {
-                List<string> commaCells = row.Where(val => val.IndexOf(',') > 0).ToList();
-                foreach (string val in commaCells)
-                {
-                    int i = row.IndexOf(val);
-                    row[i] = row[i].Remove(row[i].IndexOf(','), 1);
-                    try
-                    {
-                        row[i] = Regexes.Match(row[i], Regexes.Number);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error formatting row cell: {ex.Message}");
-                    }
-                }
-            }
-        }
 
         private void rBtnAvgAll_CheckedChanged(object sender, EventArgs e)
         {
-            if (rBtnAvgSome.Checked)
+            if (cboxAvgAll.Checked)
             {
-                _avgAllValues = false;
+                AvgAllValues = true;
             }
             else
             {
-                _avgAllValues = true;
+                AvgAllValues = false;
             }
         }
 
-        private void ReadDataToDataTable()
+        private void txtBoxInFile_DoubleClick(object sender, EventArgs e)
+        {
+            txtBoxInFile.SelectAll();
+        }
+
+        private void ImportData()
         {
             Console.WriteLine("Processing Data...");
-            _processing = true;
-            _dataTable = new StatDataTable();
+            StatDataTable.Processing = true;
             List<string> inputRow = new List<string>();
             string query = "";
             try
             {
                 StreamReader inFile = File.OpenText(_inFileName);
                 char delimChar = ',';
-                string writeDelim = ",";
 
-                List<string> SecondRow = _dataTable.SetTableSchema(ref inFile, ref delimChar);
-                ColumnHeaderSelect c = new ColumnHeaderSelect(_dataTable.Columns);
+                var firstRowString = inFile.ReadLine();
+                if (firstRowString.IndexOf('\t') > 0)
+                {
+                    delimChar = '\t';
+                }
+                var firstRow = firstRowString.Split(delimChar).ToList();
+                var secondRow = inFile.ReadLine().Split(delimChar).ToList();
+                _dataTable = new StatDataTable(firstRow, secondRow);
+
+                ColumnHeaderSelect c = new ColumnHeaderSelect(StatDataTable.ColumnCollection);
                 c.ShowDialog();
                 DataColumnCollection Columns = _dataTable.Columns;
 
                 if (c.DialogResult == DialogResult.OK)
                 {
-                    //_queryColumn = c.SelectedIndex;
-                    _dataTable.QueryCol = c.SelectedIndex;
+                    StatDataTable.QueryCol = c.SelectedIndex;
 
-                    //string newFirstRow = $"Word,{string.Join(writeDelim, firstRow)}";
-                    List<string> headerRow = (from DataColumn h in _dataTable.Columns
+                    List<string> headerRow = (from DataColumn h in StatDataTable.ColumnCollection
                                               select h.Caption).ToList();
 
                     List<object> outputRow = new List<object>();
@@ -236,17 +206,17 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
+                        if (StatDataTable.OperationCancelled)
+                            throw new OperationCanceledException();
+
                         try
                         {
                             inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
-                            FormatRow(ref inputRow, ref Columns);
-                            //  query = inputRow[_dataTable.QueryCol];
-                            AddRowToTable(inputRow);
-                            //  Console.WriteLine($"Query: {query} read from file.");
+                            StatDataTable.FormatRow(ref inputRow);
+                            _dataTable.AddRowToTable(inputRow);
                         }
                         catch (Exception ex)
                         {
-                            //  Console.Error.WriteLine($"Error importing row: {ex.Message}");
                             Console.WriteLine($"Error importing row: {ex.Message}");
                         }
 
@@ -258,46 +228,14 @@ namespace QueryMining
             }
             catch (OperationCanceledException)
             {
-                _operationCancelled = true;
-                _processing = false;
+                StatDataTable.OperationCancelled = true;
+                StatDataTable.Processing = false;
                 MessageBox.Show("The operation was cancelled.");
             }
             catch (Exception ex)
             {
-                _processing = false;
+                StatDataTable.Processing = false;
                 throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
-            }
-
-        }
-
-        private void AddRowToTable(List<string> inputRow)
-        {
-            object[] outputRow;
-            List<DataRow> existingRows = (from DataRow r in _dataTable.Rows
-                                          where r.ItemArray[_dataTable.QueryCol].ToString() == inputRow[_dataTable.QueryCol]
-                                          select r).ToList();
-            if (existingRows.Count > 0)
-            {
-                outputRow = _dataTable.AggregateRows(existingRows, inputRow, inputRow.Count);
-                int rowIx = _dataTable.Rows.IndexOf(existingRows[0]);
-                _dataTable.Rows[rowIx].ItemArray = outputRow;
-            }
-            else
-            {
-                outputRow = inputRow.ToArray();
-                try
-                {
-                    _dataTable.Rows.Add(outputRow);
-
-                }
-                catch (ConstraintException ex)
-                {
-                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
-                }
-                catch (DuplicateNameException ex)
-                {
-                    Console.WriteLine($"Duplicate Query attempted: {ex.Message}, {ex.Data}");
-                }
             }
 
         }

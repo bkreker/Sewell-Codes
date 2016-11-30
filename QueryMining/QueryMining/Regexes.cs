@@ -26,7 +26,7 @@ namespace QueryMining
             }
         }
 
-        private static RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+        private const RegexOptions _options = RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline;
         public const string Word = @"Word";
         public const string Query = @"^Query$|(Search ?term)";
         public const string Cost = @"Cost";
@@ -45,7 +45,7 @@ namespace QueryMining
         public const string CostPerConv = @"Cost\.? ?\/ ?Conv\.?|CostPerConv(ersion)?";
         public const string ConvRate = @"(Conv\.?|Conversion) ?Rate";
         public const string ViewThroughConv = @"View\-?through ?Conv\.?";
-        public const string Number = @"-?\d+(\.{1}\d*)?";
+        public const string Number = @"^-?\d+(\.{1}\d*)?$";
         public const string QueryCount = @"^Query ?Count$";
         public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
         public const string Percent = @".*\%.*";
@@ -66,27 +66,25 @@ namespace QueryMining
         }
         public static List<string> IntPatterns
         {
-            get
-            {
-                return new string[] { Conversions, Clicks, }.ToList();
-            }
+            get { return new string[] { Conversions, Clicks, }.ToList(); }
         }
         public static List<string> LongPatterns
         {
-            get
-            {
-                return new string[] { Impressions, }.ToList();
-            }
+            get { return new string[] { Impressions, }.ToList(); }
+        }
+
+        public static List<string> ExcludedWords
+        {
+            get { return new string[] { "a", "an", "and", "at", "the", "of", "for" }.ToList(); }
         }
         public static string Match(string target, string pattern)
         {
-            return Regex.Match(target, pattern, options).ToString();
+            return Regex.Match(target, pattern, _options).ToString();
         }
-        public static bool IsMatch(string target, string pattern)
+        public static bool IsMatch(string target, string pattern, RegexOptions options = _options)
         {
             try
             {
-
                 return Regex.IsMatch(target, pattern, options);
             }
             catch (Exception ex)
@@ -98,10 +96,11 @@ namespace QueryMining
 
         public static bool MatchesAnyStat(string target)
         {
-            List<bool> matches = (from expr in StatsPatterns
-                                  select Regexes.IsMatch(target, expr)).ToList();
+            int matches = (from expr in StatsPatterns
+                           where Regexes.IsMatch(target, expr)
+                           select true).Count();
 
-            return matches.Any(match => match == true);
+            return matches > 0;
         }
         public static bool IsDecimal(string target)
         {
@@ -117,9 +116,14 @@ namespace QueryMining
         }
         public static bool IsInt(string target)
         {
-            List<bool> matches = (from expr in IntPatterns
-                                  select Regexes.IsMatch(target, expr)).ToList();
-            return matches.Any(match => match);
+            var matches = (from expr in IntPatterns
+                           select Regexes.IsMatch(target, expr)).Count();
+            return matches > 0;
+        }
+
+        public static bool IsNumber(String target, RegexOptions options = _options)
+        {
+            return IsMatch(target, Regexes.Number, options);
         }
 
         public static bool IsLong(string target)
@@ -129,5 +133,16 @@ namespace QueryMining
             return matches.Any(match => match);
         }
 
+        public static bool IsExcluded(string target, RegexOptions options = _options)
+        {
+            if (Regexes.IsNumber(target, options))
+                return true;
+
+            int matches = (from expr in ExcludedWords
+                           where Regexes.IsMatch(target, expr)
+                           select true).Count();
+
+            return matches > 0;
+        }
     }
 }

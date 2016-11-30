@@ -30,14 +30,12 @@
         {
             this.inFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.btnImport = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
             this.btnGo = new System.Windows.Forms.Button();
             this.txtBoxInFile = new System.Windows.Forms.TextBox();
             this.outFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.rBtnAvgAll = new System.Windows.Forms.RadioButton();
-            this.rBtnAvgSome = new System.Windows.Forms.RadioButton();
+            this.cboxAvgAll = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // inFileDialog
@@ -49,45 +47,39 @@
             // 
             // btnImport
             // 
-            this.btnImport.Location = new System.Drawing.Point(395, 10);
+            this.btnImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnImport.Location = new System.Drawing.Point(161, 42);
             this.btnImport.Margin = new System.Windows.Forms.Padding(2);
             this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(92, 40);
+            this.btnImport.Size = new System.Drawing.Size(98, 22);
             this.btnImport.TabIndex = 0;
-            this.btnImport.Text = "&Import CSV File";
+            this.btnImport.Text = "&Select CSV File";
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
             // 
-            // btnClose
-            // 
-            this.btnClose.Location = new System.Drawing.Point(395, 87);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(2);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(92, 59);
-            this.btnClose.TabIndex = 0;
-            this.btnClose.Text = "&Close";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
-            // 
             // btnGo
             // 
-            this.btnGo.Location = new System.Drawing.Point(9, 87);
+            this.btnGo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnGo.Location = new System.Drawing.Point(285, 41);
             this.btnGo.Margin = new System.Windows.Forms.Padding(2);
             this.btnGo.Name = "btnGo";
-            this.btnGo.Size = new System.Drawing.Size(382, 35);
+            this.btnGo.Size = new System.Drawing.Size(98, 22);
             this.btnGo.TabIndex = 0;
-            this.btnGo.Text = "&Go!";
+            this.btnGo.Text = "&Begin Import";
             this.btnGo.UseVisualStyleBackColor = true;
             this.btnGo.Click += new System.EventHandler(this.btnGo_Click);
             // 
             // txtBoxInFile
             // 
-            this.txtBoxInFile.Location = new System.Drawing.Point(9, 12);
+            this.txtBoxInFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtBoxInFile.Location = new System.Drawing.Point(10, 12);
             this.txtBoxInFile.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxInFile.Name = "txtBoxInFile";
-            this.txtBoxInFile.Size = new System.Drawing.Size(383, 20);
+            this.txtBoxInFile.Size = new System.Drawing.Size(375, 20);
             this.txtBoxInFile.TabIndex = 1;
             this.txtBoxInFile.Text = "Select a .csv file to import...";
+            this.txtBoxInFile.DoubleClick += new System.EventHandler(this.txtBoxInFile_DoubleClick);
             // 
             // outFileDialog
             // 
@@ -96,11 +88,12 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(10, 128);
+            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.Location = new System.Drawing.Point(0, 68);
             this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.MarqueeAnimationSpeed = 0;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(381, 19);
+            this.progressBar1.Size = new System.Drawing.Size(395, 10);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 2;
             // 
@@ -109,49 +102,36 @@
             this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
             this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
             // 
-            // rBtnAvgAll
+            // cboxAvgAll
             // 
-            this.rBtnAvgAll.AutoSize = true;
-            this.rBtnAvgAll.Checked = true;
-            this.rBtnAvgAll.Location = new System.Drawing.Point(35, 50);
-            this.rBtnAvgAll.Name = "rBtnAvgAll";
-            this.rBtnAvgAll.Size = new System.Drawing.Size(136, 17);
-            this.rBtnAvgAll.TabIndex = 4;
-            this.rBtnAvgAll.TabStop = true;
-            this.rBtnAvgAll.Text = "Average All Aggregates";
-            this.rBtnAvgAll.UseVisualStyleBackColor = true;
-            this.rBtnAvgAll.CheckedChanged += new System.EventHandler(this.rBtnAvgAll_CheckedChanged);
-            // 
-            // rBtnAvgSome
-            // 
-            this.rBtnAvgSome.AutoSize = true;
-            this.rBtnAvgSome.Location = new System.Drawing.Point(192, 50);
-            this.rBtnAvgSome.Name = "rBtnAvgSome";
-            this.rBtnAvgSome.Size = new System.Drawing.Size(154, 17);
-            this.rBtnAvgSome.TabIndex = 5;
-            this.rBtnAvgSome.Text = "Only Average Avg Columns";
-            this.rBtnAvgSome.UseVisualStyleBackColor = true;
-            this.rBtnAvgSome.CheckedChanged += new System.EventHandler(this.rBtnAvgAll_CheckedChanged);
+            this.cboxAvgAll.AutoSize = true;
+            this.cboxAvgAll.Checked = true;
+            this.cboxAvgAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cboxAvgAll.Location = new System.Drawing.Point(12, 45);
+            this.cboxAvgAll.Name = "cboxAvgAll";
+            this.cboxAvgAll.Size = new System.Drawing.Size(123, 17);
+            this.cboxAvgAll.TabIndex = 5;
+            this.cboxAvgAll.Text = "Average All Columns";
+            this.cboxAvgAll.UseVisualStyleBackColor = true;
+            this.cboxAvgAll.CheckedChanged += new System.EventHandler(this.rBtnAvgAll_CheckedChanged);
             // 
             // ImportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(496, 155);
-            this.Controls.Add(this.rBtnAvgSome);
-            this.Controls.Add(this.rBtnAvgAll);
+            this.ClientSize = new System.Drawing.Size(395, 78);
+            this.Controls.Add(this.cboxAvgAll);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.txtBoxInFile);
             this.Controls.Add(this.btnGo);
-            this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnImport);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(306, 45);
             this.Name = "ImportForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "QueryWizard";
+            this.Text = "Import File";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -162,13 +142,11 @@
         private System.Windows.Forms.OpenFileDialog inFileDialog;
         private System.Windows.Forms.TextBox txtBoxInFile;
         private System.Windows.Forms.Button btnGo;
-        private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.SaveFileDialog outFileDialog;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
-        private System.Windows.Forms.RadioButton rBtnAvgAll;
-        private System.Windows.Forms.RadioButton rBtnAvgSome;
+        private System.Windows.Forms.CheckBox cboxAvgAll;
     }
 }
 
