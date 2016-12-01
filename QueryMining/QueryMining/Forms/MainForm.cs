@@ -79,29 +79,6 @@ namespace QueryMining
             }
         }
 
-        private void SetMineType(object sender, EventArgs e)
-        {
-            try
-            {
-                ToolStripMenuItem btn = sender as ToolStripMenuItem;
-                foreach (ToolStripMenuItem item in mineQueriesToolStripMenuItem.DropDownItems)
-                {
-                    if (item != btn)
-                        item.Checked = false;
-
-                    else
-                        item.Checked = true;
-
-                }
-                _mineType = (MineType)btn.Tag;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Something went Wrong setting the Mine Type, setting it to Mine 2 Words");
-                _mineType = MineType.Two;
-            }
-            //MineType type = btn.Tag as MineType;
-        }
 
         private void PerformBackgroundWork(object sender, DoWorkEventArgs e)
         {
@@ -174,17 +151,13 @@ namespace QueryMining
                 {
                     FullQueries.Enqueue(query);
                     CheckedKeys.Add(query, true);
-
                 }
 
                 // Take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
-
-
-                foreach (var fullRow in FullQueries)
+                for (int i = 0; i < FullQueries.Count; i++)
                 {
-                    if (Program.OperationCancelled)
-                        throw new OperationCanceledException();
+                    ThrowIfCancelled();
 
                     string query = FullQueries.Dequeue();
                     var queryWords = query.Split(' ').ToList();
@@ -201,8 +174,7 @@ namespace QueryMining
                         {
                             for (int word2Num = word1Num + 1; word2Num < queryWords.Count; word2Num++)
                             {
-                                if (Program.OperationCancelled)
-                                    throw new OperationCanceledException();
+                                ThrowIfCancelled();
 
                                 string word2 = queryWords[word2Num];
                                 if (word1 != word2)
@@ -214,8 +186,7 @@ namespace QueryMining
                                     {
                                         for (int word3Num = word2Num + 1; word2Num < queryWords.Count; word2Num++)
                                         {
-                                            if (Program.OperationCancelled)
-                                                throw new OperationCanceledException();
+                                            ThrowIfCancelled();
 
                                             string word3 = queryWords[word3Num];
                                             if (word1 != word3 && word2 != word3)
@@ -262,8 +233,7 @@ namespace QueryMining
         /// <param name="word2"></param>
         private void MineWords(string word1, string word2 = "", string word3 = "")
         {
-            if (Program.OperationCancelled)
-                throw new OperationCanceledException();
+            ThrowIfCancelled();
 
             string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
             string reverseWords = string.Join(" ", new string[] { word3, word2, word1 }).Trim();
@@ -272,29 +242,29 @@ namespace QueryMining
             {
                 try
                 {
-                    var existingKeys = (from pair in MainForm.CheckedKeys
+                    int existingKeys = (from pair in MainForm.CheckedKeys
                                         where pair.Key == wordString || pair.Key == reverseWords
                                         select pair.Key).Count();
 
                     if (existingKeys == 0)
                     {
-                        var existingRows = (from DataRow row in _dataTable.Rows
+                        var mineableRows = (from DataRow row in _dataTable.Rows
                                             where row.ItemArray[QueryColIndex].ToString().Contains(word1)
                                                 && row.ItemArray[QueryColIndex].ToString().Contains(word2)
                                                 && row.ItemArray[QueryColIndex].ToString().Contains(word3)
                                             select row).ToList();
 
                         object[] newRow;
-                        if (existingRows.Count > 1)
+                        if (mineableRows.Count > 1)
                         {
-                            newRow = StatDataTable.Mine(wordString, existingRows);
+                            newRow = StatDataTable.Mine(wordString, mineableRows);
                             newRow[QueryColIndex] = wordString;
                         }
                         else
                         {
-                            newRow = existingRows[0].ItemArray;
+                            newRow = mineableRows[0].ItemArray;
                         }
-                        _dataTable.AddRowToTable(newRow, existingRows);
+                        _dataTable.AddRowToTable(newRow, mineableRows);
                         MainForm.CheckedKeys[wordString] = true;
                         MainForm.CheckedKeys[reverseWords] = true;
 
@@ -307,6 +277,21 @@ namespace QueryMining
             }
         }
 
+        private bool KeyExists(string wordString, string reverseWordString)
+        {
+            bool result = false;
+            try
+            {
+                result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(reverseWordString);
+                return result;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
         private void resetLblRowCount()
         {
             try
@@ -315,7 +300,7 @@ namespace QueryMining
                 {
                     dgvMineResults.Invoke(new MethodInvoker(delegate
                     {
-                        dgvMineResults.DataSource = _dataTable;
+                        // dgvMineResults.DataSource = _dataTable;
                         dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
                         dgvMineResults.Refresh();
                     }));
@@ -434,9 +419,43 @@ namespace QueryMining
             }
         }
 
-        private void averageAllValuesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void tsmiAvgAll_Click(object sender, EventArgs e)
         {
+            try
+            {
+                tsmiAvgAll.Checked = !tsmiAvgAll.Checked;
+                _avgAll = tsmiAvgAll.Checked;
 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error assigning avgAll: {ex.Message}");
+            }
         }
+        private void SetMineType(object sender, EventArgs e)
+        {
+            try
+            {
+                ToolStripMenuItem btn = sender as ToolStripMenuItem;
+                foreach (ToolStripMenuItem item in mineQueriesToolStripMenuItem.DropDownItems)
+                {
+                    if (item != btn)
+                        item.Checked = false;
+
+                    else
+                        item.Checked = true;
+
+                }
+                _mineType = (MineType)btn.Tag;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Something went Wrong setting the Mine Type, setting it to Mine 2 Words");
+                _mineType = MineType.Two;
+            }
+            //MineType type = btn.Tag as MineType;
+        }
+
+
     }
 }

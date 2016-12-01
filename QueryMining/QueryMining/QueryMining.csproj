@@ -64,6 +64,7 @@
     <Compile Include="Forms\ImportForm.Designer.cs">
       <DependentUpon>ImportForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="OperationListener.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AboutBox.cs">
       <SubType>Form</SubType>
