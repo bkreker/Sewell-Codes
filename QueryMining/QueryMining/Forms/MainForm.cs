@@ -24,7 +24,7 @@ namespace QueryMining
         private static bool
               _outFileSavedCorrectly = false;
 
-        public static Dictionary<string, string> CheckedKeys { get; set; }
+        public static Dictionary<string, bool> CheckedKeys { get; set; }
 
         private static bool _avgAll
         {
@@ -46,6 +46,8 @@ namespace QueryMining
         string _outFileName = "default.csv";
 
         private StatDataTable _dataTable;
+        Thread cancellationChecker,
+         displayUpdater;
 
         private DataColumnCollection Columns { get { return StatDataTable.ColumnCollection; } }
         private int QueryColIndex { get { return StatDataTable.QueryCol; } }
@@ -56,11 +58,13 @@ namespace QueryMining
         {
             InitializeComponent();
 
-            CheckedKeys = new Dictionary<string, string>();
+            CheckedKeys = new Dictionary<string, bool>();
             tsmiMine1Word.Tag = MineType.One;
             tsmiMine2Words.Tag = MineType.Two;
             tsmiMine3Words.Tag = MineType.Three;
             tsmiMine2Words.Checked = true;
+            cancellationChecker = new Thread(new ThreadStart(ThrowIfCancelled)); cancellationChecker.Name = "cancellationChecker";
+            displayUpdater = new Thread(new ThreadStart(resetLblRowCountAsync)); displayUpdater.Name = "displayUpdater";
 
         }
 
@@ -144,8 +148,6 @@ namespace QueryMining
                 progressBar1.MarqueeAnimationSpeed = 50;
                 btnCancel.Enabled = true;
                 Program.Processing = true;
-                Thread cancellationChecker = new Thread(new ThreadStart(ThrowIfCancelled));
-                Thread displayUpdater = new Thread(new ThreadStart(resetLblRowCountAsync));
                 cancellationChecker.Start();
                 displayUpdater.Start();
                 backgroundWorker.RunWorkerAsync();
@@ -163,25 +165,27 @@ namespace QueryMining
             Console.WriteLine("Sort Started.");
             try
             {
-                CheckedKeys = new Dictionary<string, string>();
+                CheckedKeys = new Dictionary<string, bool>();
 
                 foreach (var query in (from DataRow r in _dataTable.Rows select r.ItemArray[QueryColIndex].ToString()))
                 {
                     FullQueries.Enqueue(query);
-                    CheckedKeys.Add(query, query.Split(' ').Reverse().ToString());
+                    CheckedKeys.Add(query, true);
                 }
                 // Take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
+                Thread thread1, thread2, thread3, thread4, thread5, thread6;
                 for (int i = 0; i < FullQueries.Count; i++)
                 {
-                    Thread thread1, thread2, threadd3, thread4, thread5, thread6;
                     string query = FullQueries.Dequeue();
                     var queryWords = query.Split(' ').ToList();
                     // for each pairing in the query in row i
                     for (int word1Num = 0; word1Num < queryWords.Count; word1Num++)
                     {
                         string word1 = queryWords[word1Num];
-                        MineWords(word1);
+                        thread1 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1); }));
+                        thread1.Name = "thread1";
+                        thread1.Start();
 
                         if (_mineType == MineType.One)
                             continue;
@@ -193,8 +197,12 @@ namespace QueryMining
                                 string word2 = queryWords[word2Num];
                                 if (word1 != word2)
                                 {
-                                    MineWords(word2);
-                                    MineWords(word1, word2);
+                                    // MineWords(word2);
+                                    thread2 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2); })); thread2.Name = "thread2";
+                                    thread3 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2); })); thread3.Name = "thread3";
+                                    thread2.Start();
+                                    thread3.Start();
+                                    // MineWords(word1, word2);
 
                                     if (_mineType == MineType.Three)
                                     {
@@ -212,6 +220,10 @@ namespace QueryMining
                                                     thread4.Start();
                                                     thread6.Start();
                                                     thread5.Start();
+                                                    while (thread4.IsAlive || thread5.IsAlive || thread6.IsAlive)
+                                                    {
+                                                        Thread.Sleep(1);
+                                                    }
 
                                                 }
                                                 catch (Exception ex)
@@ -224,11 +236,21 @@ namespace QueryMining
                                             } // end if word1 != word2
                                         }
                                     }
+                                    while (thread2.IsAlive || thread3.IsAlive)
+                                    {
+                                        Thread.Sleep(1);
+                                    }
                                 }
                             } // end querywords loop 2     
 
                         } // end if/else for minetype == One
+                        while (thread1.IsAlive)
+                        {
+                            Thread.Sleep(1);
+                        }
+
                     } // end rows loop
+
                 }
                 Console.WriteLine("Finished Mining");
             }
@@ -238,7 +260,7 @@ namespace QueryMining
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error");
+                Console.WriteLine(ex.Message, "Error");
             }
         }
 
@@ -260,6 +282,13 @@ namespace QueryMining
             }
         }
 
+        private bool KeyExists(string word1, string word2, string word3 = "")
+        {
+            string wordString = string.Join(" ", new string[] { word1.Trim(), word2.Trim(), word3.Trim() }).Trim();
+            string reverseWords = wordString.Split(' ').Reverse().ToString();
+            return KeyExists(wordString, reverseWords);
+        }
+
         /// <summary>
         /// Calculate the Results for 1, 2, or 3 words
         /// </summary>
@@ -268,10 +297,15 @@ namespace QueryMining
         private void MineWords(string word1, string word2 = "", string word3 = "")
         {
             // ThrowIfCancelled();
-
             string wordString = string.Join(" ", new string[] { word1.Trim(), word2.Trim(), word3.Trim() }).Trim();
             string reverseWords = wordString.Split(' ').Reverse().ToString();
-            if (!KeyExists(wordString, reverseWords))
+            //  Console.WriteLine($"MineWords {Thread.CurrentThread.Name} wordstring = {wordString}");
+            if (KeyExists(wordString))
+            {
+                Console.WriteLine($"\t{Thread.CurrentThread.Name}: Key already present: {wordString} ");
+                _tableChanged = false;
+            }
+            else
             {
                 if (wordString != "" && !Regexes.IsExcluded(wordString))
                 {
@@ -303,29 +337,27 @@ namespace QueryMining
                             _tableChanged = true;
                         }
                         MainForm.CheckedKeys[wordString] = MainForm.CheckedKeys[reverseWords];
+                        Console.WriteLine($"\t{Thread.CurrentThread.Name} Finished, wordstring: {wordString}, tablechanged = {_tableChanged}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error Querying for word(s):{wordString} {ex.Message}");
+                        Console.WriteLine($"\t{Thread.CurrentThread.Name}: Error Querying for word(s): {wordString} {ex.Message}");
                     }// end try/catch
                 }
                 else
                 {
+                    Console.WriteLine($"\t{Thread.CurrentThread.Name}: Key excluded: {wordString} ");
                     MainForm.CheckedKeys[wordString] = MainForm.CheckedKeys[reverseWords];
+                    _tableChanged = false;
 
                 }
             }
-            else
-            {
-                //  Console.WriteLine("Key already checked.");
-            }
         }
 
-        private bool KeyExists(string wordString, string reverseWordString)
+        private bool KeyExists(string wordString)
         {
             bool result = false;
-            result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(reverseWordString) ||
-                CheckedKeys.ContainsValue(wordString) || CheckedKeys.ContainsValue(reverseWordString);
+            result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(wordString.Split(' ').Reverse().ToString());
             return result;
 
         }
@@ -359,10 +391,10 @@ namespace QueryMining
                         {
                             lblRowCount.Invoke(new MethodInvoker(delegate
                             {
-                                lblRowCount.Text = _dataTable.Rows.Count.ToString();
+                                lblRowCount.Text = StatDataTable.RowCount.ToString();
                             }));
                         }
-                        else lblRowCount.Text = _dataTable.Rows.Count.ToString();
+                        else lblRowCount.Text = StatDataTable.RowCount.ToString();
                     }
                     catch (Exception ex)
                     {
