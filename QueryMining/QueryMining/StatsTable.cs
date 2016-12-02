@@ -348,15 +348,15 @@ namespace QueryMining
         {
             try
             {
-                string colName = "", cellVal = item.ToString();
+                string colName = "", 
+                    cellVal = item.ToString();
 
                 Type type = StatDataTable.ColumnCollection[i].DataType;
                 colName = StatDataTable.ColumnCollection[i].Caption;
-
+                //String
                 if (type == typeof(string))
                     return item.ToString();
-
-                if (Regexes.IsMatch(cellVal, Regexes.Number) && i != QueryCol)
+                if (i != QueryCol && Regexes.IsMatch(cellVal, Regexes.Number))
                 {
                     if (cellVal.Contains('%'))
                         cellVal = cellVal.Remove(cellVal.IndexOf('%'), 1);
@@ -364,31 +364,32 @@ namespace QueryMining
                     if (cellVal.Contains(','))
                         cellVal = cellVal.Remove(cellVal.IndexOf(','), 1);
 
-                    if (type == typeof(double))
-                    {
-                        double dub;
-                        if (double.TryParse(cellVal, out dub)) return dub;
-                    }
-                    else if (type == typeof(decimal))
-                    {
-                        decimal dec;
-                        if (decimal.TryParse(cellVal, out dec)) return dec;
-
-                    }
-                    else if (type == typeof(long))
-                    {
-                        long lon;
-                        if (long.TryParse(cellVal, out lon)) return lon;
-                    }
-                    else if (type == typeof(int))
-                    {
-                        int ig;
-                        if (int.TryParse(cellVal, out ig)) return ig;
-
-                    }
-
                     float fl;
-                    if (float.TryParse(cellVal, out fl)) return fl;
+                    switch (type.Name)
+                    {
+                        case "Double":
+                            double dub;
+                            if (double.TryParse(cellVal, out dub)) return dub;
+                            break;
+                        case "Decimal":
+                            decimal dec;
+                            if (decimal.TryParse(cellVal, out dec)) return dec;
+                            break;
+                        case "Int32":
+                            int ig;
+                            if (int.TryParse(cellVal, out ig)) return ig;
+                            break;
+                        case "Int64":
+                            long lon;
+                            if (long.TryParse(cellVal, out lon)) return lon;
+                            break;
+                        case "Single":
+                            if (float.TryParse(cellVal, out fl)) return fl;
+                            break;
+                        default:
+                            if (float.TryParse(cellVal, out fl)) return fl;
+                            break;
+                    }
                 }
                 return cellVal;
             }
@@ -401,59 +402,52 @@ namespace QueryMining
 
         public void AddRowToTable(List<string> newRow)
         {
+
             AddRowToTable(newRow.ToArray<object>());
         }
 
         public void AddRowToTable(object[] newRow, List<DataRow> existingRows = null)
         {
             var unchangedRowCount = StatDataTable.RowCount;
+
+            for (int i = 0; i < newRow.Count(); i++)
+            {
+                newRow[i] = FormatCell(newRow[i], i);
+            }
+            if (existingRows == null)
+            {
+                existingRows = (from DataRow row in this.Rows
+                                where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
+                                select row).ToList();
+            }
             try
             {
-                if (existingRows == null)
-                    existingRows = (from DataRow row in this.Rows
-                                    where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
-                                    select row).ToList();
-
                 if (existingRows.Count == 0)
                 {
-                    for (int i = 0; i < newRow.Count(); i++)
-                    {
-                        newRow[i] = FormatCell(newRow[i], i);
-                    }
                     StatDataTable.RowCount++;
                     this.Rows.Add(newRow);
                 }
-
-                else throw new ConstraintException();
-
-            }
-            catch (ConstraintException ex)
-            {
-                try
+                else
                 {
-                    if (existingRows == null)
-                        existingRows = (from DataRow row in this.Rows
-                                        where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
-                                        select row).ToList();
+                    try
+                    {
 
-                    if (existingRows.Count <= 0)
-                        throw new ImportError($"Row Not Added: {ex.Message}");
-
-                    object[] outputRow = AggregateRows(existingRows, newRow);
-                    int rowIx = this.Rows.IndexOf(existingRows[0]);
-                    this.Rows[rowIx].ItemArray = outputRow;
-
-                }
-                catch (ImportError e)
-                {
-                    RowCount = unchangedRowCount;
-                    Console.WriteLine(e.Message);
-
-                }
-                catch (Exception e)
-                {
-                    RowCount = unchangedRowCount;
-                    Console.WriteLine($"Something went wrong adding new row to table: {e.Message}");
+                        if (existingRows.Count > 0)
+                        {
+                            object[] outputRow = AggregateRows(existingRows, newRow);
+                            int rowIx = this.Rows.IndexOf(existingRows[0]);
+                            this.Rows[rowIx].ItemArray = outputRow;
+                        }
+                        else
+                        {
+                            RowCount = unchangedRowCount;
+                            Console.WriteLine($"Row Not Added");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ImportError($"Something went wrong adding new row to table: {e.Message}");
+                    }
                 }
             }
             catch (NullReferenceException ex)
@@ -477,25 +471,30 @@ namespace QueryMining
         public static object[] AggregateRows(List<object[]> existingRows, object[] inputRow)
         {
             object[] outputArr = new object[ColumnCollection.Count];
-
-            for (int col_ix = 0; col_ix < inputRow.Count(); col_ix++)
+            inputRow.CopyTo(outputArr, 0);
+            for (int col_ix = 0; col_ix < StatDataTable.ColumnCollection.Count && col_ix < outputArr.Length; col_ix++)
             {
-
-                inputRow[col_ix] = FormatCell(inputRow[col_ix], col_ix);
-
                 if (col_ix == StatDataTable.QueryCountCol)
                 {
-                    outputArr[col_ix] = existingRows.Count;
-                    continue;
+                    outputArr[col_ix] = existingRows.Count();
+
                 }
-                List<object> allColumnValues = (from row in existingRows
-                                                select row[col_ix]).ToList();
+                if (outputArr[col_ix] != null)
+                {
+                    outputArr[col_ix] = FormatCell(outputArr[col_ix], col_ix);
 
-                allColumnValues.Add(inputRow[col_ix]);
+                }
+                else
+                {
+                    List<object> allColumnValues = (from row in existingRows
+                                                    select row[col_ix]).ToList();
 
-                bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[col_ix].Caption, Regexes.Average) || AvgAll;
+                    allColumnValues.Add(outputArr[col_ix]);
 
-                outputArr[col_ix] = AggregateColumnValues(allColumnValues, StatDataTable.ColumnCollection[col_ix], isAvg);
+                    bool isAvg = Regexes.IsMatch(StatDataTable.ColumnCollection[col_ix].Caption, Regexes.Average) || AvgAll;
+
+                    outputArr[col_ix] = AggregateColumnValues(allColumnValues, StatDataTable.ColumnCollection[col_ix], isAvg);
+                }
             }
 
             return outputArr;
@@ -513,26 +512,25 @@ namespace QueryMining
             object[] aggregatedRow = new object[StatDataTable.ColumnCollection.Count];
             for (int columnIndex = 0; columnIndex < StatDataTable.ColumnCollection.Count; columnIndex++)
             {
-                if (OperationCancelled)
-                    throw new OperationCanceledException();
-
                 try
                 {
                     object columnTotal = "N/A";
                     if (columnIndex == StatDataTable.QueryCol)
-                        columnTotal = wordString;
+                        aggregatedRow[StatDataTable.QueryCol] = wordString;
 
                     else if (columnIndex == StatDataTable.QueryCountCol)
-                        columnTotal = existingRows.Count;
-
+                    {
+                        aggregatedRow[StatDataTable.QueryCountCol] = existingRows.Count;
+                    }
                     else
                     {
                         List<object> columnValues = (from resRow in existingRows
                                                      select resRow.ItemArray[columnIndex]).ToList();
 
                         columnTotal = StatDataTable.AggregateColumnValues(columnValues, columnIndex);
+
+                        aggregatedRow[columnIndex] = columnTotal;
                     }
-                    aggregatedRow[columnIndex] = columnTotal;
                 }
                 catch (Exception ex)
                 {
@@ -577,39 +575,42 @@ namespace QueryMining
                             string nextString = next.ToString();
                             string sumMatch = Regexes.Match(sumString, Regexes.Number);
                             string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                            double divisor = 2.0;
+                            var type = column.DataType;
+                            switch (type.Name)
+                            {
+                                case "Double":
+                                    double sumDub, nextDub;
+                                    if (double.TryParse(nextMatch, out nextDub) && double.TryParse(sumMatch, out sumDub))
+                                        return (sumDub + nextDub) / divisor;
+                                    break;
+                                case "Decimal":
+                                    decimal sumDec, nextDec;
+                                    if (decimal.TryParse(nextMatch, out nextDec) && decimal.TryParse(sumMatch, out sumDec))
+                                        return (decimal)(sumDec + nextDec) / (decimal)divisor;
+                                    break;
+                                case "Int32":
+                                    int sumInt, nextInt;
+                                    if (int.TryParse(nextMatch, out sumInt) && int.TryParse(sumMatch, out nextInt))
+                                        return (int)(sumInt + nextInt) / divisor;
+                                    break;
+                                case "Int64":
+                                    long sumLong, nextLong;
+                                    if (long.TryParse(nextMatch, out nextLong) && long.TryParse(sumMatch, out sumLong))
+                                        return (long)(sumLong + (double)nextLong) / divisor;
+                                    break;
+                                case "Single":
+                                    float sumFloat, nextFloat;
+                                    if (float.TryParse(nextMatch, out nextFloat) && float.TryParse(sumMatch, out sumFloat))
+                                        return (float)(sumFloat + nextFloat) / divisor;
+                                    break;
+                                default:
+                                    float sumNum, nextNum;
+                                    if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                        return (float)(sumNum + nextNum) / divisor;
+                                    break;
+                            }
 
-                            if (column.DataType == typeof(decimal))
-                            {
-                                decimal sumNum, nextNum;
-                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = (sumNum + nextNum) / 2;
-                                }
-                            }
-                            else if (column.DataType == typeof(double))
-                            {
-                                double sumNum, nextNum;
-                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = (sumNum + nextNum) / 2;
-                                }
-                            }
-                            else if (column.DataType == typeof(long))
-                            {
-                                long sumNum, nextNum;
-                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = (sumNum + nextNum) / 2;
-                                }
-                            }
-                            else
-                            {
-                                float sumNum, nextNum;
-                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = (sumNum + nextNum) / 2;
-                                }
-                            }
                             return sum;
                         });
                     }
@@ -622,43 +623,42 @@ namespace QueryMining
                             string nextString = next.ToString();
                             string sumMatch = Regexes.Match(sumString, Regexes.Number);
                             string nextMatch = Regexes.Match(nextString, Regexes.Number);
-                            //if (sum == next)
-                            //{
-                            //    return sum;
-                            //}
-                            if (column.DataType == typeof(decimal))
+                           
+                            var type = column.DataType;
+                            switch (type.Name)
                             {
-                                decimal sumNum, nextNum;
-                                if (decimal.TryParse(nextMatch, out nextNum) && decimal.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = sumNum + nextNum;
-                                }
+                                case "Double":
+                                    double sumDub, nextDub;
+                                    if (double.TryParse(nextMatch, out nextDub) && double.TryParse(sumMatch, out sumDub))
+                                        return (sumDub + nextDub);
+                                    break;
+                                case "Decimal":
+                                    decimal sumDec, nextDec;
+                                    if (decimal.TryParse(nextMatch, out nextDec) && decimal.TryParse(sumMatch, out sumDec))
+                                        return (decimal)(sumDec + nextDec);
+                                    break;
+                                case "Int32":
+                                    int sumInt, nextInt;
+                                    if (int.TryParse(nextMatch, out sumInt) && int.TryParse(sumMatch, out nextInt))
+                                        return (int)(sumInt + nextInt);
+                                    break;
+                                case "Int64":
+                                    long sumLong, nextLong;
+                                    if (long.TryParse(nextMatch, out nextLong) && long.TryParse(sumMatch, out sumLong))
+                                        return (long)(sumLong + (double)nextLong);
+                                    break;
+                                case "Single":
+                                    float sumFloat, nextFloat;
+                                    if (float.TryParse(nextMatch, out nextFloat) && float.TryParse(sumMatch, out sumFloat))
+                                        return (float)(sumFloat + nextFloat);
+                                    break;
+                                default:
+                                    float sumNum, nextNum;
+                                    if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                        return (float)(sumNum + nextNum);
+                                    break;
                             }
-                            else if (column.DataType == typeof(double))
-                            {
-                                double sumNum, nextNum;
-                                if (double.TryParse(nextMatch, out nextNum) && double.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = sumNum + nextNum;
-                                }
-                            }
-                            else if (column.DataType == typeof(long))
-                            {
-                                long sumNum, nextNum;
-                                if (long.TryParse(nextMatch, out nextNum) && long.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = sumNum + nextNum;
-                                }
-                            }
-                            else
-                            {
-                                float sumNum, nextNum;
-                                if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
-                                {
-                                    sum = sumNum + nextNum;
-                                }
 
-                            }
                             return sum;
                         });
                     }

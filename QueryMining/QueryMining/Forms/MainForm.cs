@@ -4,9 +4,12 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.IO.Pipes;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using QueryMining.Properties;
@@ -21,7 +24,7 @@ namespace QueryMining
         private static bool
               _outFileSavedCorrectly = false;
 
-        public static Dictionary<string, bool> CheckedKeys { get; set; }
+        public static Dictionary<string, string> CheckedKeys { get; set; }
 
         private static bool _avgAll
         {
@@ -39,6 +42,7 @@ namespace QueryMining
             set { Program.OperationCancelled = value; }
         }
         Queue<String> FullQueries = new Queue<string>();
+        private static bool _tableChanged = false;
         string _outFileName = "default.csv";
 
         private StatDataTable _dataTable;
@@ -51,7 +55,8 @@ namespace QueryMining
         public MainForm()
         {
             InitializeComponent();
-            CheckedKeys = new Dictionary<string, bool>();
+
+            CheckedKeys = new Dictionary<string, string>();
             tsmiMine1Word.Tag = MineType.One;
             tsmiMine2Words.Tag = MineType.Two;
             tsmiMine3Words.Tag = MineType.Three;
@@ -107,19 +112,26 @@ namespace QueryMining
             if (!Program.OperationCancelled)
             {
                 if (dgvMineResults.Rows.Count > 0)
-                {
                     MessageBox.Show("Finished!");
-
-                }
                 else
-                {
                     MessageBox.Show("Something went wrong populating the table.");
-                }
-
             }
             else if (Program.OperationCancelled)
             {
                 MessageBox.Show("The new file was not saved");
+            }
+            Console.WriteLine("Checked Keys:");
+            foreach (var key in CheckedKeys)
+            {
+                Console.WriteLine(key.Key + " " + key.Value);
+            }
+
+            Console.WriteLine("Rows in data table:");
+            int i = 0;
+            foreach (DataRow row in _dataTable.Rows)
+            {
+                Console.WriteLine($"{i++} {row.ItemArray[QueryColIndex]}");
+
             }
         }
 
@@ -127,38 +139,42 @@ namespace QueryMining
         {
             try
             {
+                //_mineType = MineType.Three;
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
                 btnCancel.Enabled = true;
+                Program.Processing = true;
+                Thread cancellationChecker = new Thread(new ThreadStart(ThrowIfCancelled));
+                Thread displayUpdater = new Thread(new ThreadStart(resetLblRowCountAsync));
+                cancellationChecker.Start();
+                displayUpdater.Start();
                 backgroundWorker.RunWorkerAsync();
 
             }
-
             catch (Exception ex)
             {
+                backgroundWorker.CancelAsync();
                 Console.WriteLine($"Something went wrong: {ex.Message}");
             }
         }
 
-        private void Analyze()
+        private async void Analyze()
         {
             Console.WriteLine("Sort Started.");
             try
             {
-                CheckedKeys = new Dictionary<string, bool>();
+                CheckedKeys = new Dictionary<string, string>();
 
                 foreach (var query in (from DataRow r in _dataTable.Rows select r.ItemArray[QueryColIndex].ToString()))
                 {
                     FullQueries.Enqueue(query);
-                    CheckedKeys.Add(query, true);
+                    CheckedKeys.Add(query, query.Split(' ').Reverse().ToString());
                 }
-
                 // Take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
                 for (int i = 0; i < FullQueries.Count; i++)
                 {
-                    ThrowIfCancelled();
-
+                    Thread thread1, thread2, threadd3, thread4, thread5, thread6;
                     string query = FullQueries.Dequeue();
                     var queryWords = query.Split(' ').ToList();
                     // for each pairing in the query in row i
@@ -174,8 +190,6 @@ namespace QueryMining
                         {
                             for (int word2Num = word1Num + 1; word2Num < queryWords.Count; word2Num++)
                             {
-                                ThrowIfCancelled();
-
                                 string word2 = queryWords[word2Num];
                                 if (word1 != word2)
                                 {
@@ -184,29 +198,37 @@ namespace QueryMining
 
                                     if (_mineType == MineType.Three)
                                     {
-                                        for (int word3Num = word2Num + 1; word2Num < queryWords.Count; word2Num++)
+                                        for (int word3Num = word2Num + 1; word3Num < queryWords.Count; word3Num++)
                                         {
-                                            ThrowIfCancelled();
-
                                             string word3 = queryWords[word3Num];
                                             if (word1 != word3 && word2 != word3)
                                             {
-                                                MineWords(word1, word3);
-                                                MineWords(word2, word3);
-                                                MineWords(word1, word2, word3);
+                                                try
+                                                {
+                                                    thread4 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2, word3); }));
+                                                    thread5 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word3); }));
+                                                    thread6 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2, word3); }));
+                                                    thread4.Name = "thread4"; thread5.Name = "thread5"; thread6.Name = "thread6";
+                                                    thread4.Start();
+                                                    thread6.Start();
+                                                    thread5.Start();
+
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine(ex.Message);
+                                                }
+                                                //await Task.Run(() => MineWords(word2, word3));
+                                                //await Task.Run(() => MineWords(word1, word2, word3));
 
                                             } // end if word1 != word2
                                         }
                                     }
                                 }
-                                resetLblRowCount();
                             } // end querywords loop 2     
-                            resetLblRowCount();
 
                         } // end if/else for minetype == One
-                        resetLblRowCount();
                     } // end rows loop
-                    resetLblRowCount();
                 }
                 Console.WriteLine("Finished Mining");
             }
@@ -222,8 +244,20 @@ namespace QueryMining
 
         private void ThrowIfCancelled()
         {
-            if (Program.OperationCancelled)
-                throw new OperationCanceledException();
+            try
+            {
+                while (Program.Processing)
+                {
+                    if (Program.OperationCancelled)
+                        throw new OperationCanceledException();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Program.Processing = false;
+                Program.OperationCancelled = false;
+                MessageBox.Show("Operation Cancelled.");
+            }
         }
 
         /// <summary>
@@ -233,95 +267,108 @@ namespace QueryMining
         /// <param name="word2"></param>
         private void MineWords(string word1, string word2 = "", string word3 = "")
         {
-            ThrowIfCancelled();
+            // ThrowIfCancelled();
 
-            string wordString = string.Join(" ", new string[] { word1, word2, word3 }).Trim();
-            string reverseWords = string.Join(" ", new string[] { word3, word2, word1 }).Trim();
-
-            if (wordString != "" && !Regexes.IsExcluded(wordString))
+            string wordString = string.Join(" ", new string[] { word1.Trim(), word2.Trim(), word3.Trim() }).Trim();
+            string reverseWords = wordString.Split(' ').Reverse().ToString();
+            if (!KeyExists(wordString, reverseWords))
             {
-                try
+                if (wordString != "" && !Regexes.IsExcluded(wordString))
                 {
-                    int existingKeys = (from pair in MainForm.CheckedKeys
-                                        where pair.Key == wordString || pair.Key == reverseWords
-                                        select pair.Key).Count();
-
-                    if (existingKeys == 0)
+                    try
                     {
-                        var mineableRows = (from DataRow row in _dataTable.Rows
-                                            where row.ItemArray[QueryColIndex].ToString().Contains(word1)
-                                                && row.ItemArray[QueryColIndex].ToString().Contains(word2)
-                                                && row.ItemArray[QueryColIndex].ToString().Contains(word3)
-                                            select row).ToList();
+                        int existingKeys = (from pair in MainForm.CheckedKeys
+                                            where pair.Key == wordString || pair.Key == reverseWords
+                                            select pair.Key).Count();
 
-                        object[] newRow;
-                        if (mineableRows.Count > 1)
+                        if (existingKeys == 0)
                         {
-                            newRow = StatDataTable.Mine(wordString, mineableRows);
-                            newRow[QueryColIndex] = wordString;
-                        }
-                        else
-                        {
-                            newRow = mineableRows[0].ItemArray;
-                        }
-                        _dataTable.AddRowToTable(newRow, mineableRows);
-                        MainForm.CheckedKeys[wordString] = true;
-                        MainForm.CheckedKeys[reverseWords] = true;
+                            var mineableRows = (from DataRow row in _dataTable.Rows
+                                                where row.ItemArray[QueryColIndex].ToString().Contains(word1)
+                                                    && row.ItemArray[QueryColIndex].ToString().Contains(word2)
+                                                    && row.ItemArray[QueryColIndex].ToString().Contains(word3)
+                                                select row).ToList();
 
+                            object[] newRow;
+                            if (mineableRows.Count > 1)
+                            {
+                                newRow = StatDataTable.Mine(wordString, mineableRows);
+                                newRow[QueryColIndex] = wordString;
+                            }
+                            else
+                            {
+                                newRow = mineableRows[0].ItemArray;
+                            }
+                            _dataTable.AddRowToTable(newRow);
+                            _tableChanged = true;
+                        }
+                        MainForm.CheckedKeys[wordString] = MainForm.CheckedKeys[reverseWords];
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error Querying for word(s):{wordString} {ex.Message}");
+                    }// end try/catch
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"Error Querying for word(s):{wordString} {ex.Message}");
-                }// end try/catch
+                    MainForm.CheckedKeys[wordString] = MainForm.CheckedKeys[reverseWords];
+
+                }
+            }
+            else
+            {
+                //  Console.WriteLine("Key already checked.");
             }
         }
 
         private bool KeyExists(string wordString, string reverseWordString)
         {
             bool result = false;
-            try
-            {
-                result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(reverseWordString);
-                return result;
-            }
-            catch (Exception)
-            {
+            result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(reverseWordString) ||
+                CheckedKeys.ContainsValue(wordString) || CheckedKeys.ContainsValue(reverseWordString);
+            return result;
 
-                throw;
-            }
         }
 
-        private void resetLblRowCount()
+        private void resetLblRowCountAsync()
         {
-            try
+            while (Program.Processing)
             {
-                if (dgvMineResults.InvokeRequired)
+                if (_tableChanged)
                 {
-                    dgvMineResults.Invoke(new MethodInvoker(delegate
+                    _tableChanged = false;
+                    try
                     {
-                        // dgvMineResults.DataSource = _dataTable;
-                        dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                        dgvMineResults.Refresh();
-                    }));
-                }
-                else
-                {
-                    dgvMineResults.Refresh();
-                }
-                if (lblRowCount.InvokeRequired)
-                {
-                    lblRowCount.Invoke(new MethodInvoker(delegate { lblRowCount.Text = _dataTable.Rows.Count.ToString(); }));
-                }
-                else
-                {
-                    lblRowCount.Text = _dataTable.Rows.Count.ToString();
-                }
 
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
+                        if (dgvMineResults.InvokeRequired)
+                        {
+                            dgvMineResults.Invoke(new MethodInvoker(delegate
+                            {
+                                dgvMineResults.DataSource = _dataTable;
+                                //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                                dgvMineResults.Refresh();
+                            }));
+                        }
+                        else
+                        {
+                            dgvMineResults.DataSource = _dataTable;
+                            dgvMineResults.Refresh();
+                        }
+
+                        if (lblRowCount.InvokeRequired)
+                        {
+                            lblRowCount.Invoke(new MethodInvoker(delegate
+                            {
+                                lblRowCount.Text = _dataTable.Rows.Count.ToString();
+                            }));
+                        }
+                        else lblRowCount.Text = _dataTable.Rows.Count.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
+                    }
+                }
             }
         }
 
