@@ -64,7 +64,7 @@ namespace QueryMining
             tsmiMine3Words.Tag = MineType.Three;
             tsmiMine2Words.Checked = true;
             cancellationChecker = new Thread(new ThreadStart(ThrowIfCancelled)); cancellationChecker.Name = "cancellationChecker";
-            displayUpdater = new Thread(new ThreadStart(resetLblRowCountAsync)); displayUpdater.Name = "displayUpdater";
+            displayUpdater = new Thread(new ThreadStart(updateDisplayAsync)); displayUpdater.Name = "displayUpdater";
 
         }
 
@@ -149,7 +149,7 @@ namespace QueryMining
                 btnCancel.Enabled = true;
                 Program.Processing = true;
                 cancellationChecker.Start();
-                displayUpdater.Start();
+             //   displayUpdater.Start();
                 backgroundWorker.RunWorkerAsync();
 
             }
@@ -230,9 +230,6 @@ namespace QueryMining
                                                 {
                                                     Console.WriteLine(ex.Message);
                                                 }
-                                                //await Task.Run(() => MineWords(word2, word3));
-                                                //await Task.Run(() => MineWords(word1, word2, word3));
-
                                             } // end if word1 != word2
                                         }
                                     }
@@ -248,7 +245,7 @@ namespace QueryMining
                         {
                             Thread.Sleep(1);
                         }
-
+                        updateDisplay();
                     } // end rows loop
 
                 }
@@ -284,10 +281,17 @@ namespace QueryMining
 
         private bool KeyExists(string word1, string word2, string word3 = "")
         {
-            string wordString = string.Join(" ", new string[] { word1.Trim(), word2.Trim(), word3.Trim() }).Trim();
-            string reverseWords = wordString.Split(' ').Reverse().ToString();
-            return KeyExists(wordString, reverseWords);
+            string wordString = string.Join(" ", new string[] { word1.Trim(), word2.Trim(), word3.Trim() }).Trim();            
+            return KeyExists(wordString);
         }
+
+        private bool KeyExists(string wordString)
+        {
+            bool result = false;
+            result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(wordString.Split(' ').Reverse().ToString());
+            return result;
+        }
+
 
         /// <summary>
         /// Calculate the Results for 1, 2, or 3 words
@@ -354,15 +358,7 @@ namespace QueryMining
             }
         }
 
-        private bool KeyExists(string wordString)
-        {
-            bool result = false;
-            result = CheckedKeys.ContainsKey(wordString) || CheckedKeys.ContainsKey(wordString.Split(' ').Reverse().ToString());
-            return result;
-
-        }
-
-        private void resetLblRowCountAsync()
+        private void updateDisplayAsync()
         {
             while (Program.Processing)
             {
@@ -402,6 +398,46 @@ namespace QueryMining
                     }
                 }
             }
+        }
+
+        private void updateDisplay()
+        {
+                if (_tableChanged)
+                {
+                    _tableChanged = false;
+                    try
+                    {
+
+                        if (dgvMineResults.InvokeRequired)
+                        {
+                            dgvMineResults.Invoke(new MethodInvoker(delegate
+                            {
+                                dgvMineResults.DataSource = _dataTable;
+                                //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                                dgvMineResults.Refresh();
+                            }));
+                        }
+                        else
+                        {
+                            dgvMineResults.DataSource = _dataTable;
+                            dgvMineResults.Refresh();
+                        }
+
+                        if (lblRowCount.InvokeRequired)
+                        {
+                            lblRowCount.Invoke(new MethodInvoker(delegate
+                            {
+                                lblRowCount.Text = StatDataTable.RowCount.ToString();
+                            }));
+                        }
+                        else lblRowCount.Text = StatDataTable.RowCount.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
+                    }
+                }
+            
         }
 
         private void outFileDialog_FileOk(object sender, CancelEventArgs e)
