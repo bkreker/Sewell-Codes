@@ -13,7 +13,9 @@ namespace QueryMining
         {
             get
             {
-                return new string[] { Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, QueryCount }.ToList();
+                return new string[] {
+                    Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC,
+                    AvgPosition, CostPerConv, ConvRate, ViewThroughConv, QueryCount }.ToList();
             }
         }
         public static List<string> AllPatterns
@@ -54,7 +56,10 @@ namespace QueryMining
         {
             get
             {
-                return new string[] { Cost, GP, NetProfit, NPPerConv, GPPerConv, ConvValPerCost, AvgCPC, CostPerConv }.ToList();
+                if (Program.AvgAll)
+                    return StatsPatterns;
+                else
+                    return new string[] { Cost, GP, NetProfit, NPPerConv, GPPerConv, ConvValPerCost, AvgCPC, CostPerConv }.ToList();
             }
         }
         public static List<string> DoublePatterns
@@ -62,7 +67,7 @@ namespace QueryMining
             get
             {
                 if (Program.AvgAll)
-                    return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv, Conversions, Clicks }.ToList();
+                    return new List<string>();
                 else
                     return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv }.ToList();
             }
@@ -79,7 +84,13 @@ namespace QueryMining
         }
         public static List<string> LongPatterns
         {
-            get { return new string[] { Impressions, }.ToList(); }
+            get
+            {
+                if (Program.AvgAll)
+                    return new List<string>();
+                else
+                    return new string[] { Impressions, }.ToList();
+            }
         }
 
         public static List<string> ExcludedWords

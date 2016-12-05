@@ -88,7 +88,7 @@ namespace QueryMining.Forms
                 try
                 {
                     dgvMineResults.DataSource = this._dataTable;
-                    dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                   // dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
                     lblRowCount.Text = dgvMineResults.RowCount.ToString();
 
                 }
@@ -213,6 +213,12 @@ namespace QueryMining.Forms
         private void Analyze()
         {
             Console.WriteLine("Sort Started.");
+            if (dgvMineResults.InvokeRequired)
+            {
+                dgvMineResults.Invoke(new MethodInvoker(delegate {
+                    dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                }));
+            }
             try
             {
                 CheckedKeys = new Dictionary<string, bool>();
@@ -461,13 +467,13 @@ namespace QueryMining.Forms
                     {
                         dgvMineResults.Invoke(new MethodInvoker(delegate
                         {
-                            dgvMineResults.DataSource = _dataTable;
+                           // dgvMineResults.DataSource = _dataTable;
                             dgvMineResults.Refresh();
                         }));
                     }
                     else
                     {
-                        dgvMineResults.DataSource = _dataTable;
+                       // dgvMineResults.DataSource = _dataTable;
                         dgvMineResults.Refresh();
                     }
 
@@ -572,6 +578,7 @@ namespace QueryMining.Forms
         private void tsmiReset_Click(object sender, EventArgs e)
         {
             this._dataTable = new StatDataTable();
+            this.dgvMineResults.DataSource = _dataTable;
         }
 
         private void SaveData()

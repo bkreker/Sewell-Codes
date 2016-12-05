@@ -17,7 +17,15 @@
             {
                 components.Dispose();
             }
-            base.Dispose(disposing);
+            try
+            {
+                base.Dispose(disposing);
+
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"Error disposing Mainform.Designer.cs:\n{ex.Message}\n{ex.TargetSite}\n{ex.StackTrace}");
+            }
         }
 
         #region Windows Form Designer generated code
@@ -173,8 +181,8 @@
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.dgvMineResults);
             this.panel1.Location = new System.Drawing.Point(0, 24);

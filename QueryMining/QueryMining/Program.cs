@@ -22,7 +22,6 @@ namespace QueryMining
         {
             try
             {
-
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 

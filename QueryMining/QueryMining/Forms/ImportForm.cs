@@ -24,9 +24,38 @@ namespace QueryMining.Forms
 {
     public partial class ImportForm : Form
     {
-        //   public Dictionary<string[], List<>> dataTable = new Dictionary<string[], bool>();
-        string _inFileName { get { return txtBoxInFile.Text; } }
+        private List<string> triedFiles = new List<string>();
+        string _inFileName
+        {
+            get
+            {
+                if (comboBoxInFile.InvokeRequired)
+                {
+                    string retVal = "";
+                    comboBoxInFile.Invoke(new MethodInvoker(delegate
+                    {
+                        retVal = comboBoxInFile.Text;
+                    }));
+                    return retVal;
+                }
 
+                return comboBoxInFile.Text;
+            }
+            set
+            {
+                if (comboBoxInFile.InvokeRequired)
+                {
+                    comboBoxInFile.Invoke(new MethodInvoker(delegate
+                    {
+                        comboBoxInFile.Text = value;
+                    }));
+                }
+                else
+                    comboBoxInFile.Text = value;
+            }
+        }
+
+        private const string PAST_FILE_NAMES_FILE = "pastFiles.txt";
 
         //   StringWriter _outPutStringStream = new StringWriter();
         private StatDataTable _dataTable { get; set; }
@@ -35,21 +64,30 @@ namespace QueryMining.Forms
 
         public static bool _inFileReadCorrectly = false;
 
-        public bool AvgAllValues
-        {
-            get { return StatDataTable.AvgAll; }
-            set { StatDataTable.AvgAll = value; }
-        }
-
         public ImportForm()
         {
             InitializeComponent();
 
             this.DialogResult = DialogResult.None;
             _dataTable = new StatDataTable();
-            AvgAllValues = true;
-            txtBoxInFile.Text = @"C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms.csv";
 
+            FillComboBox();
+            // comboBoxInFile.Text = @"C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms.csv";
+
+        }
+
+        private void FillComboBox()
+        {
+            StreamReader pastFileNamesFile = new StreamReader(PAST_FILE_NAMES_FILE);
+
+            while (!pastFileNamesFile.EndOfStream)
+            {
+                string fileName = pastFileNamesFile.ReadLine();
+                triedFiles.Add(fileName);
+                comboBoxInFile.Items.Add(fileName);
+            }
+            comboBoxInFile.SelectedIndex = comboBoxInFile.Items.Count - 1;
+            pastFileNamesFile.Close();
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -70,23 +108,25 @@ namespace QueryMining.Forms
         {
             if (_inFileName != "")
             {
-                try
+                if (!triedFiles.Contains(_inFileName))
                 {
-                    StreamWriter outFile = File.AppendText("pastFiles.txt");
-                    outFile.WriteLine(_inFileName);
-                    outFile.Close();
+                    try
+                    {
+                        StreamWriter outFile = File.AppendText(PAST_FILE_NAMES_FILE);
+                        outFile.WriteLine(_inFileName);
+                        outFile.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error Saving file name.\n{ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error Saving file name.\n{ex.Message}");
-                }
-
                 progressBar1.Style = ProgressBarStyle.Marquee;
-                progressBar1.MarqueeAnimationSpeed = 50;
+                progressBar1.MarqueeAnimationSpeed = 10;
 
                 btnGo.Enabled = false;
                 btnImport.Enabled = false;
-
+                Program.AvgAll = cboxAvgAll.Checked;
                 BackgroundWorker bw = new BackgroundWorker();
                 bw.DoWork += bw_DoWork;
                 bw.RunWorkerCompleted += bw_RunWorkerCompleted;
@@ -100,10 +140,11 @@ namespace QueryMining.Forms
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
+            if (_inFileName != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
                 Program.Processing = true;
+                Program.OperationCancelled = false;
                 try
                 {
                     ImportData();
@@ -163,21 +204,10 @@ namespace QueryMining.Forms
         }
 
 
-        private void rBtnAvgAll_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cboxAvgAll.Checked)
-            {
-                AvgAllValues = true;
-            }
-            else
-            {
-                AvgAllValues = false;
-            }
-        }
 
         private void txtBoxInFile_DoubleClick(object sender, EventArgs e)
         {
-            txtBoxInFile.SelectAll();
+            comboBoxInFile.SelectAll();
         }
 
         private void ImportData()
@@ -249,7 +279,12 @@ namespace QueryMining.Forms
 
         private void inFileDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            txtBoxInFile.Text = inFileDialog.FileName; ;
+            _inFileName = inFileDialog.FileName;
+            if (comboBoxInFile.Items.IndexOf(_inFileName) < 0)
+            {
+                comboBoxInFile.Items.Add(_inFileName);
+            }
+            comboBoxInFile.SelectedIndex = comboBoxInFile.Items.IndexOf(_inFileName);
         }
 
     }

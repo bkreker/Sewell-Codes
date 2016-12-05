@@ -475,7 +475,7 @@ namespace QueryMining
             }
             catch (NullReferenceException ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Null Reference error when adding new row to table: {ex.Message}");
             }
             catch (Exception ex)
             {
