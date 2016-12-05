@@ -20,7 +20,7 @@ using System.Data;
 *    Do I have a problem with ad poaching and duplication?
 **/
 
-namespace QueryMining
+namespace QueryMining.Forms
 {
     public partial class ImportForm : Form
     {
@@ -70,6 +70,17 @@ namespace QueryMining
         {
             if (_inFileName != "")
             {
+                try
+                {
+                    StreamWriter outFile = File.AppendText("pastFiles.txt");
+                    outFile.WriteLine(_inFileName);
+                    outFile.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error Saving file name.\n{ex.Message}");
+                }
+
                 progressBar1.Style = ProgressBarStyle.Marquee;
                 progressBar1.MarqueeAnimationSpeed = 50;
 
@@ -92,14 +103,13 @@ namespace QueryMining
             if (txtBoxInFile.Text != "" && inFileDialog.CheckFileExists)
             {
                 Console.WriteLine("Processing Data...");
-                StatDataTable.Processing = true;
+                Program.Processing = true;
                 try
                 {
                     ImportData();
                 }
                 catch (OperationCanceledException)
                 {
-
                     Console.WriteLine("The operation was cancelled by the user");
                 }
                 catch (Exception ex)
@@ -115,7 +125,7 @@ namespace QueryMining
 
         private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            StatDataTable.Processing = false;
+            Program.Processing = false;
             progressBar1.Style = ProgressBarStyle.Continuous;
             progressBar1.Value = progressBar1.Minimum;
             progressBar1.MarqueeAnimationSpeed = 0;
@@ -128,7 +138,7 @@ namespace QueryMining
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            else if (!StatDataTable.Processing)
+            else if (!Program.Processing)
             {
                 MessageBox.Show("Something went wrong, the file was not imported correctly.");
             }
@@ -136,12 +146,12 @@ namespace QueryMining
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            if (StatDataTable.Processing)
+            if (Program.Processing)
             {
                 DialogResult result = MessageBox.Show("Cancel File Import and Close the Program?", "Still Processing!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
                 {
-                    StatDataTable.OperationCancelled = true;
+                    Program.OperationCancelled = true;
                     this.Close();
                 }
             }
@@ -173,7 +183,7 @@ namespace QueryMining
         private void ImportData()
         {
             Console.WriteLine("Processing Data...");
-            StatDataTable.Processing = true;
+            Program.Processing = true;
             List<string> inputRow = new List<string>();
             string query = "";
             try
@@ -206,9 +216,6 @@ namespace QueryMining
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
                     {
-                        if (StatDataTable.OperationCancelled)
-                            throw new OperationCanceledException();
-
                         try
                         {
                             inputRow = (inFile.ReadLine().Split(delimChar)).ToList();
@@ -228,13 +235,13 @@ namespace QueryMining
             }
             catch (OperationCanceledException)
             {
-                StatDataTable.OperationCancelled = true;
-                StatDataTable.Processing = false;
+                Program.OperationCancelled = true;
+                Program.Processing = false;
                 MessageBox.Show("The operation was cancelled.");
             }
             catch (Exception ex)
             {
-                StatDataTable.Processing = false;
+                Program.Processing = false;
                 throw new Exception($"Something went wrong reading the file: {ex.Message}\nInputRow: {string.Join(",", inputRow)}\nQuery{query}");
             }
 

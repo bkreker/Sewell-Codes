@@ -1,4 +1,4 @@
-﻿namespace QueryMining
+﻿namespace QueryMining.Forms
 {
     partial class MainForm
     {
@@ -36,18 +36,16 @@
             this.lblTitleOutput = new System.Windows.Forms.Label();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiReset = new System.Windows.Forms.ToolStripMenuItem();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mineQueriesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tsmiAvgAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.tsmiMine1Word = new System.Windows.Forms.ToolStripMenuItem();
-            this.tsmiMine2Words = new System.Windows.Forms.ToolStripMenuItem();
-            this.tsmiMine3Words = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.lblRemRows = new System.Windows.Forms.Label();
+            this.lblTitleRemRows = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMineResults)).BeginInit();
             this.menuStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -60,11 +58,11 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(1061, 911);
-            this.progressBar1.Margin = new System.Windows.Forms.Padding(4);
+            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.Location = new System.Drawing.Point(0, 922);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(472, 28);
+            this.progressBar1.Size = new System.Drawing.Size(1486, 10);
+            this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 0;
             // 
             // dgvMineResults
@@ -73,11 +71,10 @@
             this.dgvMineResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvMineResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvMineResults.Location = new System.Drawing.Point(0, 0);
-            this.dgvMineResults.Margin = new System.Windows.Forms.Padding(4);
             this.dgvMineResults.Name = "dgvMineResults";
             this.dgvMineResults.RowTemplate.DefaultCellStyle.Format = "0.##";
             this.dgvMineResults.RowTemplate.DefaultCellStyle.NullValue = null;
-            this.dgvMineResults.Size = new System.Drawing.Size(1549, 874);
+            this.dgvMineResults.Size = new System.Drawing.Size(1486, 863);
             this.dgvMineResults.TabIndex = 1;
             this.dgvMineResults.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgvResults_RowsAdded);
             // 
@@ -92,10 +89,9 @@
             // 
             this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblRowCount.AutoSize = true;
-            this.lblRowCount.Location = new System.Drawing.Point(108, 919);
-            this.lblRowCount.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblRowCount.Location = new System.Drawing.Point(90, 898);
             this.lblRowCount.Name = "lblRowCount";
-            this.lblRowCount.Size = new System.Drawing.Size(16, 17);
+            this.lblRowCount.Size = new System.Drawing.Size(13, 13);
             this.lblRowCount.TabIndex = 3;
             this.lblRowCount.Text = "0";
             // 
@@ -103,10 +99,9 @@
             // 
             this.lblTitleOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblTitleOutput.AutoSize = true;
-            this.lblTitleOutput.Location = new System.Drawing.Point(16, 919);
-            this.lblTitleOutput.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblTitleOutput.Location = new System.Drawing.Point(12, 898);
             this.lblTitleOutput.Name = "lblTitleOutput";
-            this.lblTitleOutput.Size = new System.Drawing.Size(93, 17);
+            this.lblTitleOutput.Size = new System.Drawing.Size(72, 13);
             this.lblTitleOutput.TabIndex = 4;
             this.lblTitleOutput.Text = "Output Rows:";
             // 
@@ -115,105 +110,64 @@
             this.menuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.mineQueriesToolStripMenuItem,
             this.aboutToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Padding = new System.Windows.Forms.Padding(8, 2, 0, 2);
-            this.menuStrip.Size = new System.Drawing.Size(1549, 28);
+            this.menuStrip.Size = new System.Drawing.Size(1486, 24);
             this.menuStrip.TabIndex = 8;
             this.menuStrip.Text = "menuStrip2";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.importToolStripMenuItem,
             this.mineToolStripMenuItem,
+            this.importToolStripMenuItem,
             this.exportToolStripMenuItem,
+            this.tsmiReset,
             this.closeToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
-            // 
-            // importToolStripMenuItem
-            // 
-            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(129, 26);
-            this.importToolStripMenuItem.Text = "Import";
-            this.importToolStripMenuItem.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // mineToolStripMenuItem
             // 
             this.mineToolStripMenuItem.Name = "mineToolStripMenuItem";
-            this.mineToolStripMenuItem.Size = new System.Drawing.Size(129, 26);
+            this.mineToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.mineToolStripMenuItem.Text = "Mine";
-            this.mineToolStripMenuItem.Click += new System.EventHandler(this.btnBegin_Click);
+            this.mineToolStripMenuItem.Click += new System.EventHandler(this.tsmiMine_Click);
+            // 
+            // importToolStripMenuItem
+            // 
+            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.importToolStripMenuItem.Text = "Import";
+            this.importToolStripMenuItem.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // exportToolStripMenuItem
             // 
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(129, 26);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.exportToolStripMenuItem.Text = "Export";
             this.exportToolStripMenuItem.Click += new System.EventHandler(this.btnExport_Click);
+            // 
+            // tsmiReset
+            // 
+            this.tsmiReset.Name = "tsmiReset";
+            this.tsmiReset.Size = new System.Drawing.Size(110, 22);
+            this.tsmiReset.Text = "Reset";
+            this.tsmiReset.Click += new System.EventHandler(this.tsmiReset_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(129, 26);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.btnClose_Click);
-            // 
-            // mineQueriesToolStripMenuItem
-            // 
-            this.mineQueriesToolStripMenuItem.AutoSize = false;
-            this.mineQueriesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsmiAvgAll,
-            this.tsmiMine1Word,
-            this.tsmiMine2Words,
-            this.tsmiMine3Words});
-            this.mineQueriesToolStripMenuItem.Name = "mineQueriesToolStripMenuItem";
-            this.mineQueriesToolStripMenuItem.Size = new System.Drawing.Size(89, 23);
-            this.mineQueriesToolStripMenuItem.Text = "Set Mine Type";
-            // 
-            // tsmiAvgAll
-            // 
-            this.tsmiAvgAll.Checked = true;
-            this.tsmiAvgAll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.tsmiAvgAll.Name = "tsmiAvgAll";
-            this.tsmiAvgAll.Size = new System.Drawing.Size(207, 26);
-            this.tsmiAvgAll.Text = "Average All Values";
-            this.tsmiAvgAll.Click += new System.EventHandler(this.tsmiAvgAll_Click);
-            // 
-            // tsmiMine1Word
-            // 
-            this.tsmiMine1Word.Name = "tsmiMine1Word";
-            this.tsmiMine1Word.Size = new System.Drawing.Size(207, 26);
-            this.tsmiMine1Word.Tag = "MineType.One";
-            this.tsmiMine1Word.Text = "Mine 1 Word";
-            this.tsmiMine1Word.Click += new System.EventHandler(this.SetMineType);
-            // 
-            // tsmiMine2Words
-            // 
-            this.tsmiMine2Words.Checked = true;
-            this.tsmiMine2Words.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.tsmiMine2Words.Name = "tsmiMine2Words";
-            this.tsmiMine2Words.Size = new System.Drawing.Size(207, 26);
-            this.tsmiMine2Words.Tag = "MineType.Two";
-            this.tsmiMine2Words.Text = "Mine 2 Words";
-            this.tsmiMine2Words.Click += new System.EventHandler(this.SetMineType);
-            // 
-            // tsmiMine3Words
-            // 
-            this.tsmiMine3Words.Name = "tsmiMine3Words";
-            this.tsmiMine3Words.Size = new System.Drawing.Size(207, 26);
-            this.tsmiMine3Words.Tag = "MineType.Three";
-            this.tsmiMine3Words.Text = "Mine 3 Words";
-            this.tsmiMine3Words.Click += new System.EventHandler(this.SetMineType);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(62, 24);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -223,37 +177,58 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.dgvMineResults);
-            this.panel1.Location = new System.Drawing.Point(0, 30);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4);
+            this.panel1.Location = new System.Drawing.Point(0, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1549, 874);
+            this.panel1.Size = new System.Drawing.Size(1486, 863);
             this.panel1.TabIndex = 9;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.Enabled = false;
-            this.btnCancel.Location = new System.Drawing.Point(931, 911);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
+            this.btnCancel.Location = new System.Drawing.Point(1399, 893);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(100, 28);
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // lblRemRows
+            // 
+            this.lblRemRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblRemRows.AutoSize = true;
+            this.lblRemRows.Location = new System.Drawing.Point(1333, 898);
+            this.lblRemRows.Name = "lblRemRows";
+            this.lblRemRows.Size = new System.Drawing.Size(13, 13);
+            this.lblRemRows.TabIndex = 3;
+            this.lblRemRows.Text = "0";
+            this.lblRemRows.Visible = false;
+            // 
+            // lblTitleRemRows
+            // 
+            this.lblTitleRemRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblTitleRemRows.AutoSize = true;
+            this.lblTitleRemRows.Location = new System.Drawing.Point(1185, 898);
+            this.lblTitleRemRows.Name = "lblTitleRemRows";
+            this.lblTitleRemRows.Size = new System.Drawing.Size(145, 13);
+            this.lblTitleRemRows.TabIndex = 4;
+            this.lblTitleRemRows.Text = "Remaining Queries to Check:";
+            this.lblTitleRemRows.Visible = false;
+            // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1549, 946);
+            this.ClientSize = new System.Drawing.Size(1486, 932);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.lblTitleRemRows);
+            this.Controls.Add(this.lblRemRows);
             this.Controls.Add(this.lblTitleOutput);
             this.Controls.Add(this.lblRowCount);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.menuStrip);
-            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "QueryWizard";
@@ -281,12 +256,10 @@
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ToolStripMenuItem mineQueriesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem tsmiMine1Word;
-        private System.Windows.Forms.ToolStripMenuItem tsmiMine2Words;
-        private System.Windows.Forms.ToolStripMenuItem tsmiMine3Words;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.ToolStripMenuItem tsmiAvgAll;
+        private System.Windows.Forms.ToolStripMenuItem tsmiReset;
+        private System.Windows.Forms.Label lblRemRows;
+        private System.Windows.Forms.Label lblTitleRemRows;
     }
 }

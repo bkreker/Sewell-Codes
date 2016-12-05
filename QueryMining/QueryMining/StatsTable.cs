@@ -9,13 +9,13 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using QueryMining.Forms;
 using System.Runtime.Serialization;
 
 namespace QueryMining
 {
     public class StatDataTable : DataTable
     {
-        // public int WordCol { get; set; }
         public static int QueryCol { get; set; }
         public static int QueryCountCol { get; set; }
 
@@ -24,17 +24,7 @@ namespace QueryMining
             get { return Program.AvgAll; }
             set { Program.AvgAll = value; }
         }
-        public static bool Processing
-        {
-            get { return Program.Processing; }
-            set { Program.Processing = value; }
-        }
-        public static bool OperationCancelled
-        {
-            get { return Program.OperationCancelled; }
-            set { Program.OperationCancelled = value; }
-        }
-
+        public static bool TableChanged { get; set; }
         public static int RowCount { get; set; }
         public static DataColumnCollection ColumnCollection { get; set; }
         public static List<string> Headers
@@ -48,6 +38,11 @@ namespace QueryMining
         public StatDataTable()
         {
             StatDataTable.RowCount = 0;
+            StatDataTable.ColumnCollection = null;
+            StatDataTable.QueryCol = 0;
+            StatDataTable.QueryCountCol = 0;
+            Program.Processing = false;
+            Program.OperationCancelled = false;
         }
 
         public StatDataTable(string firstRowString, string secondRowString, char delimChar = ',')
@@ -348,7 +343,7 @@ namespace QueryMining
         {
             try
             {
-                string colName = "", 
+                string colName = "",
                     cellVal = item.ToString();
 
                 Type type = StatDataTable.ColumnCollection[i].DataType;
@@ -377,6 +372,8 @@ namespace QueryMining
                             break;
                         case "Int32":
                             int ig;
+                            if (cellVal.Contains("."))
+                                if (float.TryParse(cellVal, out fl)) return (int)fl;
                             if (int.TryParse(cellVal, out ig)) return ig;
                             break;
                         case "Int64":
@@ -390,6 +387,8 @@ namespace QueryMining
                             if (float.TryParse(cellVal, out fl)) return fl;
                             break;
                     }
+
+                    if (float.TryParse(cellVal, out fl)) return fl;
                 }
                 return cellVal;
             }
@@ -409,7 +408,7 @@ namespace QueryMining
         public void AddRowToTable(object[] newRow, List<DataRow> existingRows = null)
         {
             var unchangedRowCount = StatDataTable.RowCount;
-
+            StatDataTable.TableChanged = false;
             for (int i = 0; i < newRow.Count(); i++)
             {
                 newRow[i] = FormatCell(newRow[i], i);
@@ -437,6 +436,7 @@ namespace QueryMining
                             object[] outputRow = AggregateRows(existingRows, newRow);
                             int rowIx = this.Rows.IndexOf(existingRows[0]);
                             this.Rows[rowIx].ItemArray = outputRow;
+                            StatDataTable.TableChanged = true;
                         }
                         else
                         {
@@ -444,11 +444,34 @@ namespace QueryMining
                             Console.WriteLine($"Row Not Added");
                         }
                     }
+                    catch (NullReferenceException)
+                    {
+                        throw;
+                    }
                     catch (Exception e)
                     {
                         throw new ImportError($"Something went wrong adding new row to table: {e.Message}");
                     }
                 }
+            }
+            catch (ConstraintException ex)
+            {
+                existingRows = (from DataRow row in this.Rows
+                                where row.ItemArray[StatDataTable.QueryCol].ToString() == newRow[StatDataTable.QueryCol].ToString()
+                                select row).ToList();
+                if (existingRows.Count > 0)
+                {
+                    object[] outputRow = AggregateRows(existingRows, newRow);
+                    int rowIx = this.Rows.IndexOf(existingRows[0]);
+                    this.Rows[rowIx].ItemArray = outputRow;
+                    StatDataTable.TableChanged = true;
+                }
+                else
+                {
+                    RowCount = unchangedRowCount;
+                    Console.WriteLine($"Row Not Added, {ex.Message}");
+                }
+
             }
             catch (NullReferenceException ex)
             {
@@ -623,7 +646,7 @@ namespace QueryMining
                             string nextString = next.ToString();
                             string sumMatch = Regexes.Match(sumString, Regexes.Number);
                             string nextMatch = Regexes.Match(nextString, Regexes.Number);
-                           
+
                             var type = column.DataType;
                             switch (type.Name)
                             {

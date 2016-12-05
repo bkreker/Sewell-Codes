@@ -1,6 +1,6 @@
 ﻿namespace QueryMining.Forms
 {
-    partial class ColumnHeaderSelect
+    partial class MineTypeSelectorForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,71 +28,73 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.lstBxColumnNames = new System.Windows.Forms.ListBox();
+            this.cBoxMineType = new System.Windows.Forms.ComboBox();
+            this.chkBxAvgAll = new System.Windows.Forms.CheckBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // lstBxColumnNames
+            // cBoxMineType
             // 
-            this.lstBxColumnNames.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lstBxColumnNames.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lstBxColumnNames.FormattingEnabled = true;
-            this.lstBxColumnNames.ItemHeight = 18;
-            this.lstBxColumnNames.Location = new System.Drawing.Point(0, 0);
-            this.lstBxColumnNames.Name = "lstBxColumnNames";
-            this.lstBxColumnNames.Size = new System.Drawing.Size(278, 256);
-            this.lstBxColumnNames.TabIndex = 0;
+            this.cBoxMineType.FormattingEnabled = true;
+            this.cBoxMineType.Location = new System.Drawing.Point(167, 11);
+            this.cBoxMineType.Name = "cBoxMineType";
+            this.cBoxMineType.Size = new System.Drawing.Size(121, 21);
+            this.cBoxMineType.TabIndex = 0;
+            // 
+            // chkBxAvgAll
+            // 
+            this.chkBxAvgAll.AutoSize = true;
+            this.chkBxAvgAll.Checked = true;
+            this.chkBxAvgAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkBxAvgAll.Location = new System.Drawing.Point(14, 13);
+            this.chkBxAvgAll.Name = "chkBxAvgAll";
+            this.chkBxAvgAll.Size = new System.Drawing.Size(115, 17);
+            this.chkBxAvgAll.TabIndex = 1;
+            this.chkBxAvgAll.Text = "Average All Values";
+            this.chkBxAvgAll.UseVisualStyleBackColor = true;
             // 
             // btnOK
             // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(179, 262);
+            this.btnOK.Location = new System.Drawing.Point(190, 49);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 1;
+            this.btnOK.TabIndex = 2;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(28, 262);
+            this.btnCancel.Location = new System.Drawing.Point(34, 49);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 1;
+            this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // ColumnHeaderSelect
+            // MineTypeSelectorForm
             // 
-            this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(279, 295);
+            this.ClientSize = new System.Drawing.Size(303, 84);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.lstBxColumnNames);
+            this.Controls.Add(this.chkBxAvgAll);
+            this.Controls.Add(this.cBoxMineType);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "ColumnHeaderSelect";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Which Column Contains the Queries?";
+            this.Name = "MineTypeSelectorForm";
+            this.Text = "MineTypeSelectorForm";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ListBox lstBxColumnNames;
+        private System.Windows.Forms.ComboBox cBoxMineType;
+        private System.Windows.Forms.CheckBox chkBxAvgAll;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
     }

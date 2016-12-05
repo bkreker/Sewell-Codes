@@ -1,4 +1,4 @@
-﻿namespace QueryMining
+﻿namespace QueryMining.Forms
 {
     partial class ImportForm
     {
@@ -71,7 +71,7 @@
             // 
             // txtBoxInFile
             // 
-            this.txtBoxInFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtBoxInFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtBoxInFile.Location = new System.Drawing.Point(10, 12);
             this.txtBoxInFile.Margin = new System.Windows.Forms.Padding(2);

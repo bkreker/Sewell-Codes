@@ -61,12 +61,21 @@ namespace QueryMining
         {
             get
             {
-                return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv }.ToList();
+                if (Program.AvgAll)
+                    return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv, Conversions, Clicks }.ToList();
+                else
+                    return new string[] { ROI, CTR, AvgPosition, ConvRate, ViewThroughConv }.ToList();
             }
         }
         public static List<string> IntPatterns
         {
-            get { return new string[] { Conversions, Clicks, }.ToList(); }
+            get
+            {
+                if (Program.AvgAll)
+                    return new List<string>();
+                else
+                    return new string[] { Conversions, Clicks }.ToList();
+            }
         }
         public static List<string> LongPatterns
         {
@@ -139,7 +148,7 @@ namespace QueryMining
                 return true;
 
             int matches = (from expr in ExcludedWords
-                           where Regexes.IsMatch(target, expr)
+                           where target == expr
                            select true).Count();
 
             return matches > 0;
