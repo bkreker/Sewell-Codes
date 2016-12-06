@@ -399,13 +399,13 @@ namespace QueryMining
             }
         }
 
-        public void AddRowToTable(List<string> newRow)
+        public bool AddRowToTable(List<string> newRow)
         {
 
-            AddRowToTable(newRow.ToArray<object>());
+            return AddRowToTable(newRow.ToArray<object>());
         }
 
-        public void AddRowToTable(object[] newRow, List<DataRow> existingRows = null)
+        public bool AddRowToTable(object[] newRow, List<DataRow> existingRows = null)
         {
             var unchangedRowCount = StatDataTable.RowCount;
             StatDataTable.TableChanged = false;
@@ -425,6 +425,7 @@ namespace QueryMining
                 {
                     StatDataTable.RowCount++;
                     this.Rows.Add(newRow);
+                    return true;
                 }
                 else
                 {
@@ -436,7 +437,8 @@ namespace QueryMining
                             object[] outputRow = AggregateRows(existingRows, newRow);
                             int rowIx = this.Rows.IndexOf(existingRows[0]);
                             this.Rows[rowIx].ItemArray = outputRow;
-                            StatDataTable.TableChanged = true;
+                            return true;
+
                         }
                         else
                         {
@@ -464,7 +466,7 @@ namespace QueryMining
                     object[] outputRow = AggregateRows(existingRows, newRow);
                     int rowIx = this.Rows.IndexOf(existingRows[0]);
                     this.Rows[rowIx].ItemArray = outputRow;
-                    StatDataTable.TableChanged = true;
+                    return true;
                 }
                 else
                 {
@@ -482,7 +484,7 @@ namespace QueryMining
                 RowCount = unchangedRowCount;
                 Console.WriteLine($"Something went wrong adding new row to table: {ex.Message}");
             }
-
+            return false;
         }
 
         public static object[] AggregateRows(List<DataRow> existingRows, object[] inputRow)
@@ -537,16 +539,17 @@ namespace QueryMining
             {
                 try
                 {
-                    object columnTotal = "N/A";
                     if (columnIndex == StatDataTable.QueryCol)
+                    {
                         aggregatedRow[StatDataTable.QueryCol] = wordString;
-
+                    }
                     else if (columnIndex == StatDataTable.QueryCountCol)
                     {
                         aggregatedRow[StatDataTable.QueryCountCol] = existingRows.Count;
                     }
                     else
                     {
+                        object columnTotal = "N/A";
                         List<object> columnValues = (from resRow in existingRows
                                                      select resRow.ItemArray[columnIndex]).ToList();
 
@@ -554,6 +557,10 @@ namespace QueryMining
 
                         aggregatedRow[columnIndex] = columnTotal;
                     }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Console.WriteLine($"Invalid Operation in Mine({wordString}, {existingRows.Count}:\n{ex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -596,6 +603,10 @@ namespace QueryMining
                         {
                             string sumString = sum.ToString();
                             string nextString = next.ToString();
+                            if (sumString == nextString && sumString == "0" || sumString == "0.00")
+                            {
+                                return sumString;
+                            }
                             string sumMatch = Regexes.Match(sumString, Regexes.Number);
                             string nextMatch = Regexes.Match(nextString, Regexes.Number);
                             double divisor = 2.0;

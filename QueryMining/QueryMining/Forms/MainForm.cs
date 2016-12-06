@@ -45,14 +45,10 @@ namespace QueryMining.Forms
             set { Program.OperationCancelled = value; }
         }
         Queue<String> FullQueries = new Queue<string>();
-        private static bool _tableChanged
-        {
-            get { return StatDataTable.TableChanged; }
-            set { StatDataTable.TableChanged = value; }
-        }
+        private static bool _tableChanged { get; set; }
         string _outFileName = "default.csv";
 
-        private StatDataTable _dataTable;
+        private static StatDataTable _dataTable;
 
         Thread cancellationChecker, displayUpdater;
 
@@ -84,11 +80,11 @@ namespace QueryMining.Forms
             form.ShowDialog();
             if (form.DialogResult == DialogResult.OK)
             {
-                this._dataTable = form.DataTable;
+                _dataTable = form.DataTable;
                 try
                 {
-                    dgvMineResults.DataSource = this._dataTable;
-                   // dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                    dgvMineResults.DataSource = _dataTable;
+                    // dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
                     lblRowCount.Text = dgvMineResults.RowCount.ToString();
 
                 }
@@ -102,8 +98,14 @@ namespace QueryMining.Forms
         private void DataError(object dgv, DataGridViewDataErrorEventArgs e)
         {
             dgv = dgv as DataGridView;
+            try
+            {
+                Console.WriteLine($"In column {StatDataTable.ColumnCollection[e.ColumnIndex].Caption}, row{e.RowIndex}");
 
-            Console.WriteLine($"In column {StatDataTable.ColumnCollection[e.ColumnIndex].Caption}, row{e.RowIndex}");
+            }
+            catch (Exception)
+            {
+            }
             Console.WriteLine($"Context: {e.Context}\nMessage: {e.Exception.Message}\nTarget Site: {e.Exception.TargetSite}");
             Console.WriteLine($"StackTrace:\n{e.Exception.StackTrace}");
         }
@@ -215,7 +217,8 @@ namespace QueryMining.Forms
             Console.WriteLine("Sort Started.");
             if (dgvMineResults.InvokeRequired)
             {
-                dgvMineResults.Invoke(new MethodInvoker(delegate {
+                dgvMineResults.Invoke(new MethodInvoker(delegate
+                {
                     dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
                 }));
             }
@@ -228,15 +231,14 @@ namespace QueryMining.Forms
                     FullQueries.Enqueue(query);
                     CheckedKeys.Add(query, true);
                 }
+                Thread
+                   thread1 = new Thread(EmptyThread), thread2 = new Thread(EmptyThread),
+                   thread3 = new Thread(EmptyThread), thread4 = new Thread(EmptyThread),
+                   thread5 = new Thread(EmptyThread), thread6 = new Thread(EmptyThread);
                 // Take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
                 for (int i = 0; i < FullQueries.Count; i++)
                 {
-                    Thread
-                       thread1 = new Thread(EmptyThread), thread2 = new Thread(EmptyThread),
-                       thread3 = new Thread(EmptyThread), thread4 = new Thread(EmptyThread),
-                       thread5 = new Thread(EmptyThread), thread6 = new Thread(EmptyThread);
-
                     string query = Pop(ref FullQueries);
 
                     var queryWords = query.Split(' ').ToList();
@@ -244,6 +246,10 @@ namespace QueryMining.Forms
                     for (int word1Num = 0; word1Num < queryWords.Count; word1Num++)
                     {
                         string word1 = queryWords[word1Num];
+                        while (thread1.IsAlive)
+                        {
+                            Thread.Sleep(1);
+                        }
                         thread1 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1); }));
                         thread1.Name = "thread1";
                         thread1.Start();
@@ -259,9 +265,11 @@ namespace QueryMining.Forms
                                 if (word1 != word2)
                                 {
                                     // MineWords(word2);
+                                    while (thread2.IsAlive) { Thread.Sleep(1); }
                                     thread2 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2); })); thread2.Name = "thread2";
-                                    thread3 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2); })); thread3.Name = "thread3";
                                     thread2.Start();
+                                    while (thread3.IsAlive) { Thread.Sleep(1); }
+                                    thread3 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2); })); thread3.Name = "thread3";
                                     thread3.Start();
                                     // MineWords(word1, word2);
 
@@ -274,13 +282,18 @@ namespace QueryMining.Forms
                                             {
                                                 try
                                                 {
+                                                    while (thread4.IsAlive) { Thread.Sleep(1); }
                                                     thread4 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2, word3); })); thread4.Name = "thread4";
-                                                    thread5 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word3); })); thread5.Name = "thread5";
-                                                    thread6 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2, word3); })); thread6.Name = "thread6";
-
                                                     thread4.Start();
-                                                    thread6.Start();
+
+                                                    while (thread5.IsAlive) { Thread.Sleep(1); }
+                                                    thread5 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word3); })); thread5.Name = "thread5";
                                                     thread5.Start();
+
+                                                    while (thread6.IsAlive) { Thread.Sleep(1); }
+                                                    thread6 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2, word3); })); thread6.Name = "thread6";
+                                                    thread6.Start();
+
                                                     while (thread4.IsAlive || thread5.IsAlive || thread6.IsAlive)
                                                     {
                                                         Thread.Sleep(1);
@@ -391,23 +404,25 @@ namespace QueryMining.Forms
                                         select row).ToList();
 
                     object[] newRow;
-                    if (mineableRows.Count > 1)
+                    if (mineableRows.Count > 0)
                     {
-                        newRow = StatDataTable.Mine(wordString, mineableRows);
-                        newRow[QueryColIndex] = wordString;
+                        if (mineableRows.Count > 1)
+                        {
+                            newRow = StatDataTable.Mine(wordString, mineableRows);
+                            newRow[QueryColIndex] = wordString;
+                        }
+                        else
+                        {
+                            newRow = mineableRows[0].ItemArray;
+                        }
+                        _tableChanged = _dataTable.AddRowToTable(newRow);
+                        MainForm.CheckedKeys[wordString] = true;
+                        Console.WriteLine($"\t{Thread.CurrentThread.Name} Finished, wordstring: {wordString}, tablechanged = {_tableChanged}");
                     }
-                    else
-                    {
-                        newRow = mineableRows[0].ItemArray;
-                    }
-                    _dataTable.AddRowToTable(newRow);
-                    MainForm.CheckedKeys[wordString] = true;
-                    Console.WriteLine($"\t{Thread.CurrentThread.Name} Finished, wordstring: {wordString}, tablechanged = {_tableChanged}");
-
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"\t{Thread.CurrentThread.Name}: Error Querying for word(s): {wordString} {ex.Message}");
+                    Console.WriteLine($"\t{Thread.CurrentThread.Name}: Error Querying for word(s): {wordString} {ex.Message}\n{ex.StackTrace}");
                 }// end try/catch
             }
 
@@ -467,13 +482,13 @@ namespace QueryMining.Forms
                     {
                         dgvMineResults.Invoke(new MethodInvoker(delegate
                         {
-                           // dgvMineResults.DataSource = _dataTable;
+                            // dgvMineResults.DataSource = _dataTable;
                             dgvMineResults.Refresh();
                         }));
                     }
                     else
                     {
-                       // dgvMineResults.DataSource = _dataTable;
+                        // dgvMineResults.DataSource = _dataTable;
                         dgvMineResults.Refresh();
                     }
 
@@ -577,7 +592,7 @@ namespace QueryMining.Forms
 
         private void tsmiReset_Click(object sender, EventArgs e)
         {
-            this._dataTable = new StatDataTable();
+            _dataTable = new StatDataTable();
             this.dgvMineResults.DataSource = _dataTable;
         }
 

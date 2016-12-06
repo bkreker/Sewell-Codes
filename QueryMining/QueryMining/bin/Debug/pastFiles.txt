@@ -1,2 +1,3 @@
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms.csv
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms - Original.csv
+C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\MOS Shopping terms.csv
