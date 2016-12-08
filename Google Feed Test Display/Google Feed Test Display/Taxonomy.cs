@@ -27,7 +27,7 @@ namespace Google_Feed_Test_Display
 {
     public class Taxonomy : XmlDocument
     {
-        const string XML_IN_FILE = "Google Shopping Taxonomy.xml";
+        public const string XML_IN_FILE = "Google Shopping Taxonomy.xml";
         public List<XmlNode> AllNodes { get; private set; }
 
         public List<XmlNode> Level1Nodes { get; private set; }

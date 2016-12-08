@@ -21,6 +21,7 @@ using System.Xml.Serialization;
 using System.Xml.XmlConfiguration;
 using System.Xml.XPath;
 using System.Xml.Xsl;
+using System.Text.RegularExpressions;
 using System.Web;
 
 
@@ -28,14 +29,39 @@ namespace Google_Feed_Test_Display
 {
     public partial class MainForm : Form
     {
+        public TreeView Tree { get { return this.treeView1; } }
         public MainForm()
         {
             InitializeComponent();
 
             Console.WriteLine("Hello");
-            Taxonomy tax = new Taxonomy();
-         //   var outpur = tax.Collapse();
-            tax.FillTreeView(ref this.treeView1);
+            XmlDocument doc = new XmlDocument();
+            doc.Load(Taxonomy.XML_IN_FILE);
+            var docText = doc.OuterXml;
+            string nameMatch = @"\s*<(name)>(.+)</name>\s*";
+            string allItemMatches = $@"<item id=""(\d*)"" index=""(\d*)"">({nameMatch})+\s*</item>";
+            var items = Regex.Matches(docText, allItemMatches);
+
+            foreach (Match item in items)
+            {
+                var index = item.Groups[1];
+                var id = item.Groups[2];
+                var itemNames = Regex.Matches(item.ToString(), nameMatch);
+
+                foreach (Match name in itemNames)
+                {
+                    var nameTag = name.Groups[0];
+                    var nameVal = name.Groups[1];
+                    var s = name.Groups;
+                    Console.WriteLine();
+                }
+            }
+
+         //   Taxonomy tax = new Taxonomy();
+            //   var outpur = tax.Collapse();
+            //this.Tree.Nodes.Add("Top");
+     
+          //  tax.FillTreeView(ref this.treeView1);
             //this.treeView1.Nodes.Add(tax.AllNodes)
         }
 
@@ -175,6 +201,27 @@ namespace Google_Feed_Test_Display
 
             return nodesHelper(node.NextSibling, ref nodeList);
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.Tree.Nodes.Clear();
+            Random rand = new Random(0);
+            for (int i = 0; i < 10; i++)
+            {
+                this.Tree.Nodes.Add("Top");
+                for (int j = 0; j < rand.Next(10); j++)
+                {
+                    this.Tree.Nodes[i].Nodes.Add("j");
+                    for (int k = 0; k < rand.Next(6); k++)
+                    {
+                        this.Tree.Nodes[i].Nodes[j].Nodes.Add("k");
+
+                    }
+
+                }
+
+            }
         }
     }
 }
