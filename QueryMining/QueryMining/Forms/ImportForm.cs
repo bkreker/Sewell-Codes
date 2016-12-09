@@ -78,16 +78,29 @@ namespace QueryMining.Forms
 
         private void FillComboBox()
         {
-            StreamReader pastFileNamesFile = new StreamReader(PAST_FILE_NAMES_FILE);
-
-            while (!pastFileNamesFile.EndOfStream)
+            try
             {
-                string fileName = pastFileNamesFile.ReadLine();
-                triedFiles.Add(fileName);
-                comboBoxInFile.Items.Add(fileName);
+                if (File.Exists(PAST_FILE_NAMES_FILE))
+                {
+
+                using (var pastFileNamesFile = File.OpenText(PAST_FILE_NAMES_FILE))
+                {
+                    while (!pastFileNamesFile.EndOfStream)
+                    {
+                        string fileName = pastFileNamesFile.ReadLine();
+                        triedFiles.Add(fileName);
+                        comboBoxInFile.Items.Add(fileName);
+                    }
+                    comboBoxInFile.SelectedIndex = comboBoxInFile.Items.Count - 1;
+
+                    }
+                }
             }
-            comboBoxInFile.SelectedIndex = comboBoxInFile.Items.Count - 1;
-            pastFileNamesFile.Close();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error filling Past files: {ex.Message}");
+                throw;
+            }
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -112,9 +125,11 @@ namespace QueryMining.Forms
                 {
                     try
                     {
-                        StreamWriter outFile = File.AppendText(PAST_FILE_NAMES_FILE);
-                        outFile.WriteLine(_inFileName);
-                        outFile.Close();
+                        using (var outFile = File.AppendText(PAST_FILE_NAMES_FILE))
+                        {
+                            outFile.WriteLine(_inFileName);
+                        }
+
                     }
                     catch (Exception ex)
                     {

@@ -27,14 +27,81 @@ using System.Web;
 
 namespace Google_Feed_Test_Display
 {
+    public struct Level
+    {
+        public Level(string name, int id, Stack<string> parents)
+        {
+            this.Name = name;
+            this.Id = id;
+            this.Parents = parents;
+        }
+        public Stack<string> Parents { get; set; }
+        public string Name { get; set; }
+        public int Id { get; set; }
+        public override string ToString()
+        {
+            return this.Name;
+        }
+    }
     public partial class MainForm : Form
     {
         public TreeView Tree { get { return this.treeView1; } }
+        public const string TXT_IN_FILE = "Google Shopping Taxonomy.txt";
+
         public MainForm()
         {
             InitializeComponent();
 
+            ReadText();
+
+            //   Taxonomy tax = new Taxonomy();
+            //   var outpur = tax.Collapse();
+            //this.Tree.Nodes.Add("Top");
+
+            //  tax.FillTreeView(ref this.treeView1);
+            //this.treeView1.Nodes.Add(tax.AllNodes)
+        }
+
+        private void ReadText()
+        {
             Console.WriteLine("Hello");
+            string taxonomy = "";
+            Queue<Level> levelStack = new Queue<Level>();
+            char[] delim = { '>' },
+                numDelim = { '-' };
+
+            using (var reader = File.OpenText(TXT_IN_FILE))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    var levels = line.Split(delim).ToList();
+                    Stack<string> lineStack = new Stack<string>();
+                    int id;
+                    string name;
+                    levels.ForEach(lvl => lineStack.Push(lvl.Trim()));
+
+
+                    string idString = lineStack.Pop();
+                    var ids = idString.Split(numDelim).ToList();
+                    id = int.Parse(ids[ids.Count - 1]);
+                    ids.RemoveAt(ids.Count - 1);
+                    name =  string.Join(" ", ids);
+
+                    Level level = new Level(name, id, lineStack);
+
+                    levelStack.Enqueue(level);
+
+                }
+            }
+            var top = levelStack.Dequeue();
+            var topName = top.Name;
+
+          
+        }
+
+        private void LoadXml()
+        {
             XmlDocument doc = new XmlDocument();
             doc.Load(Taxonomy.XML_IN_FILE);
             var docText = doc.OuterXml;
@@ -56,122 +123,112 @@ namespace Google_Feed_Test_Display
                     Console.WriteLine();
                 }
             }
-
-         //   Taxonomy tax = new Taxonomy();
-            //   var outpur = tax.Collapse();
-            //this.Tree.Nodes.Add("Top");
-     
-          //  tax.FillTreeView(ref this.treeView1);
-            //this.treeView1.Nodes.Add(tax.AllNodes)
         }
-
- 
-
         private void MainForm_Load(object sender, EventArgs e)
         {
         }
-            //var urlstring = "Google Shopping Taxonomy.xml";
-            //XmlDocument doc = new XmlDocument();
-            //doc.Load(urlstring);
-            //StringBuilder outDoc = new StringBuilder();
+        //var urlstring = "Google Shopping Taxonomy.xml";
+        //XmlDocument doc = new XmlDocument();
+        //doc.Load(urlstring);
+        //StringBuilder outDoc = new StringBuilder();
 
-            //outDoc.Append(doc.FirstChild.InnerXml);
-            //var s = doc.DocumentElement;
-            //string allItems = "//item";
-            //var allItemNodes = doc.SelectNodes(allItems);
-
-
-            //Console.Write(s);
-            //var allNodes = doc.GetElementsByTagName("item", doc.NamespaceURI);
-
-            //List<XmlNode> nodesList = new List<XmlNode>();
-            //foreach (XmlNode item in allNodes)
-            //{
-            //    nodesList.Add(item);
-            //}
-
-            //var baseNodes = (from XmlNode node in allNodes
-            //                 where node.ChildNodes.Count == 1
-            //                 select node).ToList();
-
-            //var topNames = (from XmlNode topNode in baseNodes
-            //                select (from XmlNode a in baseNodes
-            //                        where a.FirstChild.InnerText == topNode.FirstChild.InnerText
-            //                        select a).First()).Distinct().ToList();
-
-            //foreach (XmlNode topLevel in topNames)
-            //{
-            //    try
-            //    {
+        //outDoc.Append(doc.FirstChild.InnerXml);
+        //var s = doc.DocumentElement;
+        //string allItems = "//item";
+        //var allItemNodes = doc.SelectNodes(allItems);
 
 
-            //        outDoc.AppendLine("<").Append(topLevel.LocalName).Append(">").Append(topLevel.Value);
+        //Console.Write(s);
+        //var allNodes = doc.GetElementsByTagName("item", doc.NamespaceURI);
 
-            //        var att = topLevel.Attributes;
-            //        string levelname = att["level", doc.NamespaceURI].Value;
-            //        var matches = (from XmlAttribute a in att
-            //                       where a.LocalName == "level" && a.Value == levelname
-            //                       select a.OwnerElement).ToList();
+        //List<XmlNode> nodesList = new List<XmlNode>();
+        //foreach (XmlNode item in allNodes)
+        //{
+        //    nodesList.Add(item);
+        //}
 
-            //        foreach (var match in matches)
-            //        {
-            //            outDoc.AppendLine(match.OuterXml);
-            //            Console.WriteLine(match.OuterXml);
-            //            nodesList.Add(match);
-            //        }
-            //        //var xpath = $@"//item[@level='{levelname}'";
-            //        //var results = doc.SelectNodes(xpath);
-            //        //nodesList.Add(item);
-            //        outDoc.AppendLine("</").Append(topLevel.LocalName).AppendLine(">");
-            //    }
-            //    catch (XPathException ex)
-            //    {
-            //        var msg = ex.Message;
+        //var baseNodes = (from XmlNode node in allNodes
+        //                 where node.ChildNodes.Count == 1
+        //                 select node).ToList();
 
-            //   }
-            //}
+        //var topNames = (from XmlNode topNode in baseNodes
+        //                select (from XmlNode a in baseNodes
+        //                        where a.FirstChild.InnerText == topNode.FirstChild.InnerText
+        //                        select a).First()).Distinct().ToList();
+
+        //foreach (XmlNode topLevel in topNames)
+        //{
+        //    try
+        //    {
 
 
-            //  var levelOnes = nodesList.Where(x => x.a)
+        //        outDoc.AppendLine("<").Append(topLevel.LocalName).Append(">").Append(topLevel.Value);
+
+        //        var att = topLevel.Attributes;
+        //        string levelname = att["level", doc.NamespaceURI].Value;
+        //        var matches = (from XmlAttribute a in att
+        //                       where a.LocalName == "level" && a.Value == levelname
+        //                       select a.OwnerElement).ToList();
+
+        //        foreach (var match in matches)
+        //        {
+        //            outDoc.AppendLine(match.OuterXml);
+        //            Console.WriteLine(match.OuterXml);
+        //            nodesList.Add(match);
+        //        }
+        //        //var xpath = $@"//item[@level='{levelname}'";
+        //        //var results = doc.SelectNodes(xpath);
+        //        //nodesList.Add(item);
+        //        outDoc.AppendLine("</").Append(topLevel.LocalName).AppendLine(">");
+        //    }
+        //    catch (XPathException ex)
+        //    {
+        //        var msg = ex.Message;
+
+        //   }
+        //}
+
+
+        //  var levelOnes = nodesList.Where(x => x.a)
 
 
 
-            //foreach (var item in topNames)
-            //{
-            //    var children = (from XmlNode node in baseNodes
-            //                    where node.FirstChild.InnerText == item.InnerText
-            //                    select node).ToList();
+        //foreach (var item in topNames)
+        //{
+        //    var children = (from XmlNode node in baseNodes
+        //                    where node.FirstChild.InnerText == item.InnerText
+        //                    select node).ToList();
 
-            //    var innerList = (from XmlNode child in children
-            //                     select child.InnerXml).ToList();
+        //    var innerList = (from XmlNode child in children
+        //                     select child.InnerXml).ToList();
 
-            //    outDoc.Append(s);
-            //}
-            //List<XmlNode> items = GetNodes(doc);
+        //    outDoc.Append(s);
+        //}
+        //List<XmlNode> items = GetNodes(doc);
 
-            //foreach (XmlNode item in items)
-            //{
-            //    var attributes = item.Attributes;
-            //    var first = item.FirstChild;
-            //    var last = item.LastChild;
+        //foreach (XmlNode item in items)
+        //{
+        //    var attributes = item.Attributes;
+        //    var first = item.FirstChild;
+        //    var last = item.LastChild;
 
-            //}
-            ////var list = (from node in nodes
-            ////            select node.ChildNodes).ToList();
+        //}
+        ////var list = (from node in nodes
+        ////            select node.ChildNodes).ToList();
 
-            ////list.Sort((a, b) =>
-            ////{
-            ////    return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
-            ////});
-            ////  Stack<string> stack = list;
+        ////list.Sort((a, b) =>
+        ////{
+        ////    return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+        ////});
+        ////  Stack<string> stack = list;
 
 
-            //if (doc.HasChildNodes)
-            //{
+        //if (doc.HasChildNodes)
+        //{
 
-            //}
+        //}
 
-     //   }
+        //   }
 
         private List<XmlNode> GetNodes(XmlDocument doc)
         {

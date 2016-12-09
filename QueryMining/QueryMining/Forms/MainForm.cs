@@ -63,6 +63,10 @@ namespace QueryMining.Forms
             CheckedKeys = new Dictionary<string, bool>();
             dgvMineResults.DataError += DataError;
 
+            progressBar1.Style = ProgressBarStyle.Continuous;
+            progressBar1.Value = progressBar1.Minimum;
+            progressBar1.MarqueeAnimationSpeed = 0;
+
             cancellationChecker = new Thread(new ParameterizedThreadStart(delegate
             {
                 ThrowIfCancelled(ref backgroundWorker);
@@ -231,10 +235,10 @@ namespace QueryMining.Forms
                     FullQueries.Enqueue(query);
                     CheckedKeys.Add(query, true);
                 }
-                Thread
-                   thread1 = new Thread(EmptyThread), thread2 = new Thread(EmptyThread),
-                   thread3 = new Thread(EmptyThread), thread4 = new Thread(EmptyThread),
-                   thread5 = new Thread(EmptyThread), thread6 = new Thread(EmptyThread);
+                //Thread
+                //   thread1 = new Thread(EmptyThread), thread2 = new Thread(EmptyThread),
+                //   thread3 = new Thread(EmptyThread), thread4 = new Thread(EmptyThread),
+                //   thread5 = new Thread(EmptyThread), thread6 = new Thread(EmptyThread);
                 // Take each query, check each combination of words in that query
                 // against every other query in the list, then add those results.
                 for (int i = 0; i < FullQueries.Count; i++)
@@ -246,13 +250,14 @@ namespace QueryMining.Forms
                     for (int word1Num = 0; word1Num < queryWords.Count; word1Num++)
                     {
                         string word1 = queryWords[word1Num];
-                        while (thread1.IsAlive)
-                        {
-                            Thread.Sleep(1);
-                        }
-                        thread1 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1); }));
-                        thread1.Name = "thread1";
-                        thread1.Start();
+                        //while (thread1.IsAlive)
+                        //{
+                        //    Thread.Sleep(1);
+                        //}
+                        //thread1 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1); }));
+                        //thread1.Name = "thread1";
+                        //thread1.Start();
+                        MineWords(word1);
 
                         if (_mineType == MineType.One)
                             continue;
@@ -264,14 +269,14 @@ namespace QueryMining.Forms
                                 string word2 = queryWords[word2Num];
                                 if (word1 != word2)
                                 {
-                                    // MineWords(word2);
-                                    while (thread2.IsAlive) { Thread.Sleep(1); }
-                                    thread2 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2); })); thread2.Name = "thread2";
-                                    thread2.Start();
-                                    while (thread3.IsAlive) { Thread.Sleep(1); }
-                                    thread3 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2); })); thread3.Name = "thread3";
-                                    thread3.Start();
-                                    // MineWords(word1, word2);
+                                     MineWords(word2);
+                                    //while (thread2.IsAlive) { Thread.Sleep(1); }
+                                    //thread2 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2); })); thread2.Name = "thread2";
+                                    //thread2.Start();
+                                    //while (thread3.IsAlive) { Thread.Sleep(1); }
+                                    //thread3 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2); })); thread3.Name = "thread3";
+                                    //thread3.Start();
+                                     MineWords(word1, word2);
 
                                     if (_mineType == MineType.Three)
                                     {
@@ -282,22 +287,25 @@ namespace QueryMining.Forms
                                             {
                                                 try
                                                 {
-                                                    while (thread4.IsAlive) { Thread.Sleep(1); }
-                                                    thread4 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2, word3); })); thread4.Name = "thread4";
-                                                    thread4.Start();
+                                                    MineWords(word2, word3);
+                                                    MineWords(word1, word3);
+                                                    MineWords(word1, word2, word3);
+                                                    //while (thread4.IsAlive) { Thread.Sleep(1); }
+                                                    //thread4 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word2, word3); })); thread4.Name = "thread4";
+                                                    //thread4.Start();
 
-                                                    while (thread5.IsAlive) { Thread.Sleep(1); }
-                                                    thread5 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word3); })); thread5.Name = "thread5";
-                                                    thread5.Start();
+                                                    //while (thread5.IsAlive) { Thread.Sleep(1); }
+                                                    //thread5 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word3); })); thread5.Name = "thread5";
+                                                    //thread5.Start();
 
-                                                    while (thread6.IsAlive) { Thread.Sleep(1); }
-                                                    thread6 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2, word3); })); thread6.Name = "thread6";
-                                                    thread6.Start();
+                                                    //while (thread6.IsAlive) { Thread.Sleep(1); }
+                                                    //thread6 = new Thread(new ParameterizedThreadStart(delegate { MineWords(word1, word2, word3); })); thread6.Name = "thread6";
+                                                    //thread6.Start();
 
-                                                    while (thread4.IsAlive || thread5.IsAlive || thread6.IsAlive)
-                                                    {
-                                                        Thread.Sleep(1);
-                                                    }
+                                                    //while (thread4.IsAlive || thread5.IsAlive || thread6.IsAlive)
+                                                    //{
+                                                    //    Thread.Sleep(1);
+                                                    //}
 
                                                 }
                                                 catch (Exception ex)
@@ -307,19 +315,19 @@ namespace QueryMining.Forms
                                             } // end if word1 != word2
                                         }
                                     }
-                                    while (thread2.IsAlive || thread3.IsAlive)
-                                    {
-                                        Thread.Sleep(1);
-                                    }
+                                    //while (thread2.IsAlive || thread3.IsAlive)
+                                    //{
+                                    //    Thread.Sleep(1);
+                                    //}
                                     updateDisplay();
                                 }
                             } // end querywords loop 2     
 
                         } // end if/else for minetype == One
-                        while (thread1.IsAlive)
-                        {
-                            Thread.Sleep(1);
-                        }
+                        //while (thread1.IsAlive)
+                        //{
+                        //    Thread.Sleep(1);
+                        //}
                         updateDisplay();
                     } // end rows loop
 
