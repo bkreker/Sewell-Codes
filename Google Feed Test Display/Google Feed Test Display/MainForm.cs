@@ -1,28 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Data.Linq.Mapping;
-using System.Data.Linq;
-using System.Drawing;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Xml.Serialization.Advanced;
-using System.Xml.Serialization.Configuration;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization.Advanced;
+using System.Xml.Serialization.Configuration;
 using System.Xml.Resolvers;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using System.Xml.XmlConfiguration;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using System.Text.RegularExpressions;
-using System.Web;
 
 
 namespace Google_Feed_Test_Display
@@ -54,8 +45,8 @@ namespace Google_Feed_Test_Display
         {
             InitializeComponent();
 
-            ReadText();
-
+           // ReadText();
+            ReadXml();
             //   Taxonomy tax = new Taxonomy();
             //   var outpur = tax.Collapse();
             //this.Tree.Nodes.Add("Top");
@@ -177,28 +168,26 @@ namespace Google_Feed_Test_Display
 
         }
 
-        private void LoadXml()
+        private void ReadXml()
         {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(Taxonomy.XML_IN_FILE);
-            var docText = doc.OuterXml;
-            string nameMatch = @"\s*<(name)>(.+)</name>\s*";
-            string allItemMatches = $@"<item id=""(\d*)"" index=""(\d*)"">({nameMatch})+\s*</item>";
-            var items = Regex.Matches(docText, allItemMatches);
 
-            foreach (Match item in items)
+            var path = "newOutfile.xml";
+            var xdoc = new XDocument();
+         
+            using (var inFile = File.OpenText(path))
             {
-                var index = item.Groups[1];
-                var id = item.Groups[2];
-                var itemNames = Regex.Matches(item.ToString(), nameMatch);
+                //    doc.Load(inFile);
+                xdoc = XDocument.Load(inFile);
+            }
+            XName xname = xdoc.BaseUri + "name";
+            XName xid = xdoc.BaseUri + "id";
+            foreach (XElement item in xdoc.Descendants())
+            {
+                //var s = item.GetType();
+                var name = item.Attribute(xname).Value;
+                var id = item.Attribute(xid).Value;
 
-                foreach (Match name in itemNames)
-                {
-                    var nameTag = name.Groups[0];
-                    var nameVal = name.Groups[1];
-                    var s = name.Groups;
-                    Console.WriteLine();
-                }
+
             }
         }
         private void MainForm_Load(object sender, EventArgs e)
@@ -324,11 +313,11 @@ namespace Google_Feed_Test_Display
 
         private List<XmlNode> nodesHelper(XmlNode node, ref List<XmlNode> nodeList)
         {
-
             nodeList.Add(node);
 
             foreach (XmlNode item in node.ChildNodes)
             {
+                
 
                 nodeList.Add(item);
             }
@@ -373,13 +362,13 @@ namespace Google_Feed_Test_Display
                 try
                 {
                     string value = node.Name;
-                    if(value.Contains("&amp;"))
+                    if (value.Contains("&amp;"))
                     {
 
                     }
                     if (value.Contains("&") && !value.Contains("&amp;"))
                     {
-                   //     value = value.Replace(" & ", " &amp; ");
+                        //     value = value.Replace(" & ", " &amp; ");
 
                     }
                     xmlWriter.WriteStartElement("level");
