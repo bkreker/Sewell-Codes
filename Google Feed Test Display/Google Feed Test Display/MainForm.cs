@@ -35,6 +35,7 @@ namespace Google_Feed_Test_Display
             this.Id = id;
             this.Parents = parents;
         }
+
         public Stack<string> Parents { get; set; }
         public string Name { get; set; }
         public int Id { get; set; }
@@ -43,6 +44,7 @@ namespace Google_Feed_Test_Display
             return this.Name;
         }
     }
+
     public partial class MainForm : Form
     {
         public TreeView Tree { get { return this.treeView1; } }
@@ -68,25 +70,25 @@ namespace Google_Feed_Test_Display
             string taxonomy = "";
             Queue<Level> levelStack = new Queue<Level>();
             char[] delim = { '>' },
-                numDelim = { '-' };
+                numDelim = { '~' };
 
             using (var reader = File.OpenText(TXT_IN_FILE))
             {
+                int id;
+                string name, idString;
                 while (!reader.EndOfStream)
                 {
+                    Stack<string> lastNameAndId = new Stack<string>();
                     string line = reader.ReadLine();
-                    var levels = line.Split(delim).ToList();
-                    Stack<string> lineStack = new Stack<string>();
-                    int id;
-                    string name;
-                    levels.ForEach(lvl => lineStack.Push(lvl.Trim()));
+                    var levelsStrings = line.Split(delim).ToList();
+                    var lineStack = new Stack<string>();
+                    levelsStrings.ForEach(lvl => lineStack.Push(lvl.Trim()));
 
+                    idString = lineStack.Pop();
+                    idString.Split(numDelim).ToList().ForEach(a => lastNameAndId.Push(a.Trim()));
 
-                    string idString = lineStack.Pop();
-                    var ids = idString.Split(numDelim).ToList();
-                    id = int.Parse(ids[ids.Count - 1]);
-                    ids.RemoveAt(ids.Count - 1);
-                    name =  string.Join(" ", ids);
+                    id = int.Parse(lastNameAndId.Pop());
+                    name = string.Join(" ", lastNameAndId);
 
                     Level level = new Level(name, id, lineStack);
 
@@ -95,9 +97,84 @@ namespace Google_Feed_Test_Display
                 }
             }
             var top = levelStack.Dequeue();
-            var topName = top.Name;
+            TreeNode node = new TreeNode();
+            List<TreeNode> nodesNotAdded = new List<TreeNode>();
+            string p1 = "", p2 = "", p3 = "", p4 = "", p5 = "", p6 = "", p7 = "";
+            while (levelStack.Count > 0)
+            {
+                node = new TreeNode(top.Name) { Tag = top.Id, Name = top.Name };
+                int parentCount = top.Parents.Count;
+                try
+                {
+                    switch (parentCount)
+                    {
+                        case 0:
+                            treeView1.Nodes.Add(node);
+                            break;
+                        case 1:
+                            p1 = top.Parents.Pop();
+                            treeView1.Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 2:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            treeView1.Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 3:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            p3 = top.Parents.Pop();
+                            treeView1.Nodes[p3].Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 4:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            p3 = top.Parents.Pop();
+                            p4 = top.Parents.Pop();
+                            treeView1.Nodes[p4].Nodes[p3].Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 5:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            p3 = top.Parents.Pop();
+                            p4 = top.Parents.Pop();
+                            p5 = top.Parents.Pop();
+                            treeView1.Nodes[p5].Nodes[p4].Nodes[p3].Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 6:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            p3 = top.Parents.Pop();
+                            p4 = top.Parents.Pop();
+                            p5 = top.Parents.Pop();
+                            p6 = top.Parents.Pop();
+                            treeView1.Nodes[p6].Nodes[p5].Nodes[p4].Nodes[p3].Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        case 7:
+                            p1 = top.Parents.Pop();
+                            p2 = top.Parents.Pop();
+                            p3 = top.Parents.Pop();
+                            p4 = top.Parents.Pop();
+                            p5 = top.Parents.Pop();
+                            p6 = top.Parents.Pop();
+                            p7 = top.Parents.Pop();
+                            treeView1.Nodes[p7].Nodes[p6].Nodes[p5].Nodes[p4].Nodes[p3].Nodes[p2].Nodes[p1].Nodes.Add(node);
+                            break;
+                        default:
+                            break;
+                    }
+                    top = levelStack.Dequeue();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating TreeView: {ex.Message}, node {top.Name} not added. Initial ParentCount: {parentCount}");
+                    //        node.Tag = $"{node.Tag} {p7} {p6} {p5} {p4} {p3} {p2} {p1}";
 
-          
+
+                    //   nodesNotAdded.Add(node);
+                }
+            }
+
         }
 
         private void LoadXml()
@@ -260,25 +337,108 @@ namespace Google_Feed_Test_Display
 
         }
 
+        XmlDocument xmlDocument = new XmlDocument();
         private void button1_Click(object sender, EventArgs e)
         {
-            this.Tree.Nodes.Clear();
-            Random rand = new Random(0);
-            for (int i = 0; i < 10; i++)
+            var path = "newOutfile.xml";
+            //TreeViewToXml(treeView1, path);
+            try
             {
-                this.Tree.Nodes.Add("Top");
-                for (int j = 0; j < rand.Next(10); j++)
+                using (var stream = File.OpenWrite(path))
                 {
-                    this.Tree.Nodes[i].Nodes.Add("j");
-                    for (int k = 0; k < rand.Next(6); k++)
-                    {
-                        this.Tree.Nodes[i].Nodes[j].Nodes.Add("k");
-
-                    }
+                    var xmlWriter = XmlWriter.Create(stream, new XmlWriterSettings() { Indent = true, WriteEndDocumentOnClose = true, CheckCharacters = true });
+                    xmlWriter.WriteStartDocument();
+                    xmlWriter.WriteStartElement("taxonomy");
+                    SaveNodes(treeView1.Nodes, ref xmlWriter);
+                    xmlWriter.WriteEndElement();
+                    xmlWriter.WriteEndDocument();
+                    xmlWriter.Close();
 
                 }
-
+                Console.WriteLine("Finished saving document.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving document: {ex.Message}");
             }
         }
+        private void SaveNodes(TreeNodeCollection nodesCollection, ref XmlWriter xmlWriter)
+        {
+            //foreach (var node in nodesCollection.OfType<TreeNode>().Where(x => x.Nodes.Count == 0))
+            //{
+            //    xmlWriter.WriteAttributeString("id", node.Tag.ToString());
+            //}
+            foreach (TreeNode node in nodesCollection/*.OfType<TreeNode>().Where(x => x.Nodes.Count > 0)*/)
+            {
+                try
+                {
+                    string value = node.Name;
+                    if(value.Contains("&amp;"))
+                    {
+
+                    }
+                    if (value.Contains("&") && !value.Contains("&amp;"))
+                    {
+                   //     value = value.Replace(" & ", " &amp; ");
+
+                    }
+                    xmlWriter.WriteStartElement("level");
+
+                    xmlWriter.WriteAttributeString("id", node.Tag.ToString());
+                    xmlWriter.WriteAttributeString("name", value);
+                    //  xmlWriter.WriteValue(value);
+                    //xmlWriter.WriteEndElement();
+                    if (node.Nodes.Count > 0)
+                    {
+                        SaveNodes(node.Nodes, ref xmlWriter);
+                    }
+                    xmlWriter.WriteEndElement();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+        public void TreeViewToXml(TreeView treeView1, string path)
+        {
+            xmlDocument = new XmlDocument();
+            TreeNodeCollection nodes = null;
+            foreach (TreeNode treeNode in treeView1.Nodes)
+            {
+                xmlDocument.AppendChild(xmlDocument.CreateElement(treeNode.Text));
+                nodes = treeNode.Nodes;
+            }
+            XmlExport(xmlDocument.DocumentElement, nodes);
+            xmlDocument.Save(path);
+        }
+        private XmlNode XmlExport(XmlNode nodeElement, TreeNodeCollection treeNodeCollection)
+        {
+            XmlNode xmlNode = null;
+            foreach (TreeNode treeNode in treeNodeCollection)
+            {
+                xmlNode = xmlDocument.CreateElement(treeNode.Text);
+                string[] node = xmlNode.Name.Split(':');
+                if (node[0] == "ATTRIBUTE")
+                {
+                    if (node[0] != null && node[1] != null)
+                    {
+                        XmlAttribute newAttribute = xmlDocument.CreateAttribute(node[1]);
+                        nodeElement.Attributes.Append(newAttribute);
+                    }
+                }
+                else
+                {
+                    if (nodeElement != null) nodeElement.AppendChild(xmlNode);
+                }
+                if (treeNode.Nodes.Count > 0)
+                {
+                    XmlExport(xmlNode, treeNode.Nodes);
+                }
+            }
+            return xmlNode;
+        }
+
+
     }
 }

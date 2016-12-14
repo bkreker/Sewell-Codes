@@ -67,9 +67,9 @@
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressBar1.Location = new System.Drawing.Point(0, 922);
+            this.progressBar1.Location = new System.Drawing.Point(0, 54);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(1486, 10);
+            this.progressBar1.Size = new System.Drawing.Size(468, 10);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 0;
             // 
@@ -82,7 +82,7 @@
             this.dgvMineResults.Name = "dgvMineResults";
             this.dgvMineResults.RowTemplate.DefaultCellStyle.Format = "0.##";
             this.dgvMineResults.RowTemplate.DefaultCellStyle.NullValue = null;
-            this.dgvMineResults.Size = new System.Drawing.Size(1486, 863);
+            this.dgvMineResults.Size = new System.Drawing.Size(468, 0);
             this.dgvMineResults.TabIndex = 1;
             this.dgvMineResults.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgvResults_RowsAdded);
             // 
@@ -97,7 +97,7 @@
             // 
             this.lblRowCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblRowCount.AutoSize = true;
-            this.lblRowCount.Location = new System.Drawing.Point(90, 898);
+            this.lblRowCount.Location = new System.Drawing.Point(90, 30);
             this.lblRowCount.Name = "lblRowCount";
             this.lblRowCount.Size = new System.Drawing.Size(13, 13);
             this.lblRowCount.TabIndex = 3;
@@ -107,7 +107,7 @@
             // 
             this.lblTitleOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblTitleOutput.AutoSize = true;
-            this.lblTitleOutput.Location = new System.Drawing.Point(12, 898);
+            this.lblTitleOutput.Location = new System.Drawing.Point(12, 30);
             this.lblTitleOutput.Name = "lblTitleOutput";
             this.lblTitleOutput.Size = new System.Drawing.Size(72, 13);
             this.lblTitleOutput.TabIndex = 4;
@@ -121,7 +121,7 @@
             this.aboutToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(1486, 24);
+            this.menuStrip.Size = new System.Drawing.Size(468, 24);
             this.menuStrip.TabIndex = 8;
             this.menuStrip.Text = "menuStrip2";
             // 
@@ -181,20 +181,20 @@
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.dgvMineResults);
             this.panel1.Location = new System.Drawing.Point(0, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1486, 863);
+            this.panel1.Size = new System.Drawing.Size(468, 0);
             this.panel1.TabIndex = 9;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.Enabled = false;
-            this.btnCancel.Location = new System.Drawing.Point(1399, 893);
+            this.btnCancel.Location = new System.Drawing.Point(381, 25);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 10;
@@ -206,7 +206,7 @@
             // 
             this.lblRemRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblRemRows.AutoSize = true;
-            this.lblRemRows.Location = new System.Drawing.Point(1333, 898);
+            this.lblRemRows.Location = new System.Drawing.Point(315, 30);
             this.lblRemRows.Name = "lblRemRows";
             this.lblRemRows.Size = new System.Drawing.Size(13, 13);
             this.lblRemRows.TabIndex = 3;
@@ -217,7 +217,7 @@
             // 
             this.lblTitleRemRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblTitleRemRows.AutoSize = true;
-            this.lblTitleRemRows.Location = new System.Drawing.Point(1185, 898);
+            this.lblTitleRemRows.Location = new System.Drawing.Point(167, 30);
             this.lblTitleRemRows.Name = "lblTitleRemRows";
             this.lblTitleRemRows.Size = new System.Drawing.Size(145, 13);
             this.lblTitleRemRows.TabIndex = 4;
@@ -228,7 +228,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1486, 932);
+            this.ClientSize = new System.Drawing.Size(468, 64);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.lblTitleRemRows);

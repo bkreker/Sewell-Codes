@@ -87,9 +87,9 @@ namespace QueryMining.Forms
                 _dataTable = form.DataTable;
                 try
                 {
-                    dgvMineResults.DataSource = _dataTable;
+                   // dgvMineResults.DataSource = _dataTable;
                     // dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                    lblRowCount.Text = dgvMineResults.RowCount.ToString();
+                   // lblRowCount.Text = dgvMineResults.RowCount.ToString();
 
                 }
                 catch (Exception ex)
@@ -144,7 +144,7 @@ namespace QueryMining.Forms
 
             if (!Program.OperationCancelled)
             {
-                if (dgvMineResults.Rows.Count > 0)
+                if (_dataTable.Rows.Count > 0)
                     MessageBox.Show("Finished!");
                 else
                     MessageBox.Show("Something went wrong populating the table.");
@@ -219,17 +219,17 @@ namespace QueryMining.Forms
         private void Analyze()
         {
             Console.WriteLine("Sort Started.");
-            if (dgvMineResults.InvokeRequired)
-            {
-                dgvMineResults.Invoke(new MethodInvoker(delegate
-                {
-                    dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                }));
-            }
+            //if (dgvMineResults.InvokeRequired)
+            //{
+            //    dgvMineResults.Invoke(new MethodInvoker(delegate
+            //    {
+            //        dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+            //    }));
+            //}
             try
             {
                 CheckedKeys = new Dictionary<string, bool>();
-
+                
                 foreach (var query in (from DataRow r in _dataTable.Rows select r.ItemArray[QueryColIndex].ToString()))
                 {
                     FullQueries.Enqueue(query);
@@ -423,9 +423,10 @@ namespace QueryMining.Forms
                         {
                             newRow = mineableRows[0].ItemArray;
                         }
+                        newRow[QueryCountIndex] = mineableRows.Count;
                         _tableChanged = _dataTable.AddRowToTable(newRow);
                         MainForm.CheckedKeys[wordString] = true;
-                        Console.WriteLine($"\t{Thread.CurrentThread.Name} Finished, wordstring: {wordString}, tablechanged = {_tableChanged}");
+                        //Console.WriteLine($"\t{Thread.CurrentThread.Name} Finished, wordstring: {wordString}, tablechanged = {_tableChanged}");
                     }
                 }
                 catch (Exception ex)
@@ -438,82 +439,82 @@ namespace QueryMining.Forms
 
         private void updateDisplayAsync()
         {
-            while (Program.Processing)
-            {
-                if (_tableChanged)
-                {
-                    _tableChanged = false;
-                    try
-                    {
+            //while (Program.Processing)
+            //{
+            //    if (_tableChanged)
+            //    {
+            //        _tableChanged = false;
+            //        try
+            //        {
 
-                        if (dgvMineResults.InvokeRequired)
-                        {
-                            dgvMineResults.Invoke(new MethodInvoker(delegate
-                            {
-                                dgvMineResults.DataSource = _dataTable;
-                                //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                                dgvMineResults.Refresh();
-                            }));
-                        }
-                        else
-                        {
-                            dgvMineResults.DataSource = _dataTable;
-                            dgvMineResults.Refresh();
-                        }
+            //            if (dgvMineResults.InvokeRequired)
+            //            {
+            //                dgvMineResults.Invoke(new MethodInvoker(delegate
+            //                {
+            //                    dgvMineResults.DataSource = _dataTable;
+            //                    //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+            //                    dgvMineResults.Refresh();
+            //                }));
+            //            }
+            //            else
+            //            {
+            //                dgvMineResults.DataSource = _dataTable;
+            //                dgvMineResults.Refresh();
+            //            }
 
-                        if (lblRowCount.InvokeRequired)
-                        {
-                            lblRowCount.Invoke(new MethodInvoker(delegate
-                            {
-                                lblRowCount.Text = StatDataTable.RowCount.ToString();
-                            }));
-                        }
-                        else lblRowCount.Text = StatDataTable.RowCount.ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
-                    }
-                }
-            }
+            //            if (lblRowCount.InvokeRequired)
+            //            {
+            //                lblRowCount.Invoke(new MethodInvoker(delegate
+            //                {
+            //                    lblRowCount.Text = StatDataTable.RowCount.ToString();
+            //                }));
+            //            }
+            //            else lblRowCount.Text = StatDataTable.RowCount.ToString();
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
+            //        }
+            //    }
+            //}
         }
 
         private void updateDisplay()
         {
-            if (_tableChanged)
-            {
-                _tableChanged = false;
-                try
-                {
+            //if (_tableChanged)
+            //{
+            //    _tableChanged = false;
+            //    try
+            //    {
 
-                    if (dgvMineResults.InvokeRequired)
-                    {
-                        dgvMineResults.Invoke(new MethodInvoker(delegate
-                        {
-                            // dgvMineResults.DataSource = _dataTable;
-                            dgvMineResults.Refresh();
-                        }));
-                    }
-                    else
-                    {
-                        // dgvMineResults.DataSource = _dataTable;
-                        dgvMineResults.Refresh();
-                    }
+            //        if (dgvMineResults.InvokeRequired)
+            //        {
+            //            dgvMineResults.Invoke(new MethodInvoker(delegate
+            //            {
+            //                // dgvMineResults.DataSource = _dataTable;
+            //                dgvMineResults.Refresh();
+            //            }));
+            //        }
+            //        else
+            //        {
+            //            // dgvMineResults.DataSource = _dataTable;
+            //            dgvMineResults.Refresh();
+            //        }
 
-                    if (lblRowCount.InvokeRequired)
-                    {
-                        lblRowCount.Invoke(new MethodInvoker(delegate
-                        {
-                            lblRowCount.Text = StatDataTable.RowCount.ToString();
-                        }));
-                    }
-                    else lblRowCount.Text = StatDataTable.RowCount.ToString();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
-                }
-            }
+            //        if (lblRowCount.InvokeRequired)
+            //        {
+            //            lblRowCount.Invoke(new MethodInvoker(delegate
+            //            {
+            //                lblRowCount.Text = StatDataTable.RowCount.ToString();
+            //            }));
+            //        }
+            //        else lblRowCount.Text = StatDataTable.RowCount.ToString();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
+            //    }
+            //}
 
         }
 
@@ -601,7 +602,7 @@ namespace QueryMining.Forms
         private void tsmiReset_Click(object sender, EventArgs e)
         {
             _dataTable = new StatDataTable();
-            this.dgvMineResults.DataSource = _dataTable;
+         //   this.dgvMineResults.DataSource = _dataTable;
         }
 
         private void SaveData()
