@@ -213,11 +213,24 @@ namespace GoogleTaxonomyViewer
         private List<TreeNode> searchNodes(string query)
         {
             var results = new List<TreeNode>();
+            var splitted = query.ToUpper().Split(' ');
             foreach (TreeNode child in treeView1.Nodes)
             {
-                if (child.Text.ToUpper().Contains(query.ToUpper()))
+                var childText = child.Text.ToUpper();
+                var queryText = query.ToUpper();
+                if (splitted.Count() == 1)
                 {
-                    results.Add(child);
+                    if (childText.Contains(queryText))
+                    {
+                        results.Add(child);
+                    }
+                }
+                else
+                {
+                    if (splitted.All(word => childText.Contains(word)))
+                    {
+                        results.Add(child);
+                    }
                 }
                 searchNodes(ref results, query, child);
             }
@@ -226,11 +239,28 @@ namespace GoogleTaxonomyViewer
 
         private List<TreeNode> searchNodes(ref List<TreeNode> results, string query, TreeNode parent)
         {
+            var splitted = query.ToUpper().Split(' ');
             foreach (TreeNode child in parent.Nodes)
             {
-                if (child.Text.ToUpper().Contains(query.ToUpper()))
+                var childText = child.Text.ToUpper();
+                var queryText = query.ToUpper();
+                if (splitted.Count() == 1)
                 {
-                    results.Add(child);
+                    if (childText.Contains(queryText))
+                    {
+                        results.Add(child);
+                    }
+                }
+                else
+                {
+                    if (child.Text.Contains("Audio Card"))
+                    {
+
+                    }
+                    if (splitted.All(word => childText.Contains(word)))
+                    {
+                        results.Add(child);
+                    }
                 }
                 searchNodes(ref results, query, child);
             }
@@ -255,9 +285,9 @@ namespace GoogleTaxonomyViewer
 
                 nodeToolTip.Show(node.ToolTipText, treeView);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
             }
         }
     }
