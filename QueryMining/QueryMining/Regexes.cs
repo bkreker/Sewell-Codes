@@ -49,7 +49,7 @@ namespace QueryMining
         public const string ViewThroughConv = @"View\-?through ?Conv\.?";
         public const string Number = @"^-?\d+(\.{1}\d*)?$";
         public const string QueryCount = @"^Query ?Count$";
-        public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|ROI|ROAS|CTR|(.*Rate.*)|(.*\%.*)";
+        public const string Average = @"(Avg\.?)|(Average)|(\\|\/)|" + ROI + "|" + CTR + "|" + @"(.*Rate.*)|(.*\%.*)";
         public const string Percent = @".*\%.*";
 
         public static List<string> DecimalPatterns
@@ -155,7 +155,7 @@ namespace QueryMining
 
         public static bool IsExcluded(string target, RegexOptions options = _options)
         {
-            if (Regexes.IsNumber(target, options))
+            if (target.Length <= 2 || Regexes.IsNumber(target, options))
                 return true;
 
             int matches = (from expr in ExcludedWords

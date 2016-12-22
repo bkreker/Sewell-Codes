@@ -343,6 +343,7 @@ namespace QueryMining
         {
             try
             {
+
                 string colName = "",
                     cellVal = item.ToString();
 
@@ -504,13 +505,13 @@ namespace QueryMining
                     outputArr[col_ix] = existingRows.Count();
 
                 }
-                if (outputArr[col_ix] != null)
-                {
-                    outputArr[col_ix] = FormatCell(outputArr[col_ix], col_ix);
-
-                }
                 else
                 {
+                    if (outputArr[col_ix] != null)
+                    {
+                        outputArr[col_ix] = FormatCell(outputArr[col_ix], col_ix);
+
+                    }
                     List<object> allColumnValues = (from row in existingRows
                                                     select row[col_ix]).ToList();
 
@@ -589,7 +590,7 @@ namespace QueryMining
 
                 bool colValsAreNumbers = columnValues.All(val => Regexes.IsMatch(val.ToString(), Regexes.Number));
 
-                if (Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0 && !colValsAreNumbers)
+                if ((Regexes.IsMatch(column.Caption, Regexes.Query) && columnValues.Count > 0 && !colValsAreNumbers) || column.DataType == typeof(string))
                     return columnValues[0];
 
                 if (column == ColumnCollection[QueryCountCol])
@@ -599,57 +600,100 @@ namespace QueryMining
                 {
                     if (isAvg)
                     {
-                        return columnValues.Aggregate((sum, next) =>
+                        switch (column.DataType.Name)
                         {
-                            string sumString = sum.ToString();
-                            string nextString = next.ToString();
-                            if (sumString == nextString && sumString == "0" || sumString == "0.00")
-                            {
-                                return sumString;
-                            }
-                            string sumMatch = Regexes.Match(sumString, Regexes.Number);
-                            string nextMatch = Regexes.Match(nextString, Regexes.Number);
-                            double divisor = 2.0;
-                            var type = column.DataType;
-                            switch (type.Name)
-                            {
-                                case "Double":
-                                    double sumDub, nextDub;
-                                    if (double.TryParse(nextMatch, out nextDub) && double.TryParse(sumMatch, out sumDub))
-                                        return (sumDub + nextDub) / divisor;
-                                    break;
-                                case "Decimal":
-                                    decimal sumDec, nextDec;
-                                    if (decimal.TryParse(nextMatch, out nextDec) && decimal.TryParse(sumMatch, out sumDec))
-                                        return (decimal)(sumDec + nextDec) / (decimal)divisor;
-                                    break;
-                                case "Int32":
-                                    int sumInt, nextInt;
-                                    if (int.TryParse(nextMatch, out sumInt) && int.TryParse(sumMatch, out nextInt))
-                                        return (int)(sumInt + nextInt) / divisor;
-                                    break;
-                                case "Int64":
-                                    long sumLong, nextLong;
-                                    if (long.TryParse(nextMatch, out nextLong) && long.TryParse(sumMatch, out sumLong))
-                                        return (long)(sumLong + (double)nextLong) / divisor;
-                                    break;
-                                case "Single":
-                                    float sumFloat, nextFloat;
-                                    if (float.TryParse(nextMatch, out nextFloat) && float.TryParse(sumMatch, out sumFloat))
-                                        return (float)(sumFloat + nextFloat) / divisor;
-                                    break;
-                                default:
-                                    float sumNum, nextNum;
-                                    if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
-                                        return (float)(sumNum + nextNum) / divisor;
-                                    break;
-                            }
-
-                            return sum;
-                        });
+                            case "Double":
+                                return columnValues.Cast<double>().Average();
+                            case "Decimal":
+                                return columnValues.Cast<decimal>().Average();
+                            case "Int32":
+                                return columnValues.Cast<int>().Average();
+                            case "Int64":
+                                return columnValues.Cast<long>().Average();
+                            case "Single":
+                                return columnValues.Cast<float>().Average();
+                            default:
+                                return columnValues[0];
+                        }
                     }
                     else
                     {
+                        switch (column.DataType.Name)
+                        {
+                            case "Double":
+                                return columnValues.Cast<double>().Sum();
+                            case "Decimal":
+                                return columnValues.Cast<decimal>().Sum();
+                            case "Int32":
+                                return columnValues.Cast<int>().Sum();
+                            case "Int64":
+                                return columnValues.Cast<long>().Sum();
+                            case "Single":
+                                return columnValues.Cast<float>().Sum();
+                            default:
+                                return columnValues[0];
+                        }
+                    }
+                }
+                else
+                {
+                    return columnValues.FirstOrDefault();
+                } // end if/else for if all elements are numbers
+                //   return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error Aggregating values: {ex.Message}");
+                return "Error";
+            }
+        }
+        /*  return columnValues.Aggregate((sum, next) =>
+                     {
+                         string sumString = sum.ToString();
+                         string nextString = next.ToString();
+                         if (sumString == nextString && sumString == "0" || sumString == "0.00")
+                         {
+                             return sumString;
+                         }
+                         string sumMatch = Regexes.Match(sumString, Regexes.Number);
+                         string nextMatch = Regexes.Match(nextString, Regexes.Number);
+                         double divisor = 2.0;
+                         switch (type.Name)
+                         {
+                             case "Double":
+                                 double sumDub, nextDub;
+                                 if (double.TryParse(nextMatch, out nextDub) && double.TryParse(sumMatch, out sumDub))
+                                     return (sumDub + nextDub) / divisor;
+                                 break;
+                             case "Decimal":
+                                 decimal sumDec, nextDec;
+                                 if (decimal.TryParse(nextMatch, out nextDec) && decimal.TryParse(sumMatch, out sumDec))
+                                     return (decimal)(sumDec + nextDec) / (decimal)divisor;
+                                 break;
+                             case "Int32":
+                                 int sumInt, nextInt;
+                                 if (int.TryParse(nextMatch, out sumInt) && int.TryParse(sumMatch, out nextInt))
+                                     return (int)(sumInt + nextInt) / divisor;
+                                 break;
+                             case "Int64":
+                                 long sumLong, nextLong;
+                                 if (long.TryParse(nextMatch, out nextLong) && long.TryParse(sumMatch, out sumLong))
+                                     return (long)(sumLong + (double)nextLong) / divisor;
+                                 break;
+                             case "Single":
+                                 float sumFloat, nextFloat;
+                                 if (float.TryParse(nextMatch, out nextFloat) && float.TryParse(sumMatch, out sumFloat))
+                                     return (float)(sumFloat + nextFloat) / divisor;
+                                 break;
+                             default:
+                                 float sumNum, nextNum;
+                                 if (float.TryParse(nextMatch, out nextNum) && float.TryParse(sumMatch, out sumNum))
+                                     return (float)(sumNum + nextNum) / divisor;
+                                 break;
+                         }
+
+                         return sum;
+                     });
                         var nonZeroRows = columnValues.Where(val => val.ToString() != "0" && val.ToString() != "0.00");
                         return nonZeroRows.Aggregate((sum, next) =>
                         {
@@ -695,21 +739,7 @@ namespace QueryMining
 
                             return sum;
                         });
-                    }
-                }
-                else
-                {
-                    return columnValues.FirstOrDefault();
-                } // end if/else for if all elements are numbers
-                //   return result;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error Aggregating values: {ex.Message}");
-                return "Error";
-            }
-        }
-
+                     */
 
         public static object AggregateColumnValues(List<object> columnValues, int col_index)
         {
