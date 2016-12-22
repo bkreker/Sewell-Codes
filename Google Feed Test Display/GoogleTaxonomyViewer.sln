@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google Feed Test Display", "Google Feed Test Display\Google Feed Test Display.csproj", "{E0F09D41-FDC0-4A42-A471-BA64D9EA491B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleTaxonomyViewer", "Google Feed Test Display\GoogleTaxonomyViewer.csproj", "{E0F09D41-FDC0-4A42-A471-BA64D9EA491B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

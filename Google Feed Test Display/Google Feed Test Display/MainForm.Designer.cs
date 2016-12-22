@@ -1,4 +1,4 @@
-﻿namespace Google_Feed_Test_Display
+﻿namespace GoogleTaxonomyViewer
 {
     partial class MainForm
     {
@@ -30,62 +30,42 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.btnExport = new System.Windows.Forms.Button();
             this.btnLoadText = new System.Windows.Forms.Button();
-            this.btnLoadXml = new System.Windows.Forms.Button();
             this.txtBoxQuery = new System.Windows.Forms.TextBox();
             this.btnCollapseAll = new System.Windows.Forms.Button();
             this.btnExpandAll = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
-            this.treeView1 = new Google_Feed_Test_Display.JDTreeView();
             this.nodeToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.treeView1 = new GoogleTaxonomyViewer.JDTreeView();
             this.SuspendLayout();
-            // 
-            // btnExport
-            // 
-            this.btnExport.Location = new System.Drawing.Point(12, 504);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(121, 23);
-            this.btnExport.TabIndex = 2;
-            this.btnExport.Text = "Export";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Visible = false;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnLoadText
             // 
-            this.btnLoadText.Location = new System.Drawing.Point(250, 477);
+            this.btnLoadText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnLoadText.Location = new System.Drawing.Point(11, 711);
             this.btnLoadText.Name = "btnLoadText";
-            this.btnLoadText.Size = new System.Drawing.Size(121, 23);
+            this.btnLoadText.Size = new System.Drawing.Size(121, 20);
             this.btnLoadText.TabIndex = 3;
             this.btnLoadText.Text = "Load From &Text";
             this.btnLoadText.UseVisualStyleBackColor = true;
             this.btnLoadText.Visible = false;
             this.btnLoadText.Click += new System.EventHandler(this.btnLoadText_Click);
             // 
-            // btnLoadXml
-            // 
-            this.btnLoadXml.Location = new System.Drawing.Point(387, 477);
-            this.btnLoadXml.Name = "btnLoadXml";
-            this.btnLoadXml.Size = new System.Drawing.Size(121, 23);
-            this.btnLoadXml.TabIndex = 3;
-            this.btnLoadXml.Text = "Load From &Xml";
-            this.btnLoadXml.UseVisualStyleBackColor = true;
-            this.btnLoadXml.Visible = false;
-            this.btnLoadXml.Click += new System.EventHandler(this.btnLoadXml_Click);
-            // 
             // txtBoxQuery
             // 
-            this.txtBoxQuery.Location = new System.Drawing.Point(188, 507);
+            this.txtBoxQuery.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtBoxQuery.Location = new System.Drawing.Point(11, 684);
             this.txtBoxQuery.Name = "txtBoxQuery";
-            this.txtBoxQuery.Size = new System.Drawing.Size(450, 20);
+            this.txtBoxQuery.Size = new System.Drawing.Size(262, 20);
             this.txtBoxQuery.TabIndex = 4;
             // 
             // btnCollapseAll
             // 
-            this.btnCollapseAll.Location = new System.Drawing.Point(524, 477);
+            this.btnCollapseAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCollapseAll.Location = new System.Drawing.Point(154, 711);
             this.btnCollapseAll.Name = "btnCollapseAll";
-            this.btnCollapseAll.Size = new System.Drawing.Size(121, 23);
+            this.btnCollapseAll.Size = new System.Drawing.Size(121, 20);
             this.btnCollapseAll.TabIndex = 5;
             this.btnCollapseAll.Text = "&Collapse All";
             this.btnCollapseAll.UseVisualStyleBackColor = true;
@@ -93,9 +73,10 @@
             // 
             // btnExpandAll
             // 
-            this.btnExpandAll.Location = new System.Drawing.Point(661, 477);
+            this.btnExpandAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExpandAll.Location = new System.Drawing.Point(291, 711);
             this.btnExpandAll.Name = "btnExpandAll";
-            this.btnExpandAll.Size = new System.Drawing.Size(121, 23);
+            this.btnExpandAll.Size = new System.Drawing.Size(121, 20);
             this.btnExpandAll.TabIndex = 6;
             this.btnExpandAll.Text = "&Expand All";
             this.btnExpandAll.UseVisualStyleBackColor = true;
@@ -103,13 +84,23 @@
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(663, 507);
+            this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSearch.Location = new System.Drawing.Point(290, 684);
             this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(121, 23);
+            this.btnSearch.Size = new System.Drawing.Size(121, 20);
             this.btnSearch.TabIndex = 6;
             this.btnSearch.Text = "Search";
             this.btnSearch.UseVisualStyleBackColor = true;
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            // 
+            // nodeToolTip
+            // 
+            this.nodeToolTip.AutoPopDelay = 5000;
+            this.nodeToolTip.InitialDelay = 500;
+            this.nodeToolTip.ReshowDelay = 0;
+            this.nodeToolTip.ShowAlways = true;
+            this.nodeToolTip.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.nodeToolTip.ToolTipTitle = "Level Info:";
             // 
             // treeView1
             // 
@@ -120,33 +111,26 @@
             this.treeView1.Margin = new System.Windows.Forms.Padding(2);
             this.treeView1.Name = "treeView1";
             this.treeView1.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("treeView1.SelectedNodes")));
-            this.treeView1.Size = new System.Drawing.Size(774, 459);
+            this.treeView1.Size = new System.Drawing.Size(401, 666);
             this.treeView1.TabIndex = 1;
             this.treeView1.NodeMouseHover += new System.Windows.Forms.TreeNodeMouseHoverEventHandler(this.treeView1_NodeMouseHover);
-            // 
-            // nodeToolTip
-            // 
-            this.nodeToolTip.AutoPopDelay = 5000;
-            this.nodeToolTip.InitialDelay = 500;
-            this.nodeToolTip.ReshowDelay = 50;
-            this.nodeToolTip.ToolTipTitle = "Level Info:";
             // 
             // MainForm
             // 
             this.AcceptButton = this.btnSearch;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(796, 536);
+            this.ClientSize = new System.Drawing.Size(423, 743);
             this.Controls.Add(this.btnSearch);
             this.Controls.Add(this.btnExpandAll);
             this.Controls.Add(this.btnCollapseAll);
             this.Controls.Add(this.txtBoxQuery);
-            this.Controls.Add(this.btnLoadXml);
             this.Controls.Add(this.btnLoadText);
-            this.Controls.Add(this.btnExport);
             this.Controls.Add(this.treeView1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(439, 781);
             this.Name = "MainForm";
-            this.Text = "Form1";
+            this.Text = "Google Product Taxonomy";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -156,9 +140,7 @@
         #endregion
 
         private JDTreeView treeView1;
-        private System.Windows.Forms.Button btnExport;
         private System.Windows.Forms.Button btnLoadText;
-        private System.Windows.Forms.Button btnLoadXml;
         private System.Windows.Forms.TextBox txtBoxQuery;
         private System.Windows.Forms.Button btnCollapseAll;
         private System.Windows.Forms.Button btnExpandAll;

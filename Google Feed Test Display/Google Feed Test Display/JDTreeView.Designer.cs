@@ -1,4 +1,4 @@
-﻿namespace Google_Feed_Test_Display
+﻿namespace GoogleTaxonomyViewer
 {
     partial class JDTreeView
     {

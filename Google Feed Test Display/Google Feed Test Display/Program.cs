@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Google_Feed_Test_Display
+namespace GoogleTaxonomyViewer
 {
     static class Program
     {

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections;
 
-namespace Google_Feed_Test_Display
+namespace GoogleTaxonomyViewer
 {
     public partial class JDTreeView : TreeView
     {
