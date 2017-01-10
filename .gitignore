@@ -12,9 +12,6 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
-#Product Navigator
-ProductNavigator/
-
 # Build results
 bld/
 [Oo]bj/

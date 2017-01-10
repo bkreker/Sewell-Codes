@@ -290,6 +290,21 @@ namespace GoogleTaxonomyViewer
                 Console.WriteLine(ex.Message);
             }
         }
+
+        private void KeyDown_Event(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F && e.Modifiers == Keys.Control)
+            {
+                this.txtBoxQuery.Focus();
+                this.txtBoxQuery.SelectAll();
+            }
+        }
+
+        private void txtBoxQuery_DoubleClick(object sender, EventArgs e)
+        {
+            this.txtBoxQuery.SelectAll();
+        }
+
     }
 
 

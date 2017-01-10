@@ -50,6 +50,7 @@
             this.btnLoadText.UseVisualStyleBackColor = true;
             this.btnLoadText.Visible = false;
             this.btnLoadText.Click += new System.EventHandler(this.btnLoadText_Click);
+            this.btnLoadText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // txtBoxQuery
             // 
@@ -59,6 +60,8 @@
             this.txtBoxQuery.Name = "txtBoxQuery";
             this.txtBoxQuery.Size = new System.Drawing.Size(262, 20);
             this.txtBoxQuery.TabIndex = 4;
+            this.txtBoxQuery.DoubleClick += new System.EventHandler(this.txtBoxQuery_DoubleClick);
+            this.txtBoxQuery.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // btnCollapseAll
             // 
@@ -70,6 +73,7 @@
             this.btnCollapseAll.Text = "&Collapse All";
             this.btnCollapseAll.UseVisualStyleBackColor = true;
             this.btnCollapseAll.Click += new System.EventHandler(this.btnCollapseAll_Click);
+            this.btnCollapseAll.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // btnExpandAll
             // 
@@ -81,6 +85,7 @@
             this.btnExpandAll.Text = "&Expand All";
             this.btnExpandAll.UseVisualStyleBackColor = true;
             this.btnExpandAll.Click += new System.EventHandler(this.btnExpandAll_Click);
+            this.btnExpandAll.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // btnSearch
             // 
@@ -92,6 +97,7 @@
             this.btnSearch.Text = "Search";
             this.btnSearch.UseVisualStyleBackColor = true;
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            this.btnSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // nodeToolTip
             // 
@@ -114,6 +120,7 @@
             this.treeView1.Size = new System.Drawing.Size(401, 666);
             this.treeView1.TabIndex = 1;
             this.treeView1.NodeMouseHover += new System.Windows.Forms.TreeNodeMouseHoverEventHandler(this.treeView1_NodeMouseHover);
+            this.treeView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             // 
             // MainForm
             // 
@@ -132,6 +139,7 @@
             this.Name = "MainForm";
             this.Text = "Google Product Taxonomy";
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.KeyDown_Event);
             this.ResumeLayout(false);
             this.PerformLayout();
 
