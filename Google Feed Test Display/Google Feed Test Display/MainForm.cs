@@ -34,7 +34,6 @@ namespace GoogleTaxonomyViewer
         public MainForm()
         {
             InitializeComponent();
-            ReadText();
         }
 
         TaxonomyList<Level> levelList = new TaxonomyList<Level>();
@@ -105,9 +104,9 @@ namespace GoogleTaxonomyViewer
                     var newLevel = levelList.Pop_First();
                     newChild = new TreeNode()
                     {
-                        Text = newLevel.Name,
+                        Text = newLevel.ToString(),
                         Name = newLevel.Name,
-                        Tag = newLevel.Id,
+                        Tag = newLevel.Id,                        
                         ToolTipText = newLevel.ToolTipText
                     };
 
@@ -149,6 +148,7 @@ namespace GoogleTaxonomyViewer
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            ReadText();
         }
 
         private void SaveNodes(TreeNodeCollection nodesCollection, ref XmlWriter xmlWriter)
@@ -253,10 +253,6 @@ namespace GoogleTaxonomyViewer
                 }
                 else
                 {
-                    if (child.Text.Contains("Audio Card"))
-                    {
-
-                    }
                     if (splitted.All(word => childText.Contains(word)))
                     {
                         results.Add(child);
@@ -282,7 +278,6 @@ namespace GoogleTaxonomyViewer
             var node = e.Node; try
             {
                 var treeView = sender as JDTreeView;
-
                 nodeToolTip.Show(node.ToolTipText, treeView);
             }
             catch (Exception ex)

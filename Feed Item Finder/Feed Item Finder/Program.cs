@@ -56,10 +56,36 @@ namespace FeedItemFinder
         static XDocument ShoppingFile;
         static void Main(string[] args)
         {
-            Console.WriteLine("Getting file...");
+            Console.WriteLine("What results do you want?");
+            Console.WriteLine("1 - Everything");
+            Console.WriteLine("2 - Items with no Image Link");
+            Console.WriteLine("3 - Brand is MRP");
             try
-            {
-                LoadXML();
+            {                
+                int i = int.Parse(Console.ReadLine());
+                Console.WriteLine("Getting file...");
+                ItemList items = new ItemList(i);
+                Console.WriteLine($"{items.Count} items found. Save to file? [y/n]");
+                string response = Console.ReadLine();
+                do
+                {
+                    string message = "";
+                    if (response.ToLower() == "y")
+                    {
+                        items.Save();
+                        message = "Saved.";
+                    }
+                    else if (response.ToLower() == "n")
+                    {
+                        message = "Not Saved.";
+                    }
+                    else
+                    {
+                        message = "Try again.";
+                    }
+                    Console.WriteLine(message);
+
+                } while (response != "y" && response != "n");
             }
             catch (Exception ex)
             {
@@ -70,10 +96,9 @@ namespace FeedItemFinder
                     Console.WriteLine(ex.Message);
                 }
             }
-            Console.WriteLine($"Finished. Saved at {OUT_FILE}");
             Console.ReadLine();
         }
-        const string OUT_FILE = "outfile.txt";
+        const string OUT_FILE = "outfile.csv";
         private static async void LoadXML()
         {
             try
@@ -87,16 +112,16 @@ namespace FeedItemFinder
                 }
 
                 var items = (from x in ShoppingFile.Descendants()
-                             where 
+                             where
                                 x.Name == item
                                 && x.Element(g_image_link) == null
                              select x).ToList();
                 using (var writer = new StreamWriter(OUT_FILE))
                 {
-
+                    writer.WriteLine("g_id,title,g_brand,link,description");
                     foreach (var x in items)
                     {
-                        string line = $"{x.Element(g_id).Value},{x.Element(title).Value}";
+                        string line = $"{x.Element(g_id).Value},{x.Element(title).Value},{x.Element(g_brand).Value},{x.Element(link).Value},{x.Element(description).Value}";
                         Console.WriteLine(line);
                         writer.WriteLine(line);
                     }
@@ -111,6 +136,7 @@ namespace FeedItemFinder
                     Console.WriteLine(ex.Message);
                 }
             }
+            Console.WriteLine($"Finished. Saved at {OUT_FILE}");
 
         }
     }

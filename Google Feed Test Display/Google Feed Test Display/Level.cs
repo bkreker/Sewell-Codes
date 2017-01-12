@@ -17,7 +17,7 @@ namespace GoogleTaxonomyViewer
         {
             get
             {
-                return $"{this.FullName}\nId: {this.Id}";
+                return $"{this.FullName}";
             }
         }
 
@@ -42,7 +42,7 @@ namespace GoogleTaxonomyViewer
 
         public override string ToString()
         {
-            return this.Name;
+            return $"{this.Name} ({this.Id})";
         }
     }
 

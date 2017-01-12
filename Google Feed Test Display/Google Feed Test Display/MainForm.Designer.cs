@@ -101,12 +101,9 @@
             // 
             // nodeToolTip
             // 
-            this.nodeToolTip.AutoPopDelay = 5000;
-            this.nodeToolTip.InitialDelay = 500;
-            this.nodeToolTip.ReshowDelay = 0;
+            this.nodeToolTip.AutomaticDelay = 1000;
             this.nodeToolTip.ShowAlways = true;
             this.nodeToolTip.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Info;
-            this.nodeToolTip.ToolTipTitle = "Level Info:";
             // 
             // treeView1
             // 

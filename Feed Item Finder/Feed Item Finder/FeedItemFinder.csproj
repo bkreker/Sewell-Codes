@@ -7,8 +7,8 @@
     <ProjectGuid>{9D2B5C0E-C54A-4064-8AB9-B214965FB57F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Feed_Item_Finder</RootNamespace>
-    <AssemblyName>Feed Item Finder</AssemblyName>
+    <RootNamespace>FeedItemFinder</RootNamespace>
+    <AssemblyName>FeedItemFinder</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Item.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
