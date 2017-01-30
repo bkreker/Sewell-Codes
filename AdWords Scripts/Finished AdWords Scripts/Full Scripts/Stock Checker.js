@@ -93,7 +93,7 @@ function main() {
         }
 
         //Send an email summarizing the changes
-        EmailResults();
+        EmailResults(REPORT_NAME);
     } catch (e) {
         print('Error Occured: e');
         print(JSON.stringify(e, null, '\t'));

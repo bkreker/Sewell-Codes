@@ -1,4 +1,9 @@
 // Helper Functions
+/**
+ * To turn this into Object, use Regexp:
+ * find: function\s*(.*)(\(.*\))\s*{
+ * replace: \1: function\2{
+ */
 // Public variables
 var PreviewMsg = '';
 var EMAIL_SIGNATURE = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
@@ -308,7 +313,7 @@ function _titleCase(str) {
     }
 }
 
-function EmailResults(ReportName) {
+function EmailResults(ReportName = REPORT_NAME) {
     try {
         var _emails = EMAILS;
         var Subject = 'AdWords Alert: ' + ReportName.join(' ');
