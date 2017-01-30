@@ -271,11 +271,11 @@ function sendResultsViaEmail(report, level) {
         var rows = report.match(/\n/g).length - 1;
         var date = _getDateTime().day;
 
-        var subject = 'AdWords Alert: ' + SCRIPT_NAME.join(' ') + ' ' + _titleCase(level) + 's Report - ' + day;
+        var subject = 'AdWords Alert: ' + REPORT_NAME.join(' ') + ' ' + _titleCase(level) + 's Report - ' + day;
 
         var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
         var message = emailMessage(rows) + signature;
-        var file_name = SCRIPT_NAME.join('_') + date;
+        var file_name = REPORT_NAME.join('_') + date;
         var To;
         var isPreview = '';
 
@@ -313,7 +313,7 @@ function _titleCase(str) {
     }
 }
 
-function EmailResults(ReportName = REPORT_NAME) {
+function EmailResults(ReportName) {
     try {
         var _emails = EMAILS;
         var Subject = 'AdWords Alert: ' + ReportName.join(' ');
