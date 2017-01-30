@@ -44,12 +44,12 @@ function AM_PM(date) {
 // Helper function to get custom date range, defaults to one quarter (13 weeks) ago is 91 days and 'YYYYMMdd' date format
 function CustomDateRange(fromDaysAgo, tillDate, format) {
     try {
-      //print('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')');
-      
+        //print('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')');
+
         if (fromDaysAgo === null || fromDaysAgo === undefined) {
             fromDaysAgo = 91;
         }
-		if (tillDate === null || tillDate === undefined) {
+        if (tillDate === null || tillDate === undefined) {
             tillDate = 0;
         }
         if (format === undefined || format === '' || format === null) {
@@ -72,7 +72,7 @@ function CustomDateRange(fromDaysAgo, tillDate, format) {
         }
         return result;
     } catch (e) {
-        throw error('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')', e);
+        throw error('CustomDateRange(fromDaysAgo: ' + fromDaysAgo + ', tillDate: ' + tillDate + ', format: ' + format + ')', e);
     }
 }
 
@@ -85,8 +85,7 @@ function _daysAgo(num, format) {
         if (format != undefined && format != '' && format != null) {
             var timeZone = AdWordsApp.currentAccount().getTimeZone();
             date = Utilities.formatDate(newDate, timeZone, format);
-        } 
-		else {
+        } else {
             date = {
                 year: newDate.getYear(),
                 month: newDate.getMonth(),
@@ -112,7 +111,7 @@ function _today(format) {
                 day: newDate.getDate(),
                 month: newDate.getMonth(),
                 year: newDate.getYear(),
-				time: newDate.getTime()
+                time: newDate.getTime()
             };
         }
         return today;
@@ -154,11 +153,11 @@ function _todayIsMonday() {
 function _rolling13Week(format) {
     try {
         if (format === undefined || format === '' || format === null) {
-			format = 'YYYYMMdd';
-		}
-        var p = CustomDateRange(98,8, format);
-        var n = CustomDateRange(91,1, format);
-		var str = p.string + ' - ' + n.string;
+            format = 'YYYYMMdd';
+        }
+        var p = CustomDateRange(98, 8, format);
+        var n = CustomDateRange(91, 1, format);
+        var str = p.string + ' - ' + n.string;
         var result = {
             from: p,
             to: n,
@@ -234,6 +233,32 @@ function createLabelIfNeeded(name) {
     }
 }
 
+function EmailErrorReport(reportName, emails, isPreview, ex, completedReport) {
+    var _subject = 'AdWords Alert: Error in ' + reportName + ', script ' + (completedReport ? 'did execute correctly ' : 'did not execute ') + ' correctly.';
+    var _message = "Error on line " + ex.lineNumber + ":\n" + ex.message + EMAIL_SIGNATURE;
+    var _attachment = emailAttachment();
+    var _fileName = _getDateString() + '_' + reportName;
+    var _to = isPreview ? emails[0] : emails.join();
+    PreviewMsg = isPreview ? 'Preview; No changes actually made.\n' : '';
+
+
+    if (_message != '') {
+        MailApp.sendEmail({
+            to: _to,
+            subject: _subject,
+            body: PreviewMsg + _message,
+            attachments: [{
+                fileName: _fileName + '.csv',
+                mimeType: 'text/csv',
+                content: _attachment
+            }]
+        });
+    }
+
+    print('Email sent to: ' + _to);
+
+}
+
 //Takes a report and the level of reporting and sends and email
 //with the report as an attachment.
 function sendResultsViaEmail(report, level) {
@@ -274,26 +299,28 @@ function sendResultsViaEmail(report, level) {
 }
 //Helper function to capitalize the first letter of a string.
 function _titleCase(str) {
-	try{
-  return str.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }); 
-  } catch (e) {
-        throw error('_titleCase(str: '+str+')', e);
+    try {
+        return str.replace(/(?:^|\s)\S/g, function(a) {
+            return a.toUpperCase();
+        });
+    } catch (e) {
+        throw error('_titleCase(str: ' + str + ')', e);
     }
 }
 
 function EmailResults(ReportName) {
     try {
-		var _emails = EMAILS;
+        var _emails = EMAILS;
         var Subject = 'AdWords Alert: ' + ReportName.join(' ');
-      var Message = emailMessage() + EMAIL_SIGNATURE;
+        var Message = emailMessage() + EMAIL_SIGNATURE;
         var Attachment = emailAttachment();
         var file_name = _getDateString() + '_' + ReportName.join('_');
         var _to;
         var previewMsg = '';
 
-		_to = IS_PREVIEW ? _emails[0] : _emails.join();
-		PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
-   
+        _to = IS_PREVIEW ? _emails[0] : _emails.join();
+        PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
+
 
         if (Message != '') {
             MailApp.sendEmail({
@@ -314,35 +341,36 @@ function EmailResults(ReportName) {
         throw error('EmailResults(ReportName: ' + ReportName.join(' ') + ')', e);
     }
 }
-function EmailReportResults(_emails ,_reportName, _message, _attachment) {
+
+function EmailReportResults(_emails, _reportName, _message, _attachment) {
     try {
-        var Subject = 'AdWords Alert: ' + _reportName.join(' ');        
-        
+        var Subject = 'AdWords Alert: ' + _reportName.join(' ');
+
         var file_name = _getDateString() + '_' + _reportName.join('_');
         var _to;
 
-		_to = IS_PREVIEW ? _emails[0] : _emails.join();
-		PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
-   
+        _to = IS_PREVIEW ? _emails[0] : _emails.join();
+        PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
+
 
         if (_message != '') {
             MailApp.sendEmail({
                 to: _to,
                 subject: Subject,
-                body: PreviewMsg + _message  + EMAIL_SIGNATURE,
+                body: PreviewMsg + _message + EMAIL_SIGNATURE,
                 attachments: [{
                     fileName: file_name + '.csv',
                     mimeType: 'text/csv',
                     content: _attachment.join(',')
                 }]
-            }); 
+            });
 
         }
 
-      Logger.log('Email sent to: ' + To);
+        Logger.log('Email sent to: ' + To);
     } catch (e) {
-      print(_attachment.join());
-      error('EmailReportResults(_emails: ' + _emails.join() + ', _reportName:' + _reportName.join() + ', _message, _attachment),\n' + e);
+        print(_attachment.join());
+        error('EmailReportResults(_emails: ' + _emails.join() + ', _reportName:' + _reportName.join() + ', _message, _attachment),\n' + e);
     }
 }
 
@@ -354,8 +382,8 @@ function print(msg) {
     Logger.log(msg);
 }
 
-function error(funcName, msg) {
-    var warning = 'ERROR in ' + funcName + ': ' + msg;
+function error(funcName, e) {
+    var warning = e.name + ' in ' + funcName + ' at line ' + e.lineNumber + ': ' + e.message;
     Logger.log(warning);
     return warning;
 }
@@ -381,9 +409,3 @@ function hasLabelAlready(entity, label) {
         throw error('hasLabelAlready(entity: ' + entity + ', label' + label + ')', e);
     }
 }
-
-//Minified Helper Functions:
-function _getDateTime(){try{var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}catch(a){throw error("_getDateTime()",a)}}function AM_PM(a){try{var b=a.getHours()+1,c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}catch(b){throw error("AM_PM(date: "+a+")",b)}}function CustomDateRange(a,b,c){try{null!==a&&void 0!==a||(a=91),null!==b&&void 0!==b||(b=0),void 0!==c&&""!==c&&null!==c||(c="YYYYMMdd");var d=_daysAgo(a),e=_daysAgo(b),f=_daysAgo(a,c).toString(),g=_daysAgo(b,c).toString(),i=f+","+g,j={fromStr:f,toStr:g,fromObj:d,toObj:e,dateObj:[d,e],string:i};return j}catch(d){throw error("CustomDateRange(fromDaysAgo: "+a+", tillDate: "+b+", format: "+c+")",d)}}function _daysAgo(a,b){try{var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={year:c.getYear(),month:c.getMonth(),day:c.getDate()};return d}catch(c){throw error("_daysAgo(num: "+a+", format: "+b+")",c)}}function _today(a){try{var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear(),time:b.getTime()}}catch(b){throw error("_today(format: "+a+")",b)}}function _getDateString(){try{var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}catch(a){throw error("_getDateString()",a)}}function _todayIsMonday(){try{var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}catch(a){throw error("todayIsMonday",a)}}function _rolling13Week(a){try{void 0!==a&&""!==a&&null!==a||(a="YYYYMMdd");var b=CustomDateRange(98,8,a),c=CustomDateRange(91,1,a),d=b.string+" - "+c.string,e={from:b,to:c,string:d};return e}catch(b){throw error("Rolling13Week(format: "+a+")",b)}}function formatKeyword(a){try{return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}catch(b){throw error("formatKeyword(keyword: "+a+")",b)}}function round(a){try{var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}catch(b){throw error("round(value: "+a+")",b)}}function getStandardDev(a,b,c){try{var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}catch(d){throw error("getStandardDev(entites: "+a+", mean: "+b+", stat_key: "+c+")",d)}}function getMean(a,b){try{var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}catch(c){throw error("getMean(entites: "+a+", stat_key: "+b+")",c)}}function createLabelIfNeeded(a){try{AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}catch(b){throw error("createLabelIfNeeded(name: "+a+")",b)}}function sendResultsViaEmail(a,b){try{var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_titleCase(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}catch(c){throw error("sendResultsViaEmail(report: "+a+", level: "+b+")",c)}}function _titleCase(a){try{return a.replace(/(?:^|\s)\S/g,function(a){return a.toUpperCase()})}catch(b){throw error("_titleCase(str: "+a+")",b)}}function EmailResults(a){try{var g,b=EMAILS,c="AdWords Alert: "+a.join(" "),d=emailMessage()+EMAIL_SIGNATURE,e=emailAttachment(),f=_getDateString()+"_"+a.join("_"),h="";g=IS_PREVIEW?b[0]:b.join(),PreviewMsg=IS_PREVIEW?"Preview; No changes actually made.\n":"",""!=d&&MailApp.sendEmail({to:g,subject:c,body:h+d,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:e}]}),print("Email sent to: "+g)}catch(b){throw error("EmailResults(ReportName: "+a.join(" ")+")",b)}}function EmailReportResults(a,b,c,d){try{var g,e="AdWords Alert: "+b.join(" "),f=_getDateString()+"_"+b.join("_");g=IS_PREVIEW?a[0]:a.join(),PreviewMsg=IS_PREVIEW?"Preview; No changes actually made.\n":"",""!=c&&MailApp.sendEmail({to:g,subject:e,body:PreviewMsg+c+EMAIL_SIGNATURE,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:d.join(",")}]}),Logger.log("Email sent to: "+To)}catch(c){print(d.join()),error("EmailReportResults(_emails: "+a.join()+", _reportName:"+b.join()+", _message, _attachment),\n"+c)}}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function error(a,b){var c="ERROR in "+a+": "+b;return Logger.log(c),c}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){try{return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}catch(b){throw error("isNumber(obj: "+a+")",b)}}function hasLabelAlready(a,b){try{return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}catch(c){throw error("hasLabelAlready(entity: "+a+", label"+b+")",c)}}var PreviewMsg="",EMAIL_SIGNATURE="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",IS_PREVIEW=AdWordsApp.getExecutionInfo().isPreview();
-
-
-
