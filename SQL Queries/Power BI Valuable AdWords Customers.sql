@@ -131,3 +131,60 @@ WHERE
 	AnalyticsMedium NOT IN ('(not set)','(none)','')) AND	
 	(AnalyticsSource IS NOT NULL AND
 	AnalyticsSource <> '')
+	
+	
+-- Switch case
+SELECT  
+	AnalyticsMedium, 
+	AnalyticsSource, 
+	ProductPartNumber AS ProductSKU,
+	ProductName,
+	ProductBrand,
+	ProductFamily,
+	m.CustomerBioId, 
+	CustomerId, 
+	CustomerPriceTier, 
+	CustomerUniquePurchase, 
+	ExtendedWarrantyRevenue, 
+	FirstReferer, 
+	FirstShipDate, 
+	LastReferer, 
+	OrderDate, 
+	OrderDetailId, 
+	OrderEmail, 
+	OrderId, 
+	OrderPaid, 
+	OrderPhone, 
+	OrderQuantity, 
+	(RevenueOfGoodsShipped + ShippingRevenue - RevenueOfGoodsReturned) AS OrderTotalRevenue,
+	(CostOfGoodsShipped + TransactionCosts + ShippingCost - CostOfGoodsReturned) AS OrderTotalCost,
+	(RevenueOfGoodsShipped + ShippingRevenue - RevenueOfGoodsReturned)  - (CostOfGoodsShipped + TransactionCosts + ShippingCost - CostOfGoodsReturned) AS OrderTotalGP,
+	SalesChannel, 
+	c.TotalOrders AS CustLifeTimeOrderCount, 
+	c.TotalNetRevenue AS CustLifetimeRevenue, 
+	c.TotalAdjustedMargin AS CustLifetimeGP,
+	CASE 
+		WHEN
+			AnalyticsMedium IN('cpc','cpm')	AND	
+			(AnalyticsSource LIKE '%google%' OR 
+			AnalyticsSource LIKE '%_d_ords%') 
+		THEN 
+			1
+		WHEN 
+			(AnalyticsMedium LIKE 'cp%' OR AnalyticsMedium LIKE 'pla')	AND	
+			(AnalyticsSource LIKE '%amazon%')
+		THEN 
+			7
+		ELSE 
+			0
+	END
+		AS AdvertisingChannelId
+	
+FROM 
+	MarketingOrders as m JOIN CustomerBios_BI as c 
+	on m.CustomerBioId = c.CustomerBioId
+WHERE 
+	(OrderEmail <> '' AND	
+	OrderEmail IS NOT NULL) AND
+	(analyticsSource <> '' AND	
+	analyticsSource IS NOT NULL) 

@@ -1,1 +1,4 @@
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cable Shopping Terms - Original.csv
+C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\Modular Matrix.csv
+C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\Modular Matrix.csv
+C:\Users\joshd\Downloads\HD-Link Ctrl to Mine.csv

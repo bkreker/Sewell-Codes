@@ -1,0 +1,49 @@
+	  SELECT 1 AS TrafficSourceID, 'https://assets.materialup.com/uploads/ef8552f1-f86e-44c9-bf69-19d99a0521a7/NLa8tqV0tu4pkFUbaXE5DXsRt65zQbs0s_8nzrLjGwctPuzMPNkjSRl2dD-w7A8hzeE=w300' AS ImageURL
+UNION SELECT 2, 'https://advertiseonbing.blob.core.windows.net/blob/bingads/media/library/global/social/bing-ads-150x150-teal.png?ext=.png'
+UNION SELECT 3, 'https://rossiadvertising.co.uk/wp-content/uploads/2015/07/yahoo-logo-optimized.png'
+UNION SELECT 4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1000px-Google_%22G%22_Logo.svg.png'
+UNION SELECT 49, 'https://s-media-cache-ak0.pinimg.com/236x/05/0d/b0/050db01589f1593486aaac2ce4f49fbf.jpg'
+UNION SELECT 52, 'https://pbs.twimg.com/profile_images/434380339411046400/u6FI5MZz.jpeg'
+UNION SELECT 53, 'https://which-50.com/wp-content/uploads/2016/11/adroll-logo.png'
+UNION SELECT 54, 'https://s3.amazonaws.com/BURC_Pages/downloads/a-smile_color_btn.png'
+-- Original
+SELECT t.TrafficGroupId, TrafficSourceId, t.Name AS TrafficSourceName ,g.Name AS TrafficGroupName
+FROM TrafficSources as t
+	JOIN TrafficGroups as g ON t.TrafficGroupId = g.TrafficGroupId
+
+
+SELECT 
+	t.TrafficGroupId, 
+	TrafficSourceId, 
+	t.Name AS TrafficSourceName, 
+	g.Name AS TrafficGroupName
+	CASE 
+		WHEN TrafficSourceID = 1  
+			THEN 'https://assets.materialup.com/uploads/ef8552f1-f86e-44c9-bf69-19d99a0521a7/NLa8tqV0tu4pkFUbaXE5DXsRt65zQbs0s_8nzrLjGwctPuzMPNkjSRl2dD-w7A8hzeE=w300' AS ImageURL
+		ELSE 
+		WHEN TrafficSourceID =  2 
+			THEN 'https://advertiseonbing.blob.core.windows.net/blob/bingads/media/library/global/social/bing-ads-150x150-teal.png?ext=.png'
+		ELSE                      
+		WHEN TrafficSourceID =  3 
+			THEN 'https://rossiadvertising.co.uk/wp-content/uploads/2015/07/yahoo-logo-optimized.png'
+		ELSE                      
+		WHEN TrafficSourceID =  4 
+			THEN 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1000px-Google_%22G%22_Logo.svg.png'
+		ELSE		              
+		WHEN TrafficSourceID =  49
+			THEN 'https://s-media-cache-ak0.pinimg.com/236x/05/0d/b0/050db01589f1593486aaac2ce4f49fbf.jpg'
+		ELSE                      
+		WHEN TrafficSourceID =  52
+			THEN 'https://pbs.twimg.com/profile_images/434380339411046400/u6FI5MZz.jpeg'
+		ELSE                      
+		WHEN TrafficSourceID =  53
+			THEN 'https://which-50.com/wp-content/uploads/2016/11/adroll-logo.png'
+		ELSE                      
+        WHEN TrafficSourceID =  54
+			THEN 'https://s3.amazonaws.com/BURC_Pages/downloads/a-smile_color_btn.png'
+		ELSE '' 
+		
+	END AS TrafficSourceImageUrl	
+		
+FROM TrafficSources as t
+	JOIN TrafficGroups as g ON t.TrafficGroupId = g.TrafficGroupId

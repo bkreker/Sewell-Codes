@@ -113,11 +113,16 @@ namespace QueryMining.Forms
                 Console.WriteLine($"In column {StatDataTable.ColumnCollection[e.ColumnIndex].Caption}, row{e.RowIndex}");
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine("Error in DataError Handler" + ex.Message);
             }
-            Console.WriteLine($"Context: {e.Context}\nMessage: {e.Exception.Message}\nTarget Site: {e.Exception.TargetSite}");
-            Console.WriteLine($"StackTrace:\n{e.Exception.StackTrace}");
+            finally
+            {
+                Console.WriteLine($"Context: {e.Context}\nMessage: {e.Exception.Message}\nTarget Site: {e.Exception.TargetSite}");
+                Console.WriteLine($"StackTrace:\n{e.Exception.StackTrace}");
+
+            }
         }
 
         private void PerformBackgroundWork(object sender, DoWorkEventArgs e)
@@ -490,8 +495,8 @@ namespace QueryMining.Forms
                                 dgvMineResults.Invoke(new MethodInvoker(delegate
                                 {
                                     dgvMineResults.DataSource = _dataTable;
-                                //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
-                                dgvMineResults.Refresh();
+                                    //dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
+                                    dgvMineResults.Refresh();
                                 }));
                             }
                             else

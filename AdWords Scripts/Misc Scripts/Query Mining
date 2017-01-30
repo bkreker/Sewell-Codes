@@ -1,0 +1,488 @@
+/**
+ *
+ * Search Query Mining Tool
+ *
+ * This script calculates the contribution of each word found in the search query report
+ * and outputs a report into a Google Doc spreadsheet.
+ *
+ * Version: 1.0
+ * Google Apps Script maintained on brainlabsdigital.com
+ *
+ **/
+//////////////////////////////////////////////////////////////////////////////
+// Options
+// The start and end date of the date range for your search query data
+// Format is yyyy-mm-dd
+var DATES = CustomDateRange(null, null, 'yyyy-mm-dd')
+var START_DATE = DATES.fromStr;
+var END_DATE = DATES.toStr;
+var DATE_RANGE = DATES.dateObj;
+
+// The currency symbol used for FORMATTING. For example "£", "$" or "€".
+var CURRENCY_SYMBOL = "$";
+var CURRENCY_FORMAT = CURRENCY_SYMBOL + "#,##0.00";
+var FORMATTING = ["#,##0", "#,##0", CURRENCY_FORMAT, "#,##0", CURRENCY_FORMAT, "0.00%", CURRENCY_FORMAT, "0.00%", CURRENCY_FORMAT, "0.00%"];
+
+
+// Use this if you only want to look at some campaigns
+// such as campaigns with names containing 'Brand' or 'Shopping'.
+// Leave as "" if not wanted.
+var CAMPAIGN_FILTER = "Modular";
+
+// The URL of the Google Doc the results will be put into.
+var WORK_BOOK  = SpreadsheetApp.create('QueryMining ' + CAMPAIGN_FILTER + ' ' +DATES.string);
+var SPREADSHEET_URL = WORK_BOOK.getUrl();
+
+//////////////////////////////////////////////////////////////////////////////
+
+// Thresholds
+
+var IMPRESSION_THRESHOLD = 10;
+var CLICK_THRESHOLD = 0;
+var COST_THRESHOLD = 0;
+var CONVERSION_THRESHOLD = 0;
+// Words will be ignored if their statistics are lower than any of these thresholds
+//////////////////////////////////////////////////////////////////////////////
+// Defines the statistics to download or calculate, and their FORMATTING
+
+var StatColumns = ["Clicks", "Impressions", "Cost", "Conversions", "ConversionValue"];
+var CalculatedStats = [
+    ["CTR", "Clicks", "Impressions"],
+    ["CPC", "Cost", "Clicks"],
+    ["Conv. Rate", "Conversions", "Clicks"],
+    ["Cost / conv.", "Cost", "Conversions"],
+    ["Conv. value/cost", "ConversionValue", "Cost"]
+]
+// Negatives
+var NegativesByGroup = [];
+var NegativesByCampaign = [];
+var SharedSetData = [];
+var SharedSetNames = [];
+var SharedSetCampaigns = [];
+var ActiveCampaignIds = [];
+
+// Main
+var CampaignSearchWords = [];
+var TotalSearchWords = [];
+var TotalSearchWordsKeys = [];
+var NumberOfWords = [];
+
+// Output  
+var CampaignSearchWordsOutput = [];
+var CampaignSearchWordsFormat = [];
+var TotalSearchWordsOutput = [];
+var TotalSearchWordsFormat = [];
+var WordLengthOutput = [];
+var WordLengthFormat = [];
+var CalcStatNames = [];
+
+
+function main() {
+    getNegKeywords();
+    Calculate();
+    Output();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Go through the search query report, remove searches already excluded by negatives
+// record the performance of each word in each remaining query
+function Calculate() {
+
+    var queryReport = AdWordsApp.report(
+        "SELECT CampaignName, CampaignId, AdGroupId, AdGroupName, Query, " + StatColumns.join(", ") + " " +
+        "FROM SEARCH_QUERY_PERFORMANCE_REPORT " +
+        "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED " +
+        "AND CampaignName CONTAINS_IGNORE_CASE '" + CAMPAIGN_FILTER + "' " +
+        "DURING " + DATE_RANGE);
+
+
+    var queryRows = queryReport.rows();
+    while (queryRows.hasNext()) {
+        var queryRow = queryRows.next();
+        var searchIsExcluded = false;
+
+        // Checks if the query is excluded by an ad group level negative
+
+        if (NegativesByGroup[queryRow["AdGroupId"]] !== undefined) {
+            for (var i = 0; i < NegativesByGroup[queryRow["AdGroupId"]].length; i++) {
+                if ((NegativesByGroup[queryRow["AdGroupId"]][i][1] == "exact" &&
+                        queryRow["Query"] == NegativesByGroup[queryRow["AdGroupId"]][i][0]) ||
+                    (NegativesByGroup[queryRow["AdGroupId"]][i][1] != "exact" &&
+                        (" " + queryRow["Query"] + " ").indexOf(" " + NegativesByGroup[queryRow["AdGroupId"]][i][0] + " ") > -1)) {
+                    searchIsExcluded = true;
+                    break;
+                }
+            }
+        }
+
+        // Checks if the query is excluded by a campaign level negative
+
+        if (!searchIsExcluded && NegativesByCampaign[queryRow["CampaignId"]] !== undefined) {
+            for (var i = 0; i < NegativesByCampaign[queryRow["CampaignId"]].length; i++) {
+                if ((NegativesByCampaign[queryRow["CampaignId"]][i][1] == "exact" &&
+                        queryRow["Query"] == NegativesByCampaign[queryRow["CampaignId"]][i][0]) ||
+                    (NegativesByCampaign[queryRow["CampaignId"]][i][1] != "exact" &&
+                        (" " + queryRow["Query"] + " ").indexOf(" " + NegativesByCampaign[queryRow["CampaignId"]][i][0] + " ") > -1)) {
+                    searchIsExcluded = true;
+                    break;
+                }
+            }
+        }
+
+        if (searchIsExcluded) {
+            continue;
+        }
+        // if the search is already excluded by the current negatives,
+        // we ignore it and go on to the next query
+
+        var currentWords = queryRow["Query"].split(" ");
+        var doneWords = [];
+
+        if (CampaignSearchWords[queryRow["CampaignName"]] == undefined) {
+            CampaignSearchWords[queryRow["CampaignName"]] = [];
+        }
+
+        var wordLength = currentWords.length;
+        if (wordLength > 6) {
+            wordLength = "7+";
+        }
+        if (NumberOfWords[wordLength] == undefined) {
+            NumberOfWords[wordLength] = [];
+        }
+        for (var i = 0; i < StatColumns.length; i++) {
+            if (NumberOfWords[wordLength][StatColumns[i]] > 0) {
+                NumberOfWords[wordLength][StatColumns[i]] += parseFloat(queryRow[StatColumns[i]].replace(/,/g, ""));
+            } else {
+                NumberOfWords[wordLength][StatColumns[i]] = parseFloat(queryRow[StatColumns[i]].replace(/,/g, ""));
+            }
+        }
+
+
+        // Splits the query into words and records the stats for each
+
+        for (var w = 0; w < currentWords.length; w++) {
+            if (doneWords.indexOf(currentWords[w]) < 0) { //if this word hasn't been in the query yet
+
+                if (CampaignSearchWords[queryRow["CampaignName"]][currentWords[w]] == undefined) {
+                    CampaignSearchWords[queryRow["CampaignName"]][currentWords[w]] = [];
+                }
+                if (TotalSearchWords[currentWords[w]] == undefined) {
+                    TotalSearchWords[currentWords[w]] = [];
+                    TotalSearchWordsKeys.push(currentWords[w]);
+                }
+
+                for (var i = 0; i < StatColumns.length; i++) {
+                    var stat = parseFloat(queryRow[StatColumns[i]].replace(/,/g, ""));
+                    if (CampaignSearchWords[queryRow["CampaignName"]][currentWords[w]][StatColumns[i]] > 0) {
+                        CampaignSearchWords[queryRow["CampaignName"]][currentWords[w]][StatColumns[i]] += stat;
+                    } else {
+                        CampaignSearchWords[queryRow["CampaignName"]][currentWords[w]][StatColumns[i]] = stat;
+                    }
+                    if (TotalSearchWords[currentWords[w]][StatColumns[i]] > 0) {
+                        TotalSearchWords[currentWords[w]][StatColumns[i]] += stat;
+                    } else {
+                        TotalSearchWords[currentWords[w]][StatColumns[i]] = stat;
+                    }
+                }
+
+                doneWords.push(currentWords[w]);
+            } //end if
+        } //end for
+    } //end while
+
+    Logger.log("Finished analysing queries.");
+
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Find the negative keywords
+function getNegKeywords() {
+    // Gather ad group level negative keywords
+    var keywordReport = AdWordsApp.report(
+        "SELECT CampaignId, AdGroupId, Criteria, KeywordMatchType " +
+        "FROM   KEYWORDS_PERFORMANCE_REPORT " +
+        "WHERE CampaignStatus = ENABLED AND AdGroupStatus = ENABLED AND Status = ENABLED AND IsNegative = TRUE " +
+        "AND CampaignName CONTAINS_IGNORE_CASE '" + CAMPAIGN_FILTER + "' " +
+        "DURING " + DATE_RANGE);
+
+    var keywordRows = keywordReport.rows();
+    while (keywordRows.hasNext()) {
+        var keywordRow = keywordRows.next();
+
+        if (NegativesByGroup[keywordRow["AdGroupId"]] == undefined) {
+            NegativesByGroup[keywordRow["AdGroupId"]] = [
+                [keywordRow["Criteria"].toLowerCase(), keywordRow["KeywordMatchType"].toLowerCase()]
+            ];
+        } else {
+
+            NegativesByGroup[keywordRow["AdGroupId"]].push([keywordRow["Criteria"].toLowerCase(), keywordRow["KeywordMatchType"].toLowerCase()]);
+        }
+
+        if (ActiveCampaignIds.indexOf(keywordRow["CampaignId"]) < 0) {
+            ActiveCampaignIds.push(keywordRow["CampaignId"]);
+        }
+    } //end while
+
+    // Gather campaign level negative keywords
+
+    var campaignNegReport;
+    if (ActiveCampaignIds.join(",") != '') {
+        campaignNegReport = AdWordsApp.report(
+            "SELECT CampaignId, Criteria, KeywordMatchType " +
+            "FROM   CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT " +
+            "WHERE  IsNegative = TRUE " +
+            "AND CampaignId IN [" + ActiveCampaignIds.join(",") + "]"
+        );
+    } else {
+        campaignNegReport = AdWordsApp.report(
+            "SELECT CampaignId, Criteria, KeywordMatchType " +
+            "FROM   CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT " +
+            "WHERE  IsNegative = TRUE"
+        );
+
+    }
+
+    var campaignNegativeRows = campaignNegReport.rows();
+    while (campaignNegativeRows.hasNext()) {
+        var campaignNegativeRow = campaignNegativeRows.next();
+
+        if (NegativesByCampaign[campaignNegativeRow["CampaignId"]] == undefined) {
+            NegativesByCampaign[campaignNegativeRow["CampaignId"]] = [
+                [campaignNegativeRow["Criteria"].toLowerCase(), campaignNegativeRow["KeywordMatchType"].toLowerCase()]
+            ];
+        } else {
+
+            NegativesByCampaign[campaignNegativeRow["CampaignId"]].push([campaignNegativeRow["Criteria"].toLowerCase(), campaignNegativeRow["KeywordMatchType"].toLowerCase()]);
+        }
+    } //end while
+
+    // Find which campaigns use shared negative keyword sets
+
+    var campaignSharedReport = AdWordsApp.report(
+        "SELECT CampaignName, CampaignId, SharedSetName, SharedSetType, Status " +
+        "FROM   CAMPAIGN_SHARED_SET_REPORT " +
+        "WHERE SharedSetType = NEGATIVE_KEYWORDS " +
+        "AND CampaignName CONTAINS_IGNORE_CASE '" + CAMPAIGN_FILTER + "'");
+    var campaignSharedRows = campaignSharedReport.rows();
+    while (campaignSharedRows.hasNext()) {
+        var campaignSharedRow = campaignSharedRows.next();
+
+        if (SharedSetCampaigns[campaignSharedRow["SharedSetName"]] == undefined) {
+            SharedSetCampaigns[campaignSharedRow["SharedSetName"]] = [campaignSharedRow["CampaignId"]];
+        } else {
+
+            SharedSetCampaigns[campaignSharedRow["SharedSetName"]].push(campaignSharedRow["CampaignId"]);
+        }
+    } //end while
+
+    // Map the shared sets' IDs (used in the criteria report below)
+    // to their names (used in the campaign report above)
+
+    var sharedSetReport = AdWordsApp.report(
+        "SELECT Name, SharedSetId, MemberCount, ReferenceCount, Type " +
+        "FROM   SHARED_SET_REPORT " +
+        "WHERE ReferenceCount > 0 AND Type = NEGATIVE_KEYWORDS ");
+    var sharedSetRows = sharedSetReport.rows();
+    while (sharedSetRows.hasNext()) {
+        var sharedSetRow = sharedSetRows.next();
+        SharedSetNames[sharedSetRow["SharedSetId"]] = sharedSetRow["Name"];
+    } //end while
+
+    // Collect the negative keyword text from the sets,
+    // and record it as a campaign level negative in the campaigns that use the set
+
+    var sharedSetReport = AdWordsApp.report(
+        "SELECT SharedSetId, KeywordMatchType, Criteria " +
+        "FROM   SHARED_SET_CRITERIA_REPORT ");
+    var sharedSetRows = sharedSetReport.rows();
+    while (sharedSetRows.hasNext()) {
+        var sharedSetRow = sharedSetRows.next();
+        var setName = SharedSetNames[sharedSetRow["SharedSetId"]];
+        if (SharedSetCampaigns[setName] !== undefined) {
+            for (var i = 0; i < SharedSetCampaigns[setName].length; i++) {
+                var campaignId = SharedSetCampaigns[setName][i];
+                if (NegativesByCampaign[campaignId] == undefined) {
+                    NegativesByCampaign[campaignId] = [
+                        [sharedSetRow["Criteria"].toLowerCase(), sharedSetRow["KeywordMatchType"].toLowerCase()]
+                    ];
+                } else {
+
+                    NegativesByCampaign[campaignId].push([sharedSetRow["Criteria"].toLowerCase(), sharedSetRow["KeywordMatchType"].toLowerCase()]);
+                }
+            }
+        }
+    } //end while
+
+    Logger.log("Finished negative keyword lists.");
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Output the data into the spreadsheet
+function Output() {
+
+    // Add headers
+    for (var s = 0; s < CalculatedStats.length; s++) {
+        CalcStatNames.push(CalculatedStats[s][0]);
+    }
+    var statNames = StatColumns.concat(CalcStatNames);
+    CampaignSearchWordsOutput.push(["Campaign", "Word"].concat(statNames));
+    TotalSearchWordsOutput.push(["Word"].concat(statNames));
+    WordLengthOutput.push(["Word count"].concat(statNames));
+
+    // Output the campaign level stats
+
+    for (var campaign in CampaignSearchWords) {
+        for (var word in CampaignSearchWords[campaign]) {
+
+            if (CampaignSearchWords[campaign][word]["Impressions"] < IMPRESSION_THRESHOLD) {
+                continue;
+            }
+            if (CampaignSearchWords[campaign][word]["Clicks"] < CLICK_THRESHOLD) {
+                continue;
+            }
+            if (CampaignSearchWords[campaign][word]["Cost"] < COST_THRESHOLD) {
+                continue;
+            }
+            if (CampaignSearchWords[campaign][word]["ConvertedClicks"] < CONVERSION_THRESHOLD) {
+                continue;
+            }
+
+            // skips words under the thresholds
+
+            var printline = [campaign, word];
+
+            for (var s = 0; s < StatColumns.length; s++) {
+                printline.push(CampaignSearchWords[campaign][word][StatColumns[s]]);
+            }
+
+            for (var s = 0; s < CalculatedStats.length; s++) {
+                var multiplier = CalculatedStats[s][1];
+                var divisor = CalculatedStats[s][2];
+                if (CampaignSearchWords[campaign][word][divisor] > 0) {
+                    printline.push(CampaignSearchWords[campaign][word][multiplier] / CampaignSearchWords[campaign][word][divisor]);
+                } else {
+                    printline.push("-");
+                }
+            }
+
+            CampaignSearchWordsOutput.push(printline);
+            CampaignSearchWordsFormat.push(FORMATTING);
+        }
+    } // end for
+
+
+    TotalSearchWordsKeys.sort(function(a, b) {
+        return TotalSearchWords[b]["Cost"] - TotalSearchWords[a]["Cost"];
+    });
+
+    for (var i = 0; i < TotalSearchWordsKeys.length; i++) {
+        var wordStats = TotalSearchWords[TotalSearchWordsKeys[i]];
+		
+        if (wordStats["Impressions"] < IMPRESSION_THRESHOLD) {
+            continue;
+        }
+        if (wordStats["Clicks"] < CLICK_THRESHOLD) {
+            continue;
+        }
+        if (wordStats["Cost"] < COST_THRESHOLD) {
+            continue;
+        }
+        if (wordStats["ConvertedClicks"] < CONVERSION_THRESHOLD) {
+            continue;
+        }
+
+        // skips words under the thresholds
+
+        var printline = [word];
+
+        for (var s = 0; s < StatColumns.length; s++) {
+            printline.push(TotalSearchWords[word][StatColumns[s]]);
+        }
+
+        for (var s = 0; s < CalculatedStats.length; s++) {
+            var multiplier = CalculatedStats[s][1];
+            var divisor = CalculatedStats[s][2];
+            if (TotalSearchWords[word][divisor] > 0) {
+                printline.push(TotalSearchWords[word][multiplier] / TotalSearchWords[word][divisor]);
+            } else {
+                printline.push("-");
+            }
+        }
+
+        TotalSearchWordsOutput.push(printline);
+        TotalSearchWordsFormat.push(FORMATTING);
+    } // end for
+
+    for (var i = 1; i < 8; i++) {
+        if (i < 7) {
+            var wordLength = i;
+        } else {
+            var wordLength = "7+";
+        }
+
+        var printline = [wordLength];
+
+        if (NumberOfWords[wordLength] == undefined) {
+            printline.push([0, 0, 0, 0, "-", "-", "-", "-"]);
+        } else {
+            for (var s = 0; s < StatColumns.length; s++) {
+                printline.push(NumberOfWords[wordLength][StatColumns[s]]);
+            }
+
+            for (var s = 0; s < CalculatedStats.length; s++) {
+                var multiplier = CalculatedStats[s][1];
+                var divisor = CalculatedStats[s][2];
+                if (NumberOfWords[wordLength][divisor] > 0) {
+                    printline.push(NumberOfWords[wordLength][multiplier] / NumberOfWords[wordLength][divisor]);
+                } else {
+                    printline.push("-");
+                }
+            }
+        }
+
+        WordLengthOutput.push(printline);
+        WordLengthFormat.push(FORMATTING);
+    } // end for
+
+    // Finds available names for the new sheets
+    var campaignWordName = "Campaign Word Analysis";
+    var totalWordName = "Total Word Analysis";
+    var wordCountName = "Word Count Analysis";
+    var campaignWordSheet = WORK_BOOK.getSheetByName(campaignWordName);
+    var totalWordSheet = WORK_BOOK.getSheetByName(totalWordName);
+    var wordCountSheet = WORK_BOOK.getSheetByName(wordCountName);
+    var i = 1;
+    while (campaignWordSheet != null || wordCountSheet != null || totalWordSheet != null) {
+        campaignWordName = "Campaign Word Analysis " + i;
+        totalWordName = "Total Word Analysis " + i;
+        wordCountName = "Word Count Analysis " + i;
+        campaignWordSheet = WORK_BOOK.getSheetByName(campaignWordName);
+        totalWordSheet =WORK_BOOK.getSheetByName(totalWordName);
+        wordCountSheet = WORK_BOOK.getSheetByName(wordCountName);
+        i++;
+    }
+    campaignWordSheet = WORK_BOOK.insertSheet(campaignWordName);
+    totalWordSheet = WORK_BOOK.insertSheet(totalWordName);
+    wordCountSheet = WORK_BOOK.insertSheet(wordCountName);
+
+    campaignWordSheet.getRange("R1C1").setValue("Analysis of Words in Search Query Report, By Campaign");
+    wordCountSheet.getRange("R1C1").setValue("Analysis of Search Query Performance by Words Count");
+
+    if (CAMPAIGN_FILTER == "") {
+        totalWordSheet.getRange("R1C1").setValue("Analysis of Words in Search Query Report, By Account");
+    } else {
+        totalWordSheet.getRange("R1C1").setValue("Analysis of Words in Search Query Report, Over All Campaigns Containing '" + CAMPAIGN_FILTER + "'");
+    }
+
+    campaignWordSheet.getRange("R2C1:R" + (CampaignSearchWordsOutput.length + 1) + "C" + CampaignSearchWordsOutput[0].length).setValues(CampaignSearchWordsOutput);
+    campaignWordSheet.getRange("R3C3:R" + (CampaignSearchWordsOutput.length + 1) + "C" + (FORMATTING.length + 2)).setNumberFormats(CampaignSearchWordsFormat);
+    totalWordSheet.getRange("R2C1:R" + (TotalSearchWordsOutput.length + 1) + "C" + TotalSearchWordsOutput[0].length).setValues(TotalSearchWordsOutput);
+    totalWordSheet.getRange("R3C2:R" + (TotalSearchWordsOutput.length + 1) + "C" + (FORMATTING.length + 1)).setNumberFormats(TotalSearchWordsFormat);
+   // wordCountSheet.getRange("R2C1:R" + (WordLengthOutput.length + 1) + "C" + WordLengthOutput[0].length).setValues(WordLengthOutput);
+    wordCountSheet.getRange("R3C2:R" + (WordLengthOutput.length + 1) + "C" + (FORMATTING.length + 1)).setNumberFormats(WordLengthFormat);
+
+    Logger.log("Finished writing to spreadsheet.");
+}
+
+//Minified Helper Functions:
+function _getDateTime(){try{var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c),e=AM_PM(a),f={day:d,time:e};return f}catch(a){throw error("_getDateTime()",a)}}function AM_PM(a){try{var b=a.getHours()+1,c=a.getMinutes(),d=b>=12?"pm":"am";b%=12,b=b?b:12,c=c<10?"0"+c:c;var e=b+":"+c+" "+d;return e}catch(b){throw error("AM_PM(date: "+a+")",b)}}function CustomDateRange(a,b,c){try{null!==a&&void 0!==a||(a=91),null!==b&&void 0!==b||(b=0),void 0!==c&&""!==c&&null!==c||(c="YYYYMMdd");var d=_daysAgo(a),e=_daysAgo(b),f=_daysAgo(a,c).toString(),g=_daysAgo(b,c).toString(),i=f+","+g,j={fromStr:f,toStr:g,fromObj:d,toObj:e,dateObj:[d,e],string:i};return j}catch(d){throw error("CustomDateRange(fromDaysAgo: "+a+", tillDate: "+b+", format: "+c+")",d)}}function _daysAgo(a,b){try{var c=new Date;c.setDate(c.getDate()-a);var d;if(void 0!=b&&""!=b&&null!=b){var e=AdWordsApp.currentAccount().getTimeZone();d=Utilities.formatDate(c,e,b)}else d={day:c.getDate(),month:c.getMonth(),year:c.getYear()};return d}catch(c){throw error("_daysAgo(num: "+a+", format: "+b+")",c)}}function _today(a){try{var d,b=new Date,c=AdWordsApp.currentAccount().getTimeZone();return d=void 0!=a&&""!=a&&null!=a?Utilities.formatDate(b,c,a):{day:b.getDate(),month:b.getMonth(),year:b.getYear(),time:b.getTime()}}catch(b){throw error("_today(format: "+a+")",b)}}function _getDateString(){try{var a=new Date,b=AdWordsApp.currentAccount().getTimeZone(),c="MM-dd-yyyy",d=Utilities.formatDate(a,b,c);return d}catch(a){throw error("_getDateString()",a)}}function _todayIsMonday(){try{var a=36e5,b=new Date,c=new Date(b.getTime()+a),e=(c.getTime(),c.getDay());return Logger.log("today: "+c+"\nday: "+e),1===e}catch(a){throw error("todayIsMonday",a)}}function _rolling13Week(a){try{void 0!==a&&""!==a&&null!==a||(a="YYYYMMdd");var b=CustomDateRange(98,8,a),c=CustomDateRange(91,1,a),d=b.string+" - "+c.string,e={from:b,to:c,string:d};return e}catch(b){throw error("Rolling13Week(format: "+a+")",b)}}function formatKeyword(a){try{return a=a.replace(/[^a-zA-Z0-9 ]/g,"")}catch(b){throw error("formatKeyword(keyword: "+a+")",b)}}function round(a){try{var b=Math.pow(10,DECIMAL_PLACES);return Math.round(a*b)/b}catch(b){throw error("round(value: "+a+")",b)}}function getStandardDev(a,b,c){try{var d=0;for(var e in a)d+=Math.pow(a[e].stats[c]-b,2);return 0==Math.sqrt(a.length-1)?0:round(Math.sqrt(d)/Math.sqrt(a.length-1))}catch(d){throw error("getStandardDev(entites: "+a+", mean: "+b+", stat_key: "+c+")",d)}}function getMean(a,b){try{var c=0;for(var d in a)c+=a[d].stats[b];return 0==a.length?0:round(c/a.length)}catch(c){throw error("getMean(entites: "+a+", stat_key: "+b+")",c)}}function createLabelIfNeeded(a){try{AdWordsApp.labels().withCondition("Name = '"+a+"'").get().hasNext()||AdWordsApp.createLabel(a)}catch(b){throw error("createLabelIfNeeded(name: "+a+")",b)}}function sendResultsViaEmail(a,b){try{var i,c=a.match(/\n/g).length-1,d=_getDateTime().day,e="AdWords Alert: "+SCRIPT_NAME.join(" ")+" "+_titleCase(b)+"s Report - "+day,f="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",g=emailMessage(c)+f,h=SCRIPT_NAME.join("_")+d,j="";0!=c&&(AdWordsApp.getExecutionInfo().isPreview()?(i=EMAILS[0],j="Preview; No changes actually made.\n"):i=EMAILS.join(),MailApp.sendEmail({to:i,subject:e,body:j+g,attachments:[Utilities.newBlob(a,"text/csv",h+d+".csv")]}),Logger.log("Email sent to: "+i))}catch(c){throw error("sendResultsViaEmail(report: "+a+", level: "+b+")",c)}}function _titleCase(a){try{return a.replace(/(?:^|\s)\S/g,function(a){return a.toUpperCase()})}catch(b){throw error("_titleCase(str: "+a+")",b)}}function EmailResults(a){try{var g,b="AdWords Alert: "+a.join(" "),c="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.",d=emailMessage()+c,e=emailAttachment(),f=_getDateString()+"_"+a.join("_"),h="";AdWordsApp.getExecutionInfo().isPreview()?(g=EMAILS[0],h="Preview; No changes actually made.\n"):g=EMAILS.join(),""!=d&&MailApp.sendEmail({to:g,subject:b,body:d,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:e}]}),Logger.log("Email sent to: "+g)}catch(b){throw error("EmailResults(ReportName: "+a+")",b)}}function EmailReportResults(a,b,c,d){try{var g,e="AdWords Alert: "+b.join(" "),f=_getDateString()+"_"+b.join("_"),h="";AdWordsApp.getExecutionInfo().isPreview()?(g=a[0],h="Preview; No changes actually made.\n"):g=a.join(),""!=c&&MailApp.sendEmail({to:g,subject:e,body:h+c+EMAIL_SIGNATURE,attachments:[{fileName:f+".csv",mimeType:"text/csv",content:d.join(",")}]}),Logger.log("Email sent to: "+g)}catch(c){print(d.join()),error("EmailReportResults(_emails: "+a.join()+", _reportName:"+b.join()+", _message, _attachment),\n"+c)}}function info(a){Logger.log(a)}function print(a){Logger.log(a)}function error(a,b){var c="ERROR in "+a+": "+b;return Logger.log(c),c}function warn(a){Logger.log("WARNING: "+a)}function isNumber(a){try{return a.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)||NaN===a}catch(b){throw error("isNumber(obj: "+a+")",b)}}function hasLabelAlready(a,b){try{return a.labels().withCondition("Name = '"+b+"'").get().hasNext()}catch(c){throw error("hasLabelAlready(entity: "+a+", label"+b+")",c)}}var EMAIL_SIGNATURE="\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.";
