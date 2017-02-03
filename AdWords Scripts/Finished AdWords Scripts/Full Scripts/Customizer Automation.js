@@ -237,6 +237,9 @@ function emailMessage() {
     var day = date.day;
     var time = date.time;
     var message = 'Ad Customizer Updated ' + day + ' ' + time + '\n' + PriceNum + ' prices counted.';
+    if (PriceNum < 50){
+        message += "\nLOW NUMBER OF PRICES COUNTED";
+    }
     return message;
 
 }

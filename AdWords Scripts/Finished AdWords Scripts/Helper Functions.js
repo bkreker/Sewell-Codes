@@ -1,416 +1,446 @@
+/**********************************
+ * Item Stock Checker
+ * Loosely based on template Created By Russ Savage
+ * Customized by Josh DeGraw
+ ***********************************/
+var REPORT_NAME = ['Stock', 'Checker'];
+var URL_LEVEL = 'Ad'; // or Keyword
+var ONLY_ACTIVE = true; // set to false to check keywords or ads in all campaigns (paused and active)
+var CAMPAIGN_LABEL = ''; // set this if you want to only check campaigns with this label
+var STRIP_QUERY_STRING = true; // set this to false if the stuff that comes after the question mark is important
+var WRAPPED_URLS = false; // set this to true if you use a 3rd party like Marin or Kenshoo for managing you account
+
+// Email addresses to send the report to. The first email is for who debugs the code
+var EMAILS = [
+    "joshd@sewelldirect.com",
+    "jarom@sewelldirect.com",
+    "sean@sewelldirect.com"
+];
+
+var OUT_OF_STOCK_LABEL = "Out_of_Stock"; // The label that is added to newly paused ads
+var IN_STOCK_LABEL = "Now_In_Stock"; // The label that is added to newly enabled ads
+var OUT_OF_STOCK_LABEL_ID = AdWordsApp.labels()
+    .withCondition('Name = "' + OUT_OF_STOCK_LABEL + '"')
+    .get().next().getId();
+
+var IN_STOCK_LABEL_ID = AdWordsApp.labels()
+    .withCondition('Name = "' + IN_STOCK_LABEL + '"')
+    .get().next().getId();
+
+var PAUSED_SKUS = ['SKUs Paused: '];
+var ENABLED_SKUS = ['SKUs Enabled: '];
+
+var pausedNum = 0;
+var enabledNum = 0;
+var pausedAdGrpNum = 0;
+var enabledAdGrpNum = 0;
+
+// Array to hold all newly paused urls
+var pausedUrls = [
+    ['Ads Paused: '],
+    ['\nCampaign', 'AdGroup', 'Ad', 'URL']
+];
+var pausedAdGroups = [
+    ['Ad Groups Paused: '],
+    ['\nCampaign', 'AdGroup']
+];
+
+// Array to hold all  enabled urls
+var enabledUrls = [
+    ['Ads Enabled: '],
+    ['\nCampaign', 'AdGroup', 'Ad', 'URL']
+];
+var enabledAdGroups = [
+    ['Ad Groups Enabled: '],
+    ['\nCampaign', 'AdGroup']
+];
+
+
+// This is the specific text (or texts) to search for 
+// on the page that indicates the item 
+// is out of stock. If ANY of these match the html
+// on the page, the item is considered "out of stock"
+var OUT_OF_STOCK_TEXTS = [
+    '<h4 id="stockStatus" itemprop="availability">Out of Stock</h4>',
+    '<h4 id="stockStatus" itemprop="availability">Discontinued</h4>'
+];
+
+var SKU_TEXT = ['<span itemprop="mpn">', '</span>'];
+
+// Same, but for being in stock
+var IN_STOCK_TEXTS = [
+    '<h4 id="stockStatus" itemprop="availability">In Stock</h4>'
+];
 // Helper Functions
-/**
- * To turn this into Object, use Regexp:
- * find: function\s*(.*)(\(.*\))\s*{
- * replace: \1: function\2{
- */
-// Public variables
-var PreviewMsg = '';
-var EMAIL_SIGNATURE = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-var IS_PREVIEW = AdWordsApp.getExecutionInfo().isPreview();
-
-
-//Helper function to format todays date and time
-function _getDateTime() {
+function main() {
+    // Create the labels if needed
     try {
-        var today = new Date();
-        var timeZone = AdWordsApp.currentAccount().getTimeZone();
-        var dayFormat = "MM-dd-yyyy";
-        var day = Utilities.formatDate(today, timeZone, dayFormat);
-        var time = AM_PM(today);
+        createLabelIfNeeded(OUT_OF_STOCK_LABEL);
+        createLabelIfNeeded(IN_STOCK_LABEL);
 
-        var date = {
-            day: day,
-            time: time
-        };
+        // Pause ads that need pausing
+        pauseURLs();
+        pauseOutOfStockAdGroups();
 
-        return date;
-    } catch (e) {
-        throw error('_getDateTime()', e);
-    }
-}
+        // Enable ads that need enabling
+        enableURLs();
 
-// Helper function to get the time in am/pm
-function AM_PM(date) {
-    try {
-        var hours = date.getHours() + 1;
-        var minutes = date.getMinutes();
-        var ampm = hours >= 12 ? 'pm' : 'am';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        var strTime = hours + ':' + minutes + ' ' + ampm;
-        return strTime;
-    } catch (e) {
-        throw error('AM_PM(date: ' + date + ')', e);
-    }
-}
-
-// Helper function to get custom date range, defaults to one quarter (13 weeks) ago is 91 days and 'YYYYMMdd' date format
-function CustomDateRange(fromDaysAgo, tillDate, format) {
-    try {
-        //print('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')');
-
-        if (fromDaysAgo === null || fromDaysAgo === undefined) {
-            fromDaysAgo = 91;
+        if (pausedNum > 0) {
+            Logger.log(pausedUrls.join());
         }
-        if (tillDate === null || tillDate === undefined) {
-            tillDate = 0;
+        if (enabledNum > 0) {
+            Logger.log(enabledUrls.join());
         }
-        if (format === undefined || format === '' || format === null) {
-            format = 'YYYYMMdd';
-        }
-        var from = _daysAgo(fromDaysAgo);
-        var to = _daysAgo(tillDate);
-        var fromS = _daysAgo(fromDaysAgo, format).toString();
-        var toS = _daysAgo(tillDate, format).toString();
-        var dateArr = [from, to];
-        var str = fromS + ',' + toS;
 
-        var result = {
-            fromStr: fromS,
-            toStr: toS,
-            fromObj: from,
-            toObj: to,
-            dateObj: [from, to],
-            string: str
-        }
-        return result;
+        //Send an email summarizing the changes
+        EmailResults(REPORT_NAME);
     } catch (e) {
-        throw error('CustomDateRange(fromDaysAgo: ' + fromDaysAgo + ', tillDate: ' + tillDate + ', format: ' + format + ')', e);
+        print('Error Occured: e');
+        print(JSON.stringify(e, null, '\t'));
+        EmailErrorReport(REPORT_NAME.join(' '), EMAILS, IS_PREVIEW, e, CompletedReport);
     }
 }
 
-// Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
-function _daysAgo(num, format) {
-    try {
-        var newDate = new Date();
-        newDate.setDate(newDate.getDate() - num);
-        var date;
-        if (format != undefined && format != '' && format != null) {
-            var timeZone = AdWordsApp.currentAccount().getTimeZone();
-            date = Utilities.formatDate(newDate, timeZone, format);
-        } else {
-            date = {
-                year: newDate.getYear(),
-                month: newDate.getMonth(),
-                day: newDate.getDate()
-            };
+function enableURLs() {
+    var alreadyCheckedUrls = {};
+    var iter = buildSelectorEnable().get();
+    while (iter.hasNext()) {
+        var entity = iter.next();
+        var adGroup = entity.getAdGroup();
+        var urls = [];
+
+        // get the Urls
+        if (entity.urls().getFinalUrl()) {
+            urls.push(entity.urls().getFinalUrl());
         }
-        return date;
-    } catch (e) {
-        throw error('_daysAgo(num: ' + num + ', format: ' + format + ')', e);
-    }
-}
-
-//Helper function to format todays date
-function _today(format) {
-    try {
-        var newDate = new Date();
-        var timeZone = AdWordsApp.currentAccount().getTimeZone();
-        var today;
-        if (format != undefined && format != '' && format != null) {
-            today = Utilities.formatDate(newDate, timeZone, format);
-        } else {
-            today = {
-                day: newDate.getDate(),
-                month: newDate.getMonth(),
-                year: newDate.getYear(),
-                time: newDate.getTime()
-            };
+        if (entity.urls().getMobileFinalUrl()) {
+            urls.push(entity.urls().getMobileFinalUrl());
         }
-        return today;
-    } catch (e) {
-        throw error('_today(format: ' + format + ')', e);
-    }
-}
 
-function _getDateString() {
-    try {
-        var today = new Date();
-        var timeZone = AdWordsApp.currentAccount().getTimeZone();
-        var dayFormat = "MM-dd-yyyy";
-        var day = Utilities.formatDate(today, timeZone, dayFormat);
+        for (var i in urls) {
+            // remove tracking info
+            var url = cleanUrl(urls[i]);
 
-        return day;
-    } catch (e) {
-        throw error('_getDateString()', e);
-    }
-}
+            if (alreadyCheckedUrls[url]) {
+                if (alreadyCheckedUrls[url] === 'in stock') {
+                    // if it's already been checked and it's in stock, enable it
+                    Enable(entity, url);
 
-// Function to get date and return true if it's monday
-// Days: 0: sun, 1: mon, 2: tue, 3: wed, 4: thu, 5: fri, 6: sat
-function _todayIsMonday() {
-    try {
-        var DATE_OFFSET = 3600000;
-        var date = new Date();
-        var today = new Date(date.getTime() + DATE_OFFSET);
-        var time = today.getTime();
-        var day = today.getDay();
-        Logger.log('today: ' + today + '\nday: ' + day);
-        return (day === 1);
-    } catch (e) {
-        throw error('todayIsMonday', e);
-    }
-}
-
-
-function _rolling13Week(format) {
-    try {
-        if (format === undefined || format === '' || format === null) {
-            format = 'YYYYMMdd';
-        }
-        var p = CustomDateRange(98, 8, format);
-        var n = CustomDateRange(91, 1, format);
-        var str = p.string + ' - ' + n.string;
-        var result = {
-            from: p,
-            to: n,
-            string: str
-        }
-        return result;
-    } catch (e) {
-        throw error('Rolling13Week(format: ' + format + ')', e);
-    }
-}
-
-function formatKeyword(keyword) {
-    try {
-        keyword = keyword.replace(/[^a-zA-Z0-9 ]/g, '');
-        return keyword;
-    } catch (e) {
-        throw error('formatKeyword(keyword: ' + keyword + ')', e);
-    }
-}
-
-// A helper function to make rounding a little easier
-function round(value) {
-    try {
-        var decimals = Math.pow(10, DECIMAL_PLACES);
-        return Math.round(value * decimals) / decimals;
-    } catch (e) {
-        throw error('round(value: ' + value + ')', e);
-    }
-}
-
-//This function returns the standard deviation for a set of entities
-//The stat key determines which stat to calculate it for
-function getStandardDev(entites, mean, stat_key) {
-    try {
-        var total = 0;
-        for (var i in entites) {
-            total += Math.pow(entites[i]['stats'][stat_key] - mean, 2);
-        }
-        if (Math.sqrt(entites.length - 1) == 0) {
-            return 0;
-        }
-        return round(Math.sqrt(total) / Math.sqrt(entites.length - 1));
-    } catch (e) {
-        throw error('getStandardDev(entites: ' + entites + ', mean: ' + mean + ', stat_key: ' + stat_key + ')', e);
-    }
-}
-
-//Returns the mean (average) for the set of entities
-//Again, stat key determines which stat to calculate this for
-function getMean(entites, stat_key) {
-    try {
-        var total = 0;
-        for (var i in entites) {
-            total += entites[i]['stats'][stat_key];
-        }
-        if (entites.length == 0) {
-            return 0;
-        }
-        return round(total / entites.length);
-    } catch (e) {
-        throw error('getMean(entites: ' + entites + ', stat_key: ' + stat_key + ')', e);
-    }
-}
-
-//This is a helper function to create the label if it does not already exist
-function createLabelIfNeeded(name) {
-    try {
-        if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
-            AdWordsApp.createLabel(name);
-        }
-    } catch (e) {
-        throw error('createLabelIfNeeded(name: ' + name + ')', e);
-    }
-}
-
-function EmailErrorReport(reportName, emails, isPreview, ex, completedReport) {
-    var _subject = 'AdWords Alert: Error in ' + reportName + ', script ' + (completedReport ? 'did execute correctly ' : 'did not execute ') + ' correctly.';
-    var _message = "Error on line " + ex.lineNumber + ":\n" + ex.message + EMAIL_SIGNATURE;
-    var _attachment = emailAttachment();
-    var _fileName = _getDateString() + '_' + reportName;
-    var _to = isPreview ? emails[0] : emails.join();
-    PreviewMsg = isPreview ? 'Preview; No changes actually made.\n' : '';
-
-
-    if (_message != '') {
-        MailApp.sendEmail({
-            to: _to,
-            subject: _subject,
-            body: PreviewMsg + _message,
-            attachments: [{
-                fileName: _fileName + '.csv',
-                mimeType: 'text/csv',
-                content: _attachment
-            }]
-        });
-    }
-
-    print('Email sent to: ' + _to);
-
-}
-
-//Takes a report and the level of reporting and sends and email
-//with the report as an attachment.
-function sendResultsViaEmail(report, level) {
-    try {
-        var rows = report.match(/\n/g).length - 1;
-        var date = _getDateTime().day;
-
-        var subject = 'AdWords Alert: ' + REPORT_NAME.join(' ') + ' ' + _titleCase(level) + 's Report - ' + day;
-
-        var signature = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
-        var message = emailMessage(rows) + signature;
-        var file_name = REPORT_NAME.join('_') + date;
-        var To;
-        var isPreview = '';
-
-        if (rows != 0) {
-            // If it's a preview, only send it to me, and mention that no changes were made
-            if (AdWordsApp.getExecutionInfo().isPreview()) {
-                To = EMAILS[0]
-                isPreview = 'Preview; No changes actually made.\n';
+                    // If the ad group is paused, re-enable it
+                    if (adGroup.isPaused()) {
+                        EnableAdGroup(adGroup);
+                    }
+                }
             } else {
-                To = EMAILS.join();
+                var htmlCode;
+                try {
+                    htmlCode = UrlFetchApp.fetch(url).getContentText();
+                } catch (e) {
+                    Logger.log('There was an issue checking:' + url + ', Skipping.');
+                    continue;
+                }
+
+                var did_enable = false;
+
+                // Check if the ad is now in stock.
+                for (var x in IN_STOCK_TEXTS) {
+
+                    // If this finds the IN_STOCK_TEXTS anywhere on the page, it will enable the ad.
+                    if (htmlCode.indexOf(IN_STOCK_TEXTS[x]) >= 0) {
+                        alreadyCheckedUrls[url] = 'in stock';
+
+                        Enable(entity);
+                        // if the ad group is paused, re-enable it.
+                        if (adGroup.isPaused()) {
+                            EnableAdGroup(adGroup);
+                        }
+                        // Flag it as enabled
+                        did_enable = true;
+                        Logger.log('Url: ' + url + ' is ' + alreadyCheckedUrls[url]);
+                        break;
+                    }
+                }
+
+                // If it wasn't re-enabled, make sure that it's still paused.
+                if (!did_enable) {
+                    alreadyCheckedUrls[url] = 'out of stock';
+                    entity.pause();
+                }
             }
-
-            MailApp.sendEmail({
-                to: To,
-                subject: subject,
-                body: isPreview + message,
-                attachments: [Utilities.newBlob(report, 'text/csv', file_name + date + '.csv')]
-            });
-
-            Logger.log('Email sent to: ' + To);
-
         }
-    } catch (e) {
-        throw error('sendResultsViaEmail(report: ' + report + ', level: ' + level + ')', e);
-    }
-}
-//Helper function to capitalize the first letter of a string.
-function _titleCase(str) {
-    try {
-        return str.replace(/(?:^|\s)\S/g, function(a) {
-            return a.toUpperCase();
-        });
-    } catch (e) {
-        throw error('_titleCase(str: ' + str + ')', e);
     }
 }
 
-function EmailResults(ReportName) {
-    try {
-        var _emails = EMAILS;
-        var Subject = 'AdWords Alert: ' + ReportName.join(' ');
-        var Message = emailMessage() + EMAIL_SIGNATURE;
-        var Attachment = emailAttachment();
-        var file_name = _getDateString() + '_' + ReportName.join('_');
-        var _to;
-        var previewMsg = '';
+function Enable(entity, url) {
+    var campaignName = entity.getCampaign().getName();
+    var adGroupName = entity.getAdGroup().getName();
+    var headline = entity.getHeadline();
+    var msg = ['\n' + campaignName, adGroupName, headline, url];
 
-        _to = IS_PREVIEW ? _emails[0] : _emails.join();
-        PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
+    entity.enable();
+    entity.removeLabel(OUT_OF_STOCK_LABEL);
+    entity.applyLabel(IN_STOCK_LABEL);
 
+    // Add this to the list of enabled urls
+    enabledUrls = enabledUrls.concat(msg);
 
-        if (Message != '') {
-            MailApp.sendEmail({
-                to: _to,
-                subject: Subject,
-                body: previewMsg + Message,
-                attachments: [{
-                    fileName: file_name + '.csv',
-                    mimeType: 'text/csv',
-                    content: Attachment
-                }]
-            });
+    Logger.log('Ads for: ' + entity + ': ' + url + ' are now enabled.');
+    enabledNum++;
+}
 
+function EnableAdGroup(adGroup) {
+    var adGrpName = adGroup.getName();
+    var campaignName = adGroup.getCampaign().getName();
+    var msg = ['\n' + campaignName, adGrpName];
+    adGroup.enable();
+    adGroup.removeLabel(OUT_OF_STOCK_LABEL);
+    adGroup.applyLabel(IN_STOCK_LABEL);
+
+    // Add this to the list of enabled ad groups
+    enabledAdGroups = enabledAdGroups.concat(msg);
+    Logger.log('AdGroup: ' + adGrpName + ' is now enabled.');
+    enabledAdGrpNum++;
+}
+
+function pauseURLs() {
+    var alreadyCheckedUrls = {};
+    var iter = buildSelectorPause().get();
+    print("Starting Pause Function.");
+    while (iter.hasNext()) {
+        var entity = iter.next();
+        var adGroup = entity.getAdGroup();
+        var urls = [];
+        // Get the Urls
+        if (entity.urls().getFinalUrl()) {
+            urls.push(entity.urls().getFinalUrl());
+        }
+        if (entity.urls().getMobileFinalUrl()) {
+            urls.push(entity.urls().getMobileFinalUrl());
         }
 
-        print('Email sent to: ' + _to);
-    } catch (e) {
-        throw error('EmailResults(ReportName: ' + ReportName.join(' ') + ')', e);
-    }
-}
+        for (var i in urls) {
+            // Remove tracking info from URL
+            var url = cleanUrl(urls[i]);
 
-function EmailReportResults(_emails, _reportName, _message, _attachment) {
-    try {
-        var Subject = 'AdWords Alert: ' + _reportName.join(' ');
+            // If it's been checked already in a different ad and it's out of stock, pause it
+            if (alreadyCheckedUrls[url]) {
+                if (alreadyCheckedUrls[url] === 'out of stock') {
+                    Pause(entity, url);
+                }
 
-        var file_name = _getDateString() + '_' + _reportName.join('_');
-        var _to;
+            } else {
+                var htmlCode;
+                try {
+                    // This pulls all the html from the URL of the ad
+                    htmlCode = UrlFetchApp.fetch(url).getContentText();
+                } catch (e) {
+                    Logger.log('There was an issue checking: ' + entity + ' ' + url + ', Skipping.');
+                    continue;
+                }
 
-        _to = IS_PREVIEW ? _emails[0] : _emails.join();
-        PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
+                // Flag for paused status
+                var did_pause = false;
 
-
-        if (_message != '') {
-            MailApp.sendEmail({
-                to: _to,
-                subject: Subject,
-                body: PreviewMsg + _message + EMAIL_SIGNATURE,
-                attachments: [{
-                    fileName: file_name + '.csv',
-                    mimeType: 'text/csv',
-                    content: _attachment.join(',')
-                }]
-            });
-
+                for (var j in OUT_OF_STOCK_TEXTS) {
+                    // if the OUT_OF_STOCK text code from above is found anywhere on the page, pause the ad
+                    if (htmlCode.indexOf(OUT_OF_STOCK_TEXTS[j]) >= 0) {
+                        alreadyCheckedUrls[url] = 'out of stock';
+                        Pause(entity, url);
+                        did_pause = true;
+                        break;
+                    }
+                }
+                // If the above did not pause it, make sure it doesn't get paused by mistake and mark it as in stock
+                if (!did_pause) {
+                    alreadyCheckedUrls[url] = 'in stock';
+                    entity.enable();
+                }
+            }
         }
-
-        Logger.log('Email sent to: ' + To);
-    } catch (e) {
-        print(_attachment.join());
-        error('EmailReportResults(_emails: ' + _emails.join() + ', _reportName:' + _reportName.join() + ', _message, _attachment),\n' + e);
     }
 }
 
-function info(msg) {
-    Logger.log(msg);
+function Pause(entity, url) {
+    var campaignName = entity.getCampaign().getName();
+    var adGroupName = entity.getAdGroup().getName();
+    var headline = entity.getHeadline();
+    var msg = ['\n' + campaignName, adGroupName, headline, url];
+    entity.pause();
+    entity.applyLabel(OUT_OF_STOCK_LABEL);
+    removeInStockLabel(entity);
+
+    // Add this to the list of paused urls
+    pausedUrls = pausedUrls.concat(msg);
+    Logger.log('Ads for: ' + adGroupName + ': ' + entity.getHeadline() + ': ' + url + ' are now paused.');
+    pausedNum++;
 }
 
-function print(msg) {
-    Logger.log(msg);
+function pauseOutOfStockAdGroups() {
+    var adGroups = AdWordsApp.adGroups()
+        .withCondition('CampaignStatus = ENABLED')
+        .withCondition('AdGroupStatus = ENABLED')
+        .get();
+
+    while (adGroups.hasNext()) {
+        adGroup = adGroups.next();
+        // If all ads in the ad group are paused, and at least one ad has the out of stock Label, pause the ad group and add the out of stock label to the ad group
+        if (allAdsPaused(adGroup) && isOutOfStock(adGroup)) {
+            PauseAdGroup(adGroup);
+        }
+    }
 }
 
-function error(funcName, e) {
-    var warning = e.name + ' in ' + funcName + ' at line ' + e.lineNumber + ': ' + e.message;
-    Logger.log(warning);
-    return warning;
+function PauseAdGroup(adGroup) {
+    var adGroupName = adGroup.getName();
+    var campaignName = adGroup.getCampaign().getName();
+
+    adGroup.pause();
+    adGroup.applyLabel(OUT_OF_STOCK_LABEL);
+    removeInStockLabel(adGroup);
+
+    // Add this to the list of paused urls
+    pausedAdGroups = pausedAdGroups.concat(['\n' + campaignName, adGroupName]);
+    Logger.log('AdGroup: ' + adGroupName + ' is now paused.');
+    pausedAdGrpNum++;
 }
 
-function warn(msg) {
-    Logger.log('WARNING: ' + msg);
+function allAdsPaused(adGroup) {
+    var ads = adGroup.ads()
+        .withCondition('Status = ENABLED')
+        .get();
+
+    if (ads.hasNext()) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
-// Returns bool representing if obj is a number
-function isNumber(obj) {
+function isOutOfStock(adGroup) {
+    var ads = adGroup.ads()
+        .withCondition('LabelNames CONTAINS_ANY[' + OUT_OF_STOCK_LABEL + ']')
+        .get();
+    Logger.log('Ads with Label: ' + ads);
+    if (ads.hasNext()) {
+        Logger.log('Ads with Label: ' + ads.next());
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function removeInStockLabel(entity) {
     try {
-        return ((obj.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)) || (obj === NaN));
+        entity.removeLabel(IN_STOCK_LABEL);
     } catch (e) {
-        throw error('isNumber(obj: ' + obj + ')', e);
+        return;
     }
+
 }
 
-// returns bool representing if an entity has a given keyword
-function hasLabelAlready(entity, label) {
-    try {
-        return (entity.labels().withCondition("Name = '" + label + "'").get().hasNext());
-    } catch (e) {
-        throw error('hasLabelAlready(entity: ' + entity + ', label' + label + ')', e);
+function cleanUrl(url) {
+    if (WRAPPED_URLS) {
+        url = url.substr(url.lastIndexOf('http'));
+        if (decodeURIComponent(url) !== url) {
+            url = decodeURIComponent(url);
+        }
     }
+    if (STRIP_QUERY_STRING) {
+        if (url.indexOf('?') >= 0) {
+            url = url.split('?')[0];
+        }
+    }
+    if (url.indexOf('{') >= 0) {
+        //Let's remove the value track parameters
+        url = url.replace(/\{[0-9a-zA-Z]+\}/g, '');
+    }
+    return url;
+}
+
+function emailMessage() {
+    var message = "";
+    if (pausedNum === 0 && enabledNum === 0) {
+        message = 'No major stock changes were detected; no changes were made.';
+    } else {
+        if (pausedNum != 0) {
+            message += pausedNum + ' ads auto-paused due to lack of stock. ';
+        }
+        if (enabledNum != 0) {
+            if (message === '') {
+                message += '\n';
+            }
+            message += enabledNum + ' ads re-enabled due to restock.';
+        }
+    }
+    return message;
+}
+
+function emailAttachment() {
+    var attachment = '';
+
+    if (pausedNum != 0) {
+        if (attachment === '') {
+            attachment += '\n\n';
+        }
+        attachment += pausedNum + ' ' + pausedUrls.join();
+    }
+
+    if (enabledNum != 0) {
+        if (attachment === '') {
+            attachment += '\n\n';
+        }
+        attachment += '\n\n' + enabledNum + ' ' + enabledUrls.join();
+    }
+
+    if (pausedAdGrpNum != 0) {
+        attachment += '\n\n' + pausedAdGrpNum + ' ' + pausedAdGroups.join();
+    }
+
+    if (enabledAdGrpNum != 0) {
+        attachment += '\n\n' + enabledAdGrpNum + ' ' + enabledAdGroups.join();
+    }
+
+    return attachment;
+}
+
+// Conditions for pausing ads
+function buildSelectorPause() {
+    var selector = (URL_LEVEL === 'Ad') ? AdWordsApp.ads() : AdWordsApp.keywords();
+
+    selector = selector
+        .withCondition('CampaignStatus != DELETED')
+        .withCondition('AdGroupStatus != DELETED')
+        .withCondition("Labels CONTAINS_NONE [" + OUT_OF_STOCK_LABEL_ID + "]");;
+
+    if (ONLY_ACTIVE) {
+        selector = selector
+            .withCondition('CampaignStatus = ENABLED');
+
+        if (URL_LEVEL !== 'Ad') {
+            selector = selector
+                .withCondition('AdGroupStatus = ENABLED');
+        }
+    }
+    return selector;
+}
+
+// Conditions for enabling ads
+function buildSelectorEnable() {
+    var selector = (URL_LEVEL === 'Ad') ? AdWordsApp.ads() : AdWordsApp.keywords();
+
+    selector = selector
+        .withCondition('CampaignStatus != DELETED')
+        .withCondition('AdGroupStatus != DELETED')
+        .withCondition("Labels CONTAINS_ANY [" + OUT_OF_STOCK_LABEL_ID + "]");
+
+    if (ONLY_ACTIVE) {
+        selector = selector
+            .withCondition('CampaignStatus = ENABLED')
+
+        if (URL_LEVEL !== 'Ad') {
+            selector = selector
+                .withCondition('AdGroupStatus = PAUSED')
+        }
+    }
+    return selector;
 }
