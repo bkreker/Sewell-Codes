@@ -48,7 +48,7 @@
             // btnImport
             // 
             this.btnImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.btnImport.Location = new System.Drawing.Point(415, 42);
+            this.btnImport.Location = new System.Drawing.Point(156, 42);
             this.btnImport.Margin = new System.Windows.Forms.Padding(2);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(142, 22);
@@ -61,7 +61,7 @@
             // 
             this.btnGo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGo.Location = new System.Drawing.Point(836, 41);
+            this.btnGo.Location = new System.Drawing.Point(318, 41);
             this.btnGo.Margin = new System.Windows.Forms.Padding(2);
             this.btnGo.Name = "btnGo";
             this.btnGo.Size = new System.Drawing.Size(142, 22);
@@ -82,7 +82,7 @@
             this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.MarqueeAnimationSpeed = 0;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(990, 10);
+            this.progressBar1.Size = new System.Drawing.Size(472, 10);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar1.TabIndex = 2;
             // 
@@ -110,14 +110,14 @@
             this.comboBoxInFile.FormattingEnabled = true;
             this.comboBoxInFile.Location = new System.Drawing.Point(12, 12);
             this.comboBoxInFile.Name = "comboBoxInFile";
-            this.comboBoxInFile.Size = new System.Drawing.Size(966, 21);
+            this.comboBoxInFile.Size = new System.Drawing.Size(448, 21);
             this.comboBoxInFile.TabIndex = 6;
             // 
             // ImportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(990, 78);
+            this.ClientSize = new System.Drawing.Size(472, 78);
             this.Controls.Add(this.comboBoxInFile);
             this.Controls.Add(this.cboxAvgAll);
             this.Controls.Add(this.progressBar1);

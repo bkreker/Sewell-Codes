@@ -1,7 +1,10 @@
 // Helper Functions
 // Public variables
 var PreviewMsg = '';
-var EMAIL_SIGNATURE = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+var EMAIL_SIGNATURE = function() {
+    const _SIGNATURE = '\n\nThis report was created by an automatic script by Josh DeGraw. If there are any errors or questions about this report, please inform me as soon as possible.';
+    return _SIGNATURE;
+}
 var IS_PREVIEW = AdWordsApp.getExecutionInfo().isPreview();
 
 var _ = {
@@ -248,7 +251,7 @@ var _ = {
     ,
     EmailErrorReport: function(reportName, emails, isPreview, ex, completedReport) {
         var _subject = 'AdWords Alert: Error in ' + reportName + ', script ' + (completedReport ? 'did execute correctly ' : 'did not execute ') + ' correctly.';
-        var _message = "Error on line " + ex.lineNumber + ":\n" + ex.message + EMAIL_SIGNATURE;
+        var _message = "Error on line " + ex.lineNumber + ":\n" + ex.message + EMAIL_SIGNATURE();
         var _attachment = emailAttachment();
         var _fileName = _getDateString() + '_' + reportName;
         var _to = isPreview ? emails[0] : emails.join();
@@ -315,7 +318,7 @@ var _ = {
         ,
     titleCase: function(str) {
         try {
-            return str.replace(/(?:^|\s)\S/g, ,: function(a) {
+            return str.replace(/(?:^|\s)\S/g, function(a) {
                 return a.toUpperCase();
             });
         } catch (e) {
@@ -324,11 +327,11 @@ var _ = {
     }
 
     ,
-    EmailResults: function(ReportName = REPORT_NAME) {
+    EmailResults: function(ReportName) {
         try {
             var _emails = EMAILS;
             var Subject = 'AdWords Alert: ' + ReportName.join(' ');
-            var Message = emailMessage() + EMAIL_SIGNATURE;
+            var Message = emailMessage() + EMAIL_SIGNATURE();
             var Attachment = emailAttachment();
             var file_name = _getDateString() + '_' + ReportName.join('_');
             var _to;
@@ -374,7 +377,7 @@ var _ = {
                 MailApp.sendEmail({
                     to: _to,
                     subject: Subject,
-                    body: PreviewMsg + _message + EMAIL_SIGNATURE,
+                    body: PreviewMsg + _message + EMAIL_SIGNATURE(),
                     attachments: [{
                         fileName: file_name + '.csv',
                         mimeType: 'text/csv',

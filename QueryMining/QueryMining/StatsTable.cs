@@ -18,7 +18,7 @@ namespace QueryMining
     {
         public static int QueryCol { get; set; }
         public static int QueryCountCol { get; set; }
-
+        public static int MatchedKeywordCol { get; set; }
         public static bool AvgAll
         {
             get { return Program.AvgAll; }
@@ -39,8 +39,11 @@ namespace QueryMining
         {
             StatDataTable.RowCount = 0;
             StatDataTable.ColumnCollection = null;
+
             StatDataTable.QueryCol = 0;
             StatDataTable.QueryCountCol = 0;
+            StatDataTable.MatchedKeywordCol = 1;
+
             Program.Processing = false;
             Program.OperationCancelled = false;
         }
@@ -400,7 +403,7 @@ namespace QueryMining
             }
         }
 
-        public bool AddRowToTable(List<string> newRow)
+        public bool AddRowToTable(IEnumerable<string> newRow)
         {
 
             return AddRowToTable(newRow.ToArray<object>());
@@ -488,13 +491,13 @@ namespace QueryMining
             return false;
         }
 
-        public static object[] AggregateRows(List<DataRow> existingRows, object[] inputRow)
+        public static object[] AggregateRows(IEnumerable<DataRow> existingRows, object[] inputRow)
         {
             return AggregateRows((from DataRow row in existingRows
-                                  select row.ItemArray).ToList(), inputRow);
+                                  select row.ItemArray), inputRow);
         }
 
-        public static object[] AggregateRows(List<object[]> existingRows, object[] inputRow)
+        public static object[] AggregateRows(IEnumerable<object[]> existingRows, object[] inputRow)
         {
             object[] outputArr = new object[ColumnCollection.Count];
             inputRow.CopyTo(outputArr, 0);
@@ -503,7 +506,10 @@ namespace QueryMining
                 if (col_ix == StatDataTable.QueryCountCol)
                 {
                     outputArr[col_ix] = existingRows.Count();
-
+                }
+                else if (col_ix == StatDataTable.MatchedKeywordCol)
+                {
+                    outputArr[StatDataTable.MatchedKeywordCol] = inputRow[StatDataTable.MatchedKeywordCol];
                 }
                 else
                 {

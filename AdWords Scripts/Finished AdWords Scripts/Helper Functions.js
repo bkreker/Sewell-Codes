@@ -322,8 +322,11 @@ function EmailResults(ReportName) {
         var file_name = _getDateString() + '_' + ReportName.join('_');
         var _to;
         var previewMsg = '';
-
-        _to = IS_PREVIEW ? _emails[0] : _emails.join();
+        if (_emails instanceof Array) {
+            _to = IS_PREVIEW ? _emails[0] : _emails.join();
+        } else {
+            _to = _emails;
+        }
         PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
 
 
@@ -347,35 +350,40 @@ function EmailResults(ReportName) {
     }
 }
 
-function EmailReportResults(_emails, _reportName, _message, _attachment) {
+function EmailReportResults(_emails, _reportName, _message, _attachment, isPreview) {
     try {
-        var Subject = 'AdWords Alert: ' + _reportName.join(' ');
+        var _subject = 'AdWords Alert: ' + _reportName.join(' ');
 
         var file_name = _getDateString() + '_' + _reportName.join('_');
         var _to;
 
-        _to = IS_PREVIEW ? _emails[0] : _emails.join();
-        PreviewMsg = IS_PREVIEW ? 'Preview; No changes actually made.\n' : '';
+        if (_emails instanceof Array)
+            _to = isPreview ? _emails[0] : _emails.join(',');
+        else
+            _to = _emails;
+
+        _attachment = _attachment instanceof Array ? _attachment.join(',') : _attachment;
+
+        PreviewMsg = isPreview ? 'Preview; No changes actually made.\n' : '';
 
 
         if (_message != '') {
             MailApp.sendEmail({
                 to: _to,
-                subject: Subject,
+                subject: _subject,
                 body: PreviewMsg + _message + EMAIL_SIGNATURE,
                 attachments: [{
                     fileName: file_name + '.csv',
                     mimeType: 'text/csv',
-                    content: _attachment.join(',')
+                    content: _attachment
                 }]
             });
 
         }
 
-        Logger.log('Email sent to: ' + To);
+        print('Email sent to: ' + _to);
     } catch (e) {
-        print(_attachment.join());
-        error('EmailReportResults(_emails: ' + _emails.join() + ', _reportName:' + _reportName.join() + ', _message, _attachment),\n' + e);
+        error('EmailReportResults(_emails: ' + _emails + ', _reportName: ' + _reportName + ', _message: ' + _message + ', _attachment: ' + _attachment + ', isPreview: ' + isPreview + '),\n' + e);
     }
 }
 
@@ -388,7 +396,12 @@ function print(msg) {
 }
 
 function error(funcName, e) {
-    var warning = e.name + ' in ' + funcName + ' at line ' + e.lineNumber + ': ' + e.message;
+    var warning = '';
+    if (e instanceof Error)
+        warning = e.name + ' in ' + funcName + ' at line ' + e.lineNumber + ': ' + e.message;
+    else
+        warning = 'Error in : ' + funcName + ':\n' + e;
+
     Logger.log(warning);
     return warning;
 }

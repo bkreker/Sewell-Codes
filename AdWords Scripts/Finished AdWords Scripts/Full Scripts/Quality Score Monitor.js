@@ -20,8 +20,8 @@ var CHECKED_LIST = [
     ['Checked'], TITLES
 ];
 
-var pausedNum = 0;
-var checkedNum = 0;
+var PausedNum = 0;
+var CheckedNum = 0;
 
 var MIN_QS = 4;
 var MED_QS = 5;
@@ -47,8 +47,9 @@ function main() {
 
         updateConvValReport(CONV_SPREADSHEET_URL, CONV_SHEET_NAME, DATE_RANGE.string, true);
         CheckOrPause(DATE_RANGE);
+        CompletedReport = true;
 
-        EmailResults(REPORT_NAME);
+        EmailReportResults(EMAILS, REPORT_NAME, emailMessage(), emailAttachment(), IS_PREVIEW);
     } catch (e) {
         EmailErrorReport(REPORT_NAME.join(' '), EMAILS, IS_PREVIEW, e, CompletedReport);
     }
@@ -120,17 +121,15 @@ function CheckOrPause(dateRange) {
                     checkedKeyword(kw, msg);
                 }
             } catch (e) {
-                print(JSON.stringify(e, null, '\t'));
                 Logger.log('Error in CheckOrPause for kw ' + kw + ': ' + e);
             }
 
         }
     }
-    CompletedReport = true;
 }
 
 function pauseKeyword(kw, msg) {
-    pausedNum++;
+    PausedNum++;
     kw.pause();
     Logger.log("Pausing " + msg.join());
     PAUSED_LIST = PAUSED_LIST.concat('\n' + msg);
@@ -139,7 +138,7 @@ function pauseKeyword(kw, msg) {
 }
 
 function checkedKeyword(kw, msg) {
-    checkedNum++;
+    CheckedNum++;
     Logger.log('Not Pausing: ' + msg.join());
     CHECKED_LIST = CHECKED_LIST.concat('\n' + msg);
 
@@ -338,10 +337,10 @@ function clearConvSheet(ss) {
 
 function emailAttachment() {
     var attachment = '';
-    if (pausedNum > 0) {
+    if (PausedNum > 0) {
         attachment = PAUSED_LIST.join();
     }
-    if (checkedNum > 0) {
+    if (CheckedNum > 0) {
         if (attachment != '') {
             attachment += '\n\n';
         }
@@ -353,14 +352,16 @@ function emailAttachment() {
 
 function emailMessage() {
     var message = '';
-    if (pausedNum > 0) {
-        message += pausedNum + ' keywords were paused due to  having a QS below ' + MIN_QS + '.';
+    if (PausedNum > 0) {
+        message += PausedNum + ' keywords were paused due to  having a QS below ' + MIN_QS + '.';
     }
-    if (checkedNum > 0) {
+    if (CheckedNum > 0) {
         if (message != '') {
             message += '\n\n';
         }
-        message += checkedNum + ' keywords have a QS of ' + MED_QS + '.';
+        message += CheckedNum + ' keywords have a QS of ' + MED_QS + '.';
     }
     return message + 'This script Pauses keywords below QS of ' + MIN_QS + ' that also are not profitable for: ' + DATE_RANGE.string + '\nKeywords that have been paused by this script can be seen at: ' + LOW_QS_LOG_URL + ', along with the date of the change.';
 }
+
+// Minified Helper Functions

@@ -2,3 +2,5 @@ C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\bin\Debug\Other Bulk Cabl
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\Modular Matrix.csv
 C:\Users\joshd\Documents\Codes\QueryMining\QueryMining\Modular Matrix.csv
 C:\Users\joshd\Downloads\HD-Link Ctrl to Mine.csv
+C:\Users\joshd\Downloads\Search term report (3).csv
+C:\Users\joshd\Downloads\Search term report.csv

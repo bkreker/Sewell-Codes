@@ -3,12 +3,15 @@
  * Loosely based on template Created By Russ Savage
  * Customized by Josh DeGraw
  ***********************************/
-var REPORT_NAME = ['Stock', 'Checker'];
-var URL_LEVEL = 'Ad'; // or Keyword
-var ONLY_ACTIVE = true; // set to false to check keywords or ads in all campaigns (paused and active)
-var CAMPAIGN_LABEL = ''; // set this if you want to only check campaigns with this label
-var STRIP_QUERY_STRING = true; // set this to false if the stuff that comes after the question mark is important
+
+var REPORT_NAME = function(){const _REPORT_NAME = ['Stock', 'Checker'];return _REPORT_NAME }
+var URL_LEVEL =  function(){const _URL_LEVEL = 'Ad'; /*or Keyword*/ return _URL_LEVEL } 
+var ONLY_ACTIVE = function(){const _ONLY_ACTIVE = true;  return _ONLY_ACTIVE; }// set to false to check keywords or ads in all campaigns (paused and active)
+var CAMPAIGN_LABEL =  function(){const _CAMPAIGN_LABEL = ''; return _CAMPAIGN_LABEL;} // set this if you want to only check campaigns with this label
+var STRIP_QUERY_STRING = function(){const _STRIP_QUERY_STRING =  true; return _STRIP_QUERY_STRING;} // set this to false if the stuff that comes after the question mark is important
 var WRAPPED_URLS = false; // set this to true if you use a 3rd party like Marin or Kenshoo for managing you account
+var OUT_OF_STOCK_LABEL = "Out_of_Stock"; // The label that is added to newly paused ads
+var IN_STOCK_LABEL = "Now_In_Stock"; // The label that is added to newly enabled ads
 
 // Email addresses to send the report to. The first email is for who debugs the code
 var EMAILS = [
@@ -17,8 +20,6 @@ var EMAILS = [
     "sean@sewelldirect.com"
 ];
 
-var OUT_OF_STOCK_LABEL = "Out_of_Stock"; // The label that is added to newly paused ads
-var IN_STOCK_LABEL = "Now_In_Stock"; // The label that is added to newly enabled ads
 var OUT_OF_STOCK_LABEL_ID = AdWordsApp.labels()
     .withCondition('Name = "' + OUT_OF_STOCK_LABEL + '"')
     .get().next().getId();
@@ -30,31 +31,30 @@ var IN_STOCK_LABEL_ID = AdWordsApp.labels()
 var PAUSED_SKUS = ['SKUs Paused: '];
 var ENABLED_SKUS = ['SKUs Enabled: '];
 
-var PausedNum = 0;
-var EnabledNum = 0;
-var PausedAdGrpNum = 0;
-var EnabledAdGrpNum = 0;
-var ChangedNum = function() { return PausedNum + EnabledNum; }
+var pausedNum = 0;
+var enabledNum = 0;
+var pausedAdGrpNum = 0;
+var enabledAdGrpNum = 0;
 
 // Array to hold all newly paused urls
-var PausedUrls = [
+var pausedUrls = [
     ['Ads Paused: '],
     ['\nCampaign', 'AdGroup', 'Ad', 'URL']
 ];
-var PausedAdGroups = [
+var pausedAdGroups = [
     ['Ad Groups Paused: '],
     ['\nCampaign', 'AdGroup']
 ];
+
 // Array to hold all  enabled urls
-var EnabledUrls = [
+var enabledUrls = [
     ['Ads Enabled: '],
     ['\nCampaign', 'AdGroup', 'Ad', 'URL']
 ];
-var EnabledAdGroups = [
+var enabledAdGroups = [
     ['Ad Groups Enabled: '],
     ['\nCampaign', 'AdGroup']
 ];
-var CompletedReport = false;
 
 
 // This is the specific text (or texts) to search for 
@@ -86,32 +86,25 @@ function main() {
         // Enable ads that need enabling
         enableURLs();
 
-        if (PausedNum > 0) {
-            print(PausedUrls.join());
+        if (pausedNum > 0) {
+            Logger.log(pausedUrls.join());
         }
-        if (EnabledNum > 0) {
-            print(EnabledUrls.join());
+        if (enabledNum > 0) {
+            Logger.log(enabledUrls.join());
         }
-        CompletedReport = true;
-        print('Changes made: ' + ChangedNum());
+
         //Send an email summarizing the changes
-        if (ChangedNum() == 0) {
-            print('No stock changes made.');
-            EMAILS = [EMAILS[0]];
-
-        }
-        EmailReportResults(EMAILS, REPORT_NAME, emailMessage(), emailAttachment(), IS_PREVIEW);
-
+        _.EmailResults(REPORT_NAME);
     } catch (e) {
-        error('main', e);
-        EmailErrorReport(REPORT_NAME.join(' '), EMAILS, IS_PREVIEW, e, CompletedReport);
+        _.print('Error Occured: e');
+        _.print(JSON.stringify(e, null, '\t'));
+       _. EmailErrorReport(REPORT_NAME.join(' '), EMAILS, IS_PREVIEW, e, CompletedReport);
     }
 }
 
 function enableURLs() {
     var alreadyCheckedUrls = {};
     var iter = buildSelectorEnable().get();
-    print('Enabling URLs.');
     while (iter.hasNext()) {
         var entity = iter.next();
         var adGroup = entity.getAdGroup();
@@ -144,7 +137,7 @@ function enableURLs() {
                 try {
                     htmlCode = UrlFetchApp.fetch(url).getContentText();
                 } catch (e) {
-                    Logger.log('There was an issue checking:' + url + ', Skipping.');
+                   _.print('There was an issue checking:' + url + ', Skipping.');
                     continue;
                 }
 
@@ -164,7 +157,7 @@ function enableURLs() {
                         }
                         // Flag it as enabled
                         did_enable = true;
-                        Logger.log('Url: ' + url + ' is ' + alreadyCheckedUrls[url]);
+                       _.print('Url: ' + url + ' is ' + alreadyCheckedUrls[url]);
                         break;
                     }
                 }
@@ -177,8 +170,6 @@ function enableURLs() {
             }
         }
     }
-
-    print('Finished. Enabled: ' + EnabledNum + ' URls');
 }
 
 function Enable(entity, url) {
@@ -192,10 +183,10 @@ function Enable(entity, url) {
     entity.applyLabel(IN_STOCK_LABEL);
 
     // Add this to the list of enabled urls
-    EnabledUrls = EnabledUrls.concat(msg);
+    enabledUrls = enabledUrls.concat(msg);
 
-    Logger.log('Ads for: ' + entity + ': ' + url + ' are now enabled.');
-    EnabledNum++;
+   _.print('Ads for: ' + entity + ': ' + url + ' are now enabled.');
+    enabledNum++;
 }
 
 function EnableAdGroup(adGroup) {
@@ -207,15 +198,15 @@ function EnableAdGroup(adGroup) {
     adGroup.applyLabel(IN_STOCK_LABEL);
 
     // Add this to the list of enabled ad groups
-    EnabledAdGroups = EnabledAdGroups.concat(msg);
-    Logger.log('AdGroup: ' + adGrpName + ' is now enabled.');
-    EnabledAdGrpNum++;
+    enabledAdGroups = enabledAdGroups.concat(msg);
+   _.print('AdGroup: ' + adGrpName + ' is now enabled.');
+    enabledAdGrpNum++;
 }
 
 function pauseURLs() {
-    print("Pausing URLs.");
     var alreadyCheckedUrls = {};
     var iter = buildSelectorPause().get();
+    _.print("Starting Pause Function.");
     while (iter.hasNext()) {
         var entity = iter.next();
         var adGroup = entity.getAdGroup();
@@ -244,7 +235,7 @@ function pauseURLs() {
                     // This pulls all the html from the URL of the ad
                     htmlCode = UrlFetchApp.fetch(url).getContentText();
                 } catch (e) {
-                    Logger.log('There was an issue checking: ' + entity + ' ' + url + ', Skipping.');
+                    _.print('There was an issue checking: ' + entity + ' ' + url + ', Skipping.');
                     continue;
                 }
 
@@ -268,8 +259,6 @@ function pauseURLs() {
             }
         }
     }
-
-    print('Finished. Paused ' + PausedNum + ' URLs.');
 }
 
 function Pause(entity, url) {
@@ -282,9 +271,9 @@ function Pause(entity, url) {
     removeInStockLabel(entity);
 
     // Add this to the list of paused urls
-    PausedUrls = PausedUrls.concat(msg);
+    pausedUrls = pausedUrls.concat(msg);
     Logger.log('Ads for: ' + adGroupName + ': ' + entity.getHeadline() + ': ' + url + ' are now paused.');
-    PausedNum++;
+    pausedNum++;
 }
 
 function pauseOutOfStockAdGroups() {
@@ -311,30 +300,26 @@ function PauseAdGroup(adGroup) {
     removeInStockLabel(adGroup);
 
     // Add this to the list of paused urls
-    PausedAdGroups = PausedAdGroups.concat(['\n' + campaignName, adGroupName]);
+    pausedAdGroups = pausedAdGroups.concat(['\n' + campaignName, adGroupName]);
     Logger.log('AdGroup: ' + adGroupName + ' is now paused.');
-    PausedAdGrpNum++;
+    pausedAdGrpNum++;
 }
 
 function allAdsPaused(adGroup) {
     var ads = adGroup.ads()
         .withCondition('Status = ENABLED')
         .get();
-
-    if (ads.hasNext()) {
-        return false;
-    } else {
-        return true;
-    }
+return (!ads.hasNext());
 }
 
 function isOutOfStock(adGroup) {
     var ads = adGroup.ads()
         .withCondition('LabelNames CONTAINS_ANY[' + OUT_OF_STOCK_LABEL + ']')
         .get();
-    Logger.log('Ads with Label: ' + ads);
+   _.print('Ads with Label: ' + ads);
+
     if (ads.hasNext()) {
-        Logger.log('Ads with Label: ' + ads.next());
+        _.print('Ads with Label: ' + ads.next());
         return true;
     } else {
         return false;
@@ -371,17 +356,17 @@ function cleanUrl(url) {
 
 function emailMessage() {
     var message = "";
-    if (PausedNum === 0 && EnabledNum === 0) {
+    if (pausedNum === 0 && enabledNum === 0) {
         message = 'No major stock changes were detected; no changes were made.';
     } else {
-        if (PausedNum != 0) {
-            message += PausedNum + ' ads auto-paused due to lack of stock. ';
+        if (pausedNum != 0) {
+            message += pausedNum + ' ads auto-paused due to lack of stock. ';
         }
-        if (EnabledNum != 0) {
+        if (enabledNum != 0) {
             if (message === '') {
                 message += '\n';
             }
-            message += EnabledNum + ' ads re-enabled due to restock.';
+            message += enabledNum + ' ads re-enabled due to restock.';
         }
     }
     return message;
@@ -390,26 +375,26 @@ function emailMessage() {
 function emailAttachment() {
     var attachment = '';
 
-    if (PausedNum != 0) {
+    if (pausedNum != 0) {
         if (attachment === '') {
             attachment += '\n\n';
         }
-        attachment += PausedNum + ' ' + PausedUrls.join();
+        attachment += pausedNum + ' ' + pausedUrls.join();
     }
 
-    if (EnabledNum != 0) {
+    if (enabledNum != 0) {
         if (attachment === '') {
             attachment += '\n\n';
         }
-        attachment += '\n\n' + EnabledNum + ' ' + EnabledUrls.join();
+        attachment += '\n\n' + enabledNum + ' ' + enabledUrls.join();
     }
 
-    if (PausedAdGrpNum != 0) {
-        attachment += '\n\n' + PausedAdGrpNum + ' ' + PausedAdGroups.join();
+    if (pausedAdGrpNum != 0) {
+        attachment += '\n\n' + pausedAdGrpNum + ' ' + pausedAdGroups.join();
     }
 
-    if (EnabledAdGrpNum != 0) {
-        attachment += '\n\n' + EnabledAdGrpNum + ' ' + EnabledAdGroups.join();
+    if (enabledAdGrpNum != 0) {
+        attachment += '\n\n' + enabledAdGrpNum + ' ' + enabledAdGroups.join();
     }
 
     return attachment;
@@ -456,3 +441,5 @@ function buildSelectorEnable() {
     }
     return selector;
 }
+
+// Minified Helper Functions:

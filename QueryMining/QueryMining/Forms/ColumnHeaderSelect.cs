@@ -10,6 +10,10 @@ using System.Windows.Forms;
 
 namespace QueryMining.Forms
 {
+    public enum ColType
+    {
+        Query, Keyword
+    }
     public partial class ColumnHeaderSelect : Form
     {
         private int _index;
@@ -29,8 +33,17 @@ namespace QueryMining.Forms
             lstBxColumnNames.SelectedIndex = 0;
         }
 
-        public ColumnHeaderSelect(DataColumnCollection columns) : this()
+        public ColumnHeaderSelect(DataColumnCollection columns, ColType colType = ColType.Query) : this()
         {
+            if (colType == ColType.Query)
+            {
+                this.Text = "Which Column Contains the Queries?";
+            }
+            else
+            {
+                this.Text = "Which Column Contains the Matched Keyword?";
+
+            }
             foreach (DataColumn column in columns)
             {
                 try

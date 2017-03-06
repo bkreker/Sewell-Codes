@@ -93,8 +93,6 @@ namespace QueryMining.Forms
                         dgvMineResults.DataSource = _dataTable;
                         dgvMineResults.Sort(dgvMineResults.Columns[this.QueryCountIndex], ListSortDirection.Descending);
                         lblRowCount.Text = dgvMineResults.RowCount.ToString();
-
-
                     }
 
                 }
@@ -530,7 +528,6 @@ namespace QueryMining.Forms
             {
                 if (_tableChanged)
                 {
-                    _tableChanged = false;
                     try
                     {
 
@@ -538,14 +535,8 @@ namespace QueryMining.Forms
                         {
                             dgvMineResults.Invoke(new MethodInvoker(delegate
                             {
-                                // dgvMineResults.DataSource = _dataTable;
-                                dgvMineResults.Refresh();
+                                updateDisplay();
                             }));
-                        }
-                        else
-                        {
-                            // dgvMineResults.DataSource = _dataTable;
-                            dgvMineResults.Refresh();
                         }
 
                         if (lblRowCount.InvokeRequired)
@@ -561,6 +552,8 @@ namespace QueryMining.Forms
                     {
                         Console.WriteLine($"Something went wrong Updating the Row Count:{ex.Message}");
                     }
+
+                    _tableChanged = false;
                 }
 
             }
@@ -574,7 +567,11 @@ namespace QueryMining.Forms
 
             if (_outFileSavedCorrectly == true)
             {
-                MessageBox.Show($"File saved at {_outFileName}", "Success!");
+                var dialogResult = MessageBox.Show($"File saved at {_outFileName}. Open the file now?", "Success!", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(_outFileName);
+                }
             }
             else
             {

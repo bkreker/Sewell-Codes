@@ -23,13 +23,13 @@ namespace QueryMining
             get
             {
                 return new string[]
-                { Word, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average, Percent, QueryCount}
+                { MatchedKeyword, Query, Cost, GP, NetProfit, ROI, NPPerConv, GPPerConv, Conversions, Clicks, Impressions, ConvValPerCost, CTR, AvgCPC, AvgPosition, CostPerConv, ConvRate, ViewThroughConv, Number, Average, Percent, QueryCount}
                 .ToList();
             }
         }
 
         private const RegexOptions _options = RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline;
-        public const string Word = @"Word";
+        public const string MatchedKeyword = @"Word|Keyword";
         public const string Query = @"^Query$|(Search ?term)";
         public const string Cost = @"Cost";
         public const string GP = @"(GP)|(Gross ?Profit)|(Total ?(Conv\.?|Conversion) (value|val\.?))";
@@ -113,7 +113,14 @@ namespace QueryMining
                 return false;
             }
         }
-
+        public static bool IsSearchQuery(string target)
+        {
+            return IsMatch(target, Regexes.Query);
+        }
+        public static bool IsMatchedKeyword(string target)
+        {
+            return IsMatch(target, Regexes.MatchedKeyword);
+        }
         public static bool MatchesAnyStat(string target)
         {
             int matches = (from expr in StatsPatterns

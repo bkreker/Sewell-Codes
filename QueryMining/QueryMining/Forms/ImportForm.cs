@@ -83,15 +83,15 @@ namespace QueryMining.Forms
                 if (File.Exists(PAST_FILE_NAMES_FILE))
                 {
 
-                using (var pastFileNamesFile = File.OpenText(PAST_FILE_NAMES_FILE))
-                {
-                    while (!pastFileNamesFile.EndOfStream)
+                    using (var pastFileNamesFile = File.OpenText(PAST_FILE_NAMES_FILE))
                     {
-                        string fileName = pastFileNamesFile.ReadLine();
-                        triedFiles.Add(fileName);
-                        comboBoxInFile.Items.Add(fileName);
-                    }
-                    comboBoxInFile.SelectedIndex = comboBoxInFile.Items.Count - 1;
+                        while (!pastFileNamesFile.EndOfStream)
+                        {
+                            string fileName = pastFileNamesFile.ReadLine();
+                            triedFiles.Add(fileName);
+                            comboBoxInFile.Items.Add(fileName);
+                        }
+                        comboBoxInFile.SelectedIndex = comboBoxInFile.Items.Count - 1;
 
                     }
                 }
@@ -245,18 +245,21 @@ namespace QueryMining.Forms
                 var secondRow = inFile.ReadLine().Split(delimChar).ToList();
                 _dataTable = new StatDataTable(firstRow, secondRow);
 
-                ColumnHeaderSelect c = new ColumnHeaderSelect(StatDataTable.ColumnCollection);
-                c.ShowDialog();
-                DataColumnCollection Columns = _dataTable.Columns;
+                var querySelect = new ColumnHeaderSelect(StatDataTable.ColumnCollection, ColType.Query);
+                var keywordSelect = new ColumnHeaderSelect(StatDataTable.ColumnCollection, ColType.Keyword);
+                querySelect.ShowDialog();
+                keywordSelect.ShowDialog();
+                var Columns = _dataTable.Columns;
 
-                if (c.DialogResult == DialogResult.OK)
+                if (querySelect.DialogResult == DialogResult.OK)
                 {
-                    StatDataTable.QueryCol = c.SelectedIndex;
+                    StatDataTable.QueryCol = querySelect.SelectedIndex;
+                    StatDataTable.MatchedKeywordCol = keywordSelect.SelectedIndex;
 
-                    List<string> headerRow = (from DataColumn h in StatDataTable.ColumnCollection
-                                              select h.Caption).ToList();
+                    var headerRow = (from DataColumn h in StatDataTable.ColumnCollection
+                                     select h.Caption).ToList();
 
-                    List<object> outputRow = new List<object>();
+                    var outputRow = new List<object>();
                     headerRow.ForEach(header => outputRow.Add(header));
                     // Write the new lines to the output stream
                     while (!inFile.EndOfStream)
