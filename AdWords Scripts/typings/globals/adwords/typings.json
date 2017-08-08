@@ -1,0 +1,9 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/OutshineLabs/typed-adwords/master/typings.json",
+    "raw": "github:OutshineLabs/typed-adwords",
+    "main": "index.d.ts",
+    "name": "adwords"
+  }
+}

@@ -225,6 +225,7 @@ namespace QueryMining.Forms
             }
             return res;
         }
+
         private void Analyze()
         {
             Console.WriteLine("Sort Started.");

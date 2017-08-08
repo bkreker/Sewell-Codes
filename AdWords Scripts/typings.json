@@ -1,0 +1,12 @@
+{
+  "globalDependencies": {
+    "adwords": "github:OutshineLabs/typed-adwords",
+    "google-apps-script/google-apps-script.base": "registry:dt/google-apps-script/google-apps-script.base",
+    "google-apps-script/google-apps-script.charts": "registry:dt/google-apps-script/google-apps-script.charts",
+    "google-apps-script/google-apps-script.drive": "registry:dt/google-apps-script/google-apps-script.drive",
+    "google-apps-script/google-apps-script.spreadsheet": "registry:dt/google-apps-script/google-apps-script.spreadsheet",
+    "google-apps-script/google-apps-script.types": "registry:dt/google-apps-script/google-apps-script.types",
+    "google-apps-script/google-apps-script.ui": "registry:dt/google-apps-script/google-apps-script.ui",
+    "google-apps-script/google-apps-script.utilities": "registry:dt/google-apps-script/google-apps-script.utilities"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "sewell-adwords-scripts",
+  "version": "1.0.0",
+  "description": "Scripts to manage AdWords account",
+  "main": "--",
+  "repository": "https://github.com/celfrumos/Sewell-Codes/tree/master/AdWords%20Scripts",
+  "author": "Josh DeGraw",
+  "license": "MIT",
+  "dependencies": {
+    "types": "google-apps-script.base"
+  }
+}
