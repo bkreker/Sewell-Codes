@@ -34,14 +34,14 @@ export function _getDateTime() {
 }
 
 // Helper function to get the time in am/pm
-export function AM_PM(date) {
+export function AM_PM(date : Date) {
     try {
         var hours = date.getHours() + 1;
         var minutes = date.getMinutes();
         var ampm = hours >= 12 ? 'pm' : 'am';
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
-        minutes = minutes < 10 ? '0' + minutes : minutes;
+        minutes = minutes < 10 ? parseFloat( '0' + minutes) : minutes;
         var strTime = hours + ':' + minutes + ' ' + ampm;
         return strTime;
     } catch (e) {
@@ -50,7 +50,7 @@ export function AM_PM(date) {
 }
 
 // Helper function to get custom date range, defaults to one quarter (13 weeks) ago is 91 days and 'YYYYMMdd' date format
-export function CustomDateRange(fromDaysAgo, tillDate, format) {
+export function CustomDateRange(fromDaysAgo? : number, tillDate? : number, format? : string) {
     try {
         //print('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')');
 
@@ -85,7 +85,7 @@ export function CustomDateRange(fromDaysAgo, tillDate, format) {
 }
 
 // Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
-export function _daysAgo(num, format) {
+export function _daysAgo(num : number, format? : string) {
     try {
         var newDate = new Date();
         newDate.setDate(newDate.getDate() - num);
@@ -95,7 +95,7 @@ export function _daysAgo(num, format) {
             date = Utilities.formatDate(newDate, timeZone, format);
         } else {
             date = {
-                year: newDate.getYear(),
+                year: newDate.getFullYear(),
                 month: newDate.getMonth(),
                 day: newDate.getDate()
             };
@@ -107,7 +107,7 @@ export function _daysAgo(num, format) {
 }
 
 //Helper function to format todays date
-export function _today(format) {
+export function _today(format? : string) {
     try {
         var newDate = new Date();
         var timeZone = AdWordsApp.currentAccount().getTimeZone();
@@ -118,7 +118,7 @@ export function _today(format) {
             today = {
                 day: newDate.getDate(),
                 month: newDate.getMonth(),
-                year: newDate.getYear(),
+                year: newDate.getFullYear(),
                 time: newDate.getTime()
             };
         }
@@ -158,7 +158,7 @@ export function _todayIsMonday() {
 }
 
 
-export function _rolling13Week(format) {
+export function _rolling13Week(format : string) {
     try {
         if (format === undefined || format === '' || format === null) {
             format = 'YYYYMMdd';
@@ -177,7 +177,7 @@ export function _rolling13Week(format) {
     }
 }
 
-export function formatKeyword(keyword) {
+export function formatKeyword(keyword :string) {
     try {
         keyword = keyword.replace(/[^a-zA-Z0-9 ]/g, '');
         return keyword;
@@ -187,7 +187,7 @@ export function formatKeyword(keyword) {
 }
 
 // A helper function to make rounding a little easier
-export function round(value) {
+export function round(value: number) {
     try {
         var decimals = Math.pow(10, DECIMAL_PLACES);
         return Math.round(value * decimals) / decimals;
@@ -198,7 +198,7 @@ export function round(value) {
 
 //This function returns the standard deviation for a set of entities
 //The stat key determines which stat to calculate it for
-export function getStandardDev(entites, mean, stat_key) {
+export function getStandardDev(entites: AdWordsScripts.AdWordsEntity[], mean : number, stat_key: string) {
     try {
         var total = 0;
         for (var i in entites) {
@@ -215,7 +215,7 @@ export function getStandardDev(entites, mean, stat_key) {
 
 //Returns the mean (average) for the set of entities
 //Again, stat key determines which stat to calculate this for
-export function getMean(entites, stat_key) {
+export function getMean(entites, stat_key: string) {
     try {
         var total = 0;
         for (var i in entites) {
@@ -231,7 +231,7 @@ export function getMean(entites, stat_key) {
 }
 
 //This is a helper function to create the label if it does not already exist
-export function createLabelIfNeeded(name) {
+export function createLabelIfNeeded(name: string) {
     try {
         if (!AdWordsApp.labels().withCondition("Name = '" + name + "'").get().hasNext()) {
             AdWordsApp.createLabel(name);
@@ -241,9 +241,9 @@ export function createLabelIfNeeded(name) {
     }
 }
 
-export function EmailErrorReport(reportName, emails, isPreview, ex, completedReport) {
+export function EmailErrorReport(reportName:string, emails: string[], isPreview: boolean, ex: ErrorEvent, completedReport:boolean) {
     var _subject = 'AdWords Alert: Error in ' + reportName + ', script ' + (completedReport ? 'did execute correctly ' : 'did not execute ') + ' correctly.';
-    var _message = "Error on line " + ex.lineNumber + ":\n" + ex.message + EMAIL_SIGNATURE;
+    var _message = "Error on line " + ex.lineno + ":\n" + ex.message + EMAIL_SIGNATURE;
     var _attachment = emailAttachment();
     var _fileName = _getDateString() + '_' + reportName;
     var _to = isPreview ? emails[0] : emails.join();

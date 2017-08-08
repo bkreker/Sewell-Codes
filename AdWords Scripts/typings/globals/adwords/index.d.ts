@@ -489,9 +489,14 @@ interface StringAccessor{
       keywords(): AdWordsSelector<Keyword>;
       labels(): AdWordsSelector<Label>;
       report(query : string, options?: ReportQueryOptions): Report;
+      currentAccount():MccApp.ManagedAccount;
+      getExecutionInfo(): ExecutionInfo;
     }
   }
 
+interface ExecutionInfo{
+    isPreview(): boolean;
+}
   export module MccApp {
 
     type AccountLabelSelector = AdWordsBasicSelector<AccountLabel>;
