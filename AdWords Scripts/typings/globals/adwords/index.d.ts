@@ -131,7 +131,11 @@ interface StringAccessor{
       | "TEMPLATE_AD"
       | "TEXT_AD";
 
-    interface Ad extends AdWordsEntity {
+interface ILabels {
+      labels(): AdWordsSelector<Label>;
+}
+
+    interface Ad extends AdWordsEntity, ILabels{
       /**
        * Applies a label to the ad. name of the label is case-sensitive. Operation will fail if the
        * label with the specified name does not already exist in the account.
@@ -167,7 +171,7 @@ interface StringAccessor{
       isType(): any;
 
       // FIXME : This should return an AdWordsSelector<Label>
-      labels(): AdWordsSelector<any>;
+      //labels(): AdWordsSelector<Label>;
 
       pause(): void;
       remove(): void;
@@ -201,7 +205,7 @@ interface StringAccessor{
 
     type AdGroupUrls = any;
 
-    interface AdGroup extends AdWordsEntity {
+    interface AdGroup extends AdWordsEntity, ILabels {
       adParams(): AdParamSelector;
       addCallout(calloutExtension: Callout): AdWordsOperation<Callout>;
       addMobileApp(mobileAppExtension: MobileApp): AdWordsOperation<MobileApp>;

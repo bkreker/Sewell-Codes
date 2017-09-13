@@ -1,4 +1,3 @@
-
 import {} from '../typings/index'
 
 // Helper Functions
@@ -34,14 +33,14 @@ export function _getDateTime() {
 }
 
 // Helper function to get the time in am/pm
-export function AM_PM(date : Date) {
+export function AM_PM(date: Date) {
     try {
         var hours = date.getHours() + 1;
         var minutes = date.getMinutes();
         var ampm = hours >= 12 ? 'pm' : 'am';
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
-        minutes = minutes < 10 ? parseFloat( '0' + minutes) : minutes;
+        minutes = minutes < 10 ? parseFloat('0' + minutes) : minutes;
         var strTime = hours + ':' + minutes + ' ' + ampm;
         return strTime;
     } catch (e) {
@@ -50,7 +49,7 @@ export function AM_PM(date : Date) {
 }
 
 // Helper function to get custom date range, defaults to one quarter (13 weeks) ago is 91 days and 'YYYYMMdd' date format
-export function CustomDateRange(fromDaysAgo? : number, tillDate? : number, format? : string) {
+export function CustomDateRange(fromDaysAgo ? : number, tillDate ? : number, format ? : string) {
     try {
         //print('CustomDateRange(fromDaysAgo: '+fromDaysAgo+', tillDate: '+tillDate+ ', format: '+format+')');
 
@@ -85,7 +84,7 @@ export function CustomDateRange(fromDaysAgo? : number, tillDate? : number, forma
 }
 
 // Helper function to get a date a certain number of days ago (one quarter (13 weeks) ago is 91 days)
-export function _daysAgo(num : number, format? : string) {
+export function _daysAgo(num: number, format ? : string) {
     try {
         var newDate = new Date();
         newDate.setDate(newDate.getDate() - num);
@@ -107,7 +106,7 @@ export function _daysAgo(num : number, format? : string) {
 }
 
 //Helper function to format todays date
-export function _today(format? : string) {
+export function _today(format ? : string) {
     try {
         var newDate = new Date();
         var timeZone = AdWordsApp.currentAccount().getTimeZone();
@@ -158,7 +157,7 @@ export function _todayIsMonday() {
 }
 
 
-export function _rolling13Week(format : string) {
+export function _rolling13Week(format: string) {
     try {
         if (format === undefined || format === '' || format === null) {
             format = 'YYYYMMdd';
@@ -177,7 +176,7 @@ export function _rolling13Week(format : string) {
     }
 }
 
-export function formatKeyword(keyword :string) {
+export function formatKeyword(keyword: string) {
     try {
         keyword = keyword.replace(/[^a-zA-Z0-9 ]/g, '');
         return keyword;
@@ -198,7 +197,7 @@ export function round(value: number) {
 
 //This function returns the standard deviation for a set of entities
 //The stat key determines which stat to calculate it for
-export function getStandardDev(entites: AdWordsScripts.AdWordsEntity[], mean : number, stat_key: string) {
+export function getStandardDev(entites: AdWordsScripts.AdWordsEntity[], mean: number, stat_key: string) {
     try {
         var total = 0;
         for (var i in entites) {
@@ -241,7 +240,7 @@ export function createLabelIfNeeded(name: string) {
     }
 }
 
-export function EmailErrorReport(reportName:string, emails: string[], isPreview: boolean, ex: ErrorEvent, completedReport:boolean) {
+export function EmailErrorReport(reportName: string, emails: string[], isPreview: boolean, ex: ErrorEvent, completedReport: boolean) {
     var _subject = 'AdWords Alert: Error in ' + reportName + ', script ' + (completedReport ? 'did execute correctly ' : 'did not execute ') + ' correctly.';
     var _message = "Error on line " + ex.lineno + ":\n" + ex.message + EMAIL_SIGNATURE;
     var _attachment = emailAttachment();
@@ -306,7 +305,7 @@ export function sendResultsViaEmail(report, level) {
     }
 }
 //Helper function to capitalize the first letter of a string.
-export function _titleCase(str) {
+export function _titleCase(str: string) {
     try {
         return str.replace(/(?:^|\s)\S/g, function (a) {
             return a.toUpperCase();
@@ -353,7 +352,7 @@ export function EmailResults(ReportName) {
     }
 }
 
-export function EmailReportResults(_emails, _reportName, _message, _attachment, isPreview) {
+export function EmailReportResults(_emails: any[], _reportName: string[], _message: string, _attachment: string | any[], isPreview: boolean) {
     try {
         var _subject = 'AdWords Alert: ' + _reportName.join(' ');
 
@@ -398,10 +397,10 @@ export function print(msg) {
     Logger.log(msg);
 }
 
-export function error(funcName, e) {
+export function error(funcName:string, e: ErrorEvent | Error | ErrorEventInit) {
     var warning = '';
     if (e instanceof Error)
-        warning = e.name + ' in ' + funcName + ' at line ' + e.lineNumber + ': ' + e.message;
+        warning = e.name + ' in ' + funcName + ' at line ' + e.lineno + ': ' + e.message;
     else
         warning = 'Error in : ' + funcName + ':\n' + e;
 
@@ -409,12 +408,12 @@ export function error(funcName, e) {
     return warning;
 }
 
-export function warn(msg) {
+export function warn(msg: any) {
     Logger.log('WARNING: ' + msg);
 }
 
 // Returns bool representing if obj is a number
-export function isNumber(obj) {
+export function isNumber(obj: any) {
     try {
         return ((obj.toString().match(/(\.*([0-9])*\,*[0-9]\.*)/g)) || (obj === NaN));
     } catch (e) {
@@ -423,7 +422,7 @@ export function isNumber(obj) {
 }
 
 // returns bool representing if an entity has a given keyword
-export function hasLabelAlready(entity, label) {
+export function hasLabelAlready(entity: AdWordsScripts.AdWordsApp.Ad | AdWordsScripts.AdWordsApp.AdGroup, label: string) {
     try {
         return (entity.labels().withCondition("Name = '" + label + "'").get().hasNext());
     } catch (e) {
